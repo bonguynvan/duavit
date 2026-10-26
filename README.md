@@ -59,7 +59,6 @@ Nếu thấy dự án vui, hãy thả ⭐ cho repo nhé!
 shared/      chạy cả trên Node lẫn trình duyệt: catalog (nhân vật, map, luật), mô phỏng đua, thuật toán công bằng
 src/         server Express + Socket.IO: phòng, đăng nhập Google, SQLite, trang quản trị
 public/      trang web (ES modules thuần, không cần build): vẽ canvas, âm thanh, quay video
-sites/peti/  trang giới thiệu tĩnh peti.vn
 deploy/      Caddyfile, script cập nhật, hướng dẫn triển khai
 test/        node:test (unit + integration qua socket thật)
 ```

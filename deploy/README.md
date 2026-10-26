@@ -1,14 +1,13 @@
 # Triển khai lên VPS (Ubuntu + Docker)
 
-> Hướng dẫn này dùng tên miền của bản chính thức (`peti.vn`, `duavit.peti.vn`). Nếu tự host, hãy thay
-> tên miền của bạn trong `deploy/Caddyfile` (hoặc `deploy/edge/duavit.caddy`) và `.env` (`PUBLIC_URL`); có thể bỏ khối
-> `peti.vn` / `www.peti.vn` / `dua.peti.vn` trong Caddyfile cùng volume `sites/peti` nếu không cần trang giới thiệu.
+> Hướng dẫn này dùng tên miền của bản chính thức (`duavit.peti.vn`). Nếu tự host, hãy thay tên miền của
+> bạn trong `deploy/Caddyfile` (hoặc `deploy/edge/duavit.caddy`) và `.env` (`PUBLIC_URL`); có thể bỏ khối
+> `dua.peti.vn` (link ngắn) nếu không cần. Trang chủ `peti.vn` nằm ở repo riêng `peti-vn/peti.vn`.
 
 Kết quả sau khi làm xong:
 
 | Địa chỉ | Nội dung |
 |---|---|
-| `https://peti.vn` | Trang link tree (tĩnh, `sites/peti`) |
 | `https://duavit.peti.vn` | Game đua vịt |
 | `https://dua.peti.vn` | Link ngắn, tự chuyển sang `duavit.peti.vn` |
 
@@ -21,8 +20,6 @@ Trong trang quản lý DNS của `peti.vn`, tạo các bản ghi **A** trỏ v�
 
 | Tên | Loại | Giá trị |
 |---|---|---|
-| `@` | A | IP VPS |
-| `www` | A | IP VPS |
 | `duavit` | A | IP VPS |
 | `dua` | A | IP VPS |
 
@@ -91,7 +88,7 @@ docker compose up -d --build
 docker compose ps               # app phải "healthy"
 docker compose logs -f caddy    # xem Caddy lấy chứng chỉ (Ctrl+C để thoát)
 ```
-Mở `https://duavit.peti.vn` và `https://peti.vn`.
+Mở `https://duavit.peti.vn`.
 
 ## 6. Cập nhật phiên bản mới
 ```bash

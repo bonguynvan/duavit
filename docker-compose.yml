@@ -1,5 +1,4 @@
 # Production stack on the VPS:
-#   peti.vn        -> static link hub (sites/peti), served by Caddy
 #   duavit.peti.vn -> the game (Node app), reverse-proxied by Caddy (HTTPS + WebSockets)
 services:
   app:
@@ -29,7 +28,6 @@ services:
       ACME_EMAIL: ${ACME_EMAIL:-}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./sites/peti:/srv/peti:ro
       - caddy_data:/data # certificates — keep this volume
       - caddy_config:/config
 
