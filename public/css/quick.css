@@ -19,12 +19,14 @@ body { padding: 0 0 48px; overflow-x: hidden; }
 .file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .file-btn:focus-within { outline: 3px dashed var(--tomato); outline-offset: 3px; }
 .hint { margin: 8px 0 0; color: var(--ink-soft); font-weight: 600; font-size: 0.9rem; }
-.options-card { display: grid; gap: 12px; }
+.options-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .option-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.quick-maps { margin-top: 0; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.quick-maps { margin-top: 0; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); }
 .options-card select {
   font: 700 1rem var(--font-body); border: var(--border); border-radius: 12px; padding: 10px 12px; background: #fff; color: var(--ink);
+  max-width: 100%;
 }
+.options-card label.field { grid-template-columns: minmax(0, 1fr); }
 .start-quick { grid-column: 1 / -1; justify-self: center; font-size: 1.8rem; padding: 16px 48px; }
 
 /* ---------- race ---------- */
@@ -67,6 +69,9 @@ body { padding: 0 0 48px; overflow-x: hidden; }
 .verdict.bad { background: #ffc9bd; }
 
 @media (max-width: 860px) {
-  .quick-setup { grid-template-columns: 1fr; }
+  .quick-setup { grid-template-columns: minmax(0, 1fr); }
   .live-board { display: none; }
+}
+@media (max-width: 480px) {
+  .start-quick { justify-self: stretch; font-size: 1.5rem; padding: 14px 20px; }
 }
