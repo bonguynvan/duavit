@@ -78,7 +78,7 @@ test('every character belongs to a known group, and the picker shows the groups 
   const groupIds = new Set(CHARACTER_GROUPS.map((g) => g.id));
   for (const animal of ANIMALS) assert.ok(groupIds.has(groupOf(animal)), `group of "${animal.id}"`);
   const ids = (mapId) => characterGroups(findMap(mapId)).map((g) => g.id);
-  assert.deepEqual(ids('meadow'), ['animals', 'saigon'], 'ordinary maps: animals first, then the 30/4 vehicles');
+  assert.deepEqual(ids('meadow'), ['animals', 'people', 'saigon'], 'ordinary maps: animals first, then people and the 30/4 cast');
   assert.deepEqual(ids('denhung'), ['denhung'], 'a map with its own cast shows only that group');
   assert.deepEqual(ids('saigon'), ['saigon']);
   for (const map of MAPS) {

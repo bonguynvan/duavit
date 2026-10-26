@@ -62,7 +62,7 @@ Quy ước hệ tọa độ:
 
 - Nhân vật **quay mặt sang phải**, gốc tọa độ `(0, 0)` nằm **trên mặt đất, giữa thân**; trục y âm là đi lên.
 - Dài khoảng **100 đơn vị** (từ khoảng -50 đến +50), cao không quá ~105 đơn vị.
-- Dùng các hàm có sẵn trong `public/js/paint.js` (`shape`, `ellipse`, `circle`, `poly`, `stroke`, `leg`, `swing`, `shade`…) để có viền mực dày giống phong cách chung.
+- Dùng các hàm có sẵn trong `public/js/paint.js` (`shape`, `ellipse`, `circle`, `poly`, `stroke`, `thinLine`, `leg`, `swing`, `shade`…) để có viền mực dày giống phong cách chung.
 - Bắt buộc gọi `drawFace(ctx, x, y, r, face, c)`: đó là huy hiệu chữ cái đầu tên người chơi.
 - Dùng `swing(p, offset, m)` cho chân/tay để nhân vật đứng yên khi `m === false`.
 

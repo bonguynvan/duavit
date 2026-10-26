@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { RULES, initialsOf, randomForm } from '../shared/catalog.js';
+import { RULES, findMap, initialsOf, randomForm } from '../shared/catalog.js';
 import { PHASES, Room, sanitizeName } from '../src/game/room.js';
 import { seededRng } from './helpers.js';
 
@@ -360,6 +360,8 @@ test('abort cancels the race and returns to the lobby without results', () => {
   assert.equal(room.results, null);
 });
 
+const SAIGON_CAST = findMap('saigon').allowedAnimals;
+
 test('vehicle-only map: everyone rides a tank or helicopter, and gets their own animal back afterwards', () => {
   const room = new Room({ rng: seededRng(4) });
   const a = room.join('An', 'turtle').player;
@@ -367,13 +369,13 @@ test('vehicle-only map: everyone rides a tank or helicopter, and gets their own 
   room.setSpecialMaps(true);
   assert.ok(room.setMap('saigon').ok);
   const ride = (p) => room.players.get(p.id).animal;
-  assert.ok(['tank', 'tank843', 'helicopter', 'palace'].includes(ride(a)));
+  assert.ok(SAIGON_CAST.includes(ride(a)));
   assert.equal(ride(b), 'tank');
-  assert.match(room.setAnimal(a.id, 'cat').error, /trực thăng hoặc dinh mini/);
+  assert.match(room.setAnimal(a.id, 'cat').error, /trực thăng, dinh mini, nhà thờ đức bà mini hoặc cột điện/);
   assert.ok(room.setAnimal(a.id, 'helicopter').player);
   const late = room.join('Cường', 'pig').player;
-  assert.ok(['tank', 'tank843', 'helicopter', 'palace'].includes(late.animal), 'late joiners are swapped too');
-  assert.ok(['tank', 'tank843', 'helicopter', 'palace'].includes(room.addBot().player.animal), 'bots follow the rule');
+  assert.ok(SAIGON_CAST.includes(late.animal), 'late joiners are swapped too');
+  assert.ok(SAIGON_CAST.includes(room.addBot().player.animal), 'bots follow the rule');
 
   assert.ok(room.setMap('meadow').ok);
   assert.equal(ride(a), 'turtle', 'own pick restored');
@@ -407,7 +409,7 @@ test('host adds racers by name: they count as real players and follow map rules'
   assert.ok(room.setSpectator(lan.id, true).error, 'no phone, so no audience mode');
   room.setSpecialMaps(true);
   room.setMap('saigon');
-  assert.ok(['tank', 'tank843', 'helicopter', 'palace'].includes(room.players.get(lan.id).animal));
+  assert.ok(SAIGON_CAST.includes(room.players.get(lan.id).animal));
   room.setMap('meadow');
   assert.equal(room.players.get(lan.id).animal, 'cat');
 

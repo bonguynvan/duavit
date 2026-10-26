@@ -71,6 +71,17 @@ export function stroke(ctx, color, width, build) {
   ctx.stroke();
 }
 
+/** Plain line without the ink outline: wires, stitches, noodles — details too thin for `stroke`. */
+export function thinLine(ctx, color, width, build) {
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  build();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.stroke();
+}
+
 export function leg(ctx, x, top, len, angle, color, width = 7) {
   const ex = x + Math.sin(angle) * len;
   const ey = top + Math.cos(angle) * len;
