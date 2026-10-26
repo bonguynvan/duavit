@@ -54,13 +54,17 @@
     <div class="race-stage" id="race-stage">
       <canvas id="race-canvas" aria-label="Đường đua"></canvas>
       <ol class="live-board" id="live-board" aria-label="Bảng xếp hạng trực tiếp"></ol>
-      <a class="commit-badge" id="commit" href="/cong-bang" target="_blank" rel="noopener" title="Mã cam kết = SHA-256 của seed ngẫu nhiên, công bố trước khi đua. Bấm để xem thuật toán công bằng."></a>
       <div class="race-controls" role="toolbar" aria-label="Điều khiển">
         <button class="btn" type="button" id="pause">⏸ Tạm dừng</button>
         <button class="btn btn-ghost" type="button" id="fullscreen">⛶ Toàn màn hình</button>
         <button class="btn btn-ghost" type="button" id="sound" aria-label="Bật/tắt nhạc">🔊</button>
         <button class="btn btn-ghost" type="button" id="back">✎ Sửa danh sách</button>
       </div>
+    </div>
+    <div class="commit-bar" id="commit-bar" hidden>
+      <a class="commit-label" href="/cong-bang" target="_blank" rel="noopener" title="Mã cam kết = SHA-256 của seed ngẫu nhiên, công bố trước khi đua. Bấm để xem thuật toán công bằng.">🔒 <span class="commit-label-text">Mã cam kết</span> ⓘ</a>
+      <code class="commit-hash"></code>
+      <button class="btn btn-ghost commit-copy" type="button">📋 Sao chép</button>
     </div>
 
     <div class="card results" id="results" hidden>

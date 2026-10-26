@@ -114,7 +114,11 @@
       <button class="btn btn-ghost" type="button" id="abort-btn">⏹ Hủy lượt</button>
       <button class="btn btn-ghost" type="button" id="arena-sound-btn" aria-label="Bật/tắt nhạc">🔊</button>
     </div>
-    <a class="commit-badge" id="commit-badge" href="/cong-bang" target="_blank" rel="noopener" title="Mã cam kết = SHA-256 của seed ngẫu nhiên, công bố trước khi đua. Bấm để xem thuật toán công bằng." hidden></a>
+    <div class="commit-bar" id="commit-bar" hidden>
+      <a class="commit-label" href="/cong-bang" target="_blank" rel="noopener" title="Mã cam kết = SHA-256 của seed ngẫu nhiên, công bố trước khi đua. Bấm để xem thuật toán công bằng.">🔒 <span class="commit-label-text">Mã cam kết</span> ⓘ</a>
+      <code class="commit-hash"></code>
+      <button class="btn btn-ghost commit-copy" type="button">📋 Sao chép</button>
+    </div>
     <div class="arena-badge"><span class="rec" id="rec-dot" hidden>⏺ REC</span><span id="arena-map"></span> · <span id="arena-timer">0.0s</span></div>
     <div class="podium-layer" id="podium-layer" hidden>
       <div class="card podium-card">

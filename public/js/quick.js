@@ -9,8 +9,10 @@ import { RaceRecorder, slugify } from './recorder.js';
 import { createSoundDirector, sound } from './audio.js';
 import { el, formatTime, toast } from './ui.js';
 import { Playback, prepareRace } from './quick/playback.js';
+import { mountCommitBar } from './commitBar.js';
 
 const $ = (id) => document.getElementById(id);
+const showCommit = mountCommitBar($('commit-bar'));
 const STORE_KEY = 'peti.quick';
 const MAX_LANES = 12;
 const STATE_HZ_MS = 50;
@@ -116,7 +118,7 @@ async function startRace() {
   $('results').hidden = true;
   $('download-video').hidden = true;
   $('pause').textContent = '⏸ Tạm dừng';
-  $('commit').textContent = `🔒 Mã cam kết: ${seedHash.slice(0, 20)}… ⓘ`;
+  showCommit(seedHash);
   raceView.start();
   current.timer = setInterval(tick, STATE_HZ_MS);
   tick();

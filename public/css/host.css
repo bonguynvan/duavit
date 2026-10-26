@@ -61,8 +61,12 @@ body { overflow-x: hidden; }
 .start-btn { font-size: 2rem; padding: 18px 48px; }
 
 /* ---------- arena ---------- */
-.arena { position: fixed; inset: 0; background: var(--ink); }
+.arena { position: fixed; inset: 0; background: var(--ink); display: flex; flex-direction: column; }
 #race-canvas { width: 100%; height: 100%; display: block; }
+.arena #race-canvas { flex: 1; min-height: 0; height: auto; }
+/* The commitment strip sits under the race, never on it; overlays move up while it shows. */
+.arena .commit-bar { flex: none; border-radius: 0; border-top: 2px solid rgba(255, 255, 255, 0.12); }
+.arena:has(.commit-bar:not([hidden])) :is(.race-controls, .arena-chat) { bottom: calc(var(--commit-bar-h) + 16px); }
 .arena-badge {
   position: absolute; top: 14px; right: 16px;
   font: 800 1.2rem var(--font-display); background: var(--paper); border: var(--border); border-radius: 999px;
@@ -169,11 +173,6 @@ body { overflow-x: hidden; }
 .share-actions .btn { padding: 8px 12px; font-size: 0.95rem; }
 
 .maps-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.commit-badge {
-  position: absolute; left: 16px; top: 64px; margin: 0; max-width: 46vw; font: 700 0.75rem var(--font-body);
-  color: #fff; background: rgba(29, 26, 47, 0.7); border-radius: 999px; padding: 4px 10px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
 .fairness { text-align: left; margin: 14px 0 0; }
 .fairness summary { font: 800 1.05rem var(--font-display); cursor: pointer; }
 .fairness dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 10px 0; }

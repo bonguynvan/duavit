@@ -30,7 +30,7 @@ body { padding: 0 0 48px; overflow-x: hidden; }
 .start-quick { grid-column: 1 / -1; justify-self: center; font-size: 1.8rem; padding: 16px 48px; }
 
 /* ---------- race ---------- */
-.quick-race { max-width: 1400px; margin: 0 auto; padding: 0 16px; display: grid; gap: 18px; }
+.quick-race { max-width: 1400px; margin: 0 auto; padding: 0 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
 .race-stage { position: relative; border: var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: var(--ink); }
 #race-canvas { display: block; width: 100%; height: min(72vh, 760px); }
 .race-stage:fullscreen { border: 0; border-radius: 0; }
@@ -44,11 +44,6 @@ body { padding: 0 0 48px; overflow-x: hidden; }
 .live-board .pos { font: 800 1rem var(--font-display); text-align: center; }
 .live-board .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .live-board .meta { color: var(--ink-soft); font-size: 0.75rem; }
-.commit-badge {
-  position: absolute; left: 12px; bottom: 12px; margin: 0; max-width: 60%; font: 700 0.75rem var(--font-body);
-  color: #fff; background: rgba(29, 26, 47, 0.7); border-radius: 999px; padding: 4px 10px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
 .quick-race .race-controls { position: absolute; right: 12px; bottom: 12px; }
 
 .results { display: grid; gap: 12px; }

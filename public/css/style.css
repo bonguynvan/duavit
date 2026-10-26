@@ -146,7 +146,20 @@ input[type='text']:focus { outline: none; border-color: var(--tomato); box-shado
 .room-missing p { margin: 0; font-weight: 600; color: var(--ink-soft); }
 .room-missing .btn { text-decoration: none; }
 
-/* "?" annotation next to commitment hashes on race screens */
-a.commit-badge { text-decoration: none; }
-a.commit-badge:hover, a.commit-badge:focus-visible { background: var(--ink); outline: 2px solid var(--sun); }
+/* Commitment hash under the race: one line, full hash selectable, copy button, link to /cong-bang */
+:root { --commit-bar-h: 46px; }
+.commit-bar {
+  display: flex; align-items: center; gap: 10px; height: var(--commit-bar-h); padding: 0 6px 0 14px;
+  background: var(--ink); color: #fff; border-radius: 14px; font: 700 0.85rem var(--font-body);
+}
+.commit-label { flex: none; color: var(--sun); text-decoration: none; white-space: nowrap; }
+.commit-label:hover, .commit-label:focus-visible { text-decoration: underline; outline: none; }
+.commit-hash {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; user-select: all;
+  contain: inline-size; /* the 64-char hash must never widen the page around it */
+  font: 600 0.85rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 6px 10px;
+}
+.commit-copy { flex: none; padding: 6px 12px; font-size: 0.85rem; box-shadow: none; }
+@media (max-width: 480px) { .commit-label-text { display: none; } }
 .fair-link { color: var(--tomato); font-weight: 800; }

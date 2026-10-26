@@ -5,8 +5,10 @@ import { RaceRecorder, slugify } from './recorder.js';
 import { createSoundDirector, sound, soundForEffect } from './audio.js';
 import { el, formatTime, request, roomStorage, socket, toast } from './net.js';
 import { mountChat, messageNode } from './chat.js';
+import { mountCommitBar } from './commitBar.js';
 
 const $ = (id) => document.getElementById(id);
+const showCommit = mountCommitBar($('commit-bar'));
 // The host key arrives once in the link (?key=…); keep it per room and wipe it from the
 // address bar so it doesn't end up on a projector, in a screenshot or in browser history.
 const urlKey = new URLSearchParams(location.search).get('key');
@@ -306,9 +308,7 @@ $('special-maps').addEventListener('change', () => act('host:specialMaps', { all
 
 // ---------- provably fair: commitment during the race, seed + proof file afterwards ----------
 function renderCommitBadge() {
-  const fairness = state?.race?.fairness;
-  $('commit-badge').hidden = !fairness;
-  if (fairness) $('commit-badge').textContent = `🔒 Mã cam kết: ${fairness.seedHash.slice(0, 20)}… ⓘ`;
+  showCommit(state?.race?.fairness?.seedHash ?? null);
 }
 
 function renderFairness() {
