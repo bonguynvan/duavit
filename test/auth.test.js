@@ -78,7 +78,7 @@ before(async () => {
     googleCalls.push({ url, body: Object.fromEntries(new URLSearchParams(init.body)) });
     return new Response(JSON.stringify({ id_token: idToken(nextClaims) }), { status: 200, headers: { 'content-type': 'application/json' } });
   };
-  server = await startServer({ port: 0, requireLogin: true, auth: { clientId: CLIENT_ID, clientSecret: 'shh', fetchImpl: fakeGoogle } });
+  server = await startServer({ port: 0, requireLogin: true, roomLimits: { maxRoomsPerIp: 50 }, auth: { clientId: CLIENT_ID, clientSecret: 'shh', fetchImpl: fakeGoogle } }); // every test signs in from 127.0.0.1: isolate the per-account cap
   base = `http://127.0.0.1:${server.port}`;
 });
 

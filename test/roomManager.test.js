@@ -60,6 +60,35 @@ test('per-IP and global room limits', () => {
   assert.equal(rooms.create({ ip: 'c', now: 0 }).status, 503);
 });
 
+test('signed-in creators are capped per IP too, not only per account', () => {
+  const rooms = new RoomManager({ maxRoomsPerIp: 2, maxRoomsPerUser: 5 });
+  assert.ok(rooms.create({ ip: 'x', now: 0, ownerId: 1 }).entry);
+  assert.ok(rooms.create({ ip: 'x', now: 0, ownerId: 2 }).entry);
+  assert.equal(rooms.create({ ip: 'x', now: 0, ownerId: 3 }).status, 429, 'a farm of accounts on one IP is still capped');
+  assert.equal(rooms.create({ ip: 'x', now: 0 }).status, 429);
+});
+
+test('sweep closes rooms no host ever opened, even with sockets holding them', () => {
+  const rooms = new RoomManager({ unclaimedMs: 10, idleMs: 1000, maxAgeMs: 10_000 });
+  const ghost = rooms.create({ ip: 'a', now: 0 }).entry;
+  const real = rooms.create({ ip: 'b', now: 0 }).entry;
+  rooms.connect(ghost, 0);
+  rooms.connect(real, 0);
+  rooms.claim(real, 5);
+  assert.deepEqual(rooms.sweep(9), []);
+  assert.deepEqual(rooms.sweep(10), [ghost.code]);
+  assert.equal(rooms.get(real.code), real, 'a room its host opened stays');
+});
+
+test('sweep closes any room past its maximum age', () => {
+  const rooms = new RoomManager({ maxAgeMs: 100 });
+  const busy = rooms.create({ ip: 'a', now: 0 }).entry;
+  rooms.connect(busy, 0);
+  rooms.claim(busy, 1);
+  assert.deepEqual(rooms.sweep(99), []);
+  assert.deepEqual(rooms.sweep(100), [busy.code]);
+});
+
 test('sweep closes rooms that stayed empty for idleMs, never busy ones', () => {
   const rooms = new RoomManager({ idleMs: 1000, maxRoomsPerIp: 10 });
   const empty = rooms.create({ ip: 'a', now: 0 }).entry;

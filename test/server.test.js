@@ -125,6 +125,14 @@ test('room creation is rate-limited per IP and capped per IP', async () => {
   }
 });
 
+test('clientIp counts an IPv6 /64 as one client and unwraps IPv4-mapped addresses', () => {
+  assert.equal(clientIp({}, '2001:db8:1:2:aaaa:bbbb:cccc:dddd', false), '2001:db8:1:2::/64');
+  assert.equal(clientIp({}, '2001:0DB8:1:2::9', false), '2001:db8:1:2::/64', 'same /64, same client');
+  assert.equal(clientIp({}, '2001:db8::1', false), '2001:db8:0:0::/64');
+  assert.equal(clientIp({}, '::ffff:203.0.113.9', false), '203.0.113.9');
+  assert.equal(clientIp({ 'x-forwarded-for': '2001:db8:1:2::5, 10.0.0.1' }, '127.0.0.1', true), '2001:db8:1:2::/64');
+});
+
 test('clientIp trusts X-Forwarded-For only behind our proxy; links follow PUBLIC_URL', () => {
   const headers = { 'x-forwarded-for': '203.0.113.9, 10.0.0.1', host: 'peti.vn', 'x-forwarded-proto': 'https' };
   assert.equal(clientIp(headers, '127.0.0.1', true), '203.0.113.9');

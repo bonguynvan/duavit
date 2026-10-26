@@ -12,10 +12,25 @@ const JOINS_PER_MINUTE = 10; // join/resume/leave per socket: each one sends a f
 const asObject = (v) => (v && typeof v === 'object' ? v : {});
 const asCallback = (fn) => (typeof fn === 'function' ? fn : () => {});
 
-/** Client IP; behind our own reverse proxy (Caddy) the real one is in X-Forwarded-For. */
+/**
+ * Rate-limit key for an address: IPv4 as is, IPv6 by its /64 (one home or one rented server
+ * gets a whole /64, so counting single addresses would make the per-IP limits meaningless).
+ */
+function clientKey(ip) {
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
+  if (mapped) return mapped[1];
+  if (!ip.includes(':')) return ip;
+  const [head, tail = ''] = ip.toLowerCase().split('%')[0].split('::');
+  const left = head ? head.split(':') : [];
+  const right = tail ? tail.split(':') : [];
+  const groups = ip.includes('::') ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill('0'), ...right] : left;
+  return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, '')).join(':')}::/64`;
+}
+
+/** Client (see clientKey); behind our own reverse proxy (Caddy) the real IP is in X-Forwarded-For. */
 export function clientIp(headers, remoteAddress, trustProxy) {
   const forwarded = trustProxy ? String(headers['x-forwarded-for'] ?? '').split(',')[0].trim() : '';
-  return forwarded || remoteAddress || 'unknown';
+  return clientKey(forwarded || remoteAddress || 'unknown');
 }
 
 /** Base URL players should open (QR code / share links). */
@@ -184,6 +199,7 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
       }
       authFailures.delete(failKey);
       socket.data.isHost = true;
+      rooms.claim(entry, Date.now());
       const links = roomLinks(publicBaseUrl(socket.handshake.headers, { publicUrl, trustProxy }), code, entry.hostKey);
       let qr = null;
       try {

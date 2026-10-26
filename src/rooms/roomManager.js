@@ -12,6 +12,8 @@ export const ROOM_DEFAULTS = Object.freeze({
   maxRoomsPerIp: 3,
   maxRoomsPerUser: 3,
   idleMs: 30 * 60 * 1000, // empty rooms are closed after this long
+  unclaimedMs: 10 * 60 * 1000, // rooms whose host never opened the host screen (anyone can create rooms)
+  maxAgeMs: 12 * 60 * 60 * 1000, // nothing can hold a room forever; a long event still fits
 });
 
 /** Normalise user-typed codes ("k7qx2a" -> "K7QX2A"); null when it can't be a valid code. */
@@ -30,7 +32,7 @@ function newCode() {
 /**
  * @typedef {{
  *   code: string, hostKey: string, room: Room, chat: Chat, ownerIp: string,
- *   createdAt: number, lastActiveAt: number, connections: number,
+ *   createdAt: number, claimedAt: number | null, lastActiveAt: number, connections: number,
  *   dirty: boolean, lastRosterKey: string,
  * }} RoomEntry
  */
@@ -50,15 +52,18 @@ export class RoomManager {
   }
 
   /**
-   * @param {{ ip: string, now: number, ownerId?: number | null }} opts  signed-in creators are limited per account
+   * @param {{ ip: string, now: number, ownerId?: number | null }} opts  limited per IP, and signed-in creators per account too
    * @returns {{ entry: RoomEntry } | { error: string, status: number }}
    */
   create({ ip, now, ownerId = null }) {
     if (this.rooms.size >= this.limits.maxRooms) return { error: 'Máy chủ đang quá tải, thử lại sau ít phút', status: 503 };
-    const mine = [...this.rooms.values()].filter((e) => (ownerId ? e.ownerId === ownerId : e.ownerIp === ip)).length;
-    const limit = ownerId ? this.limits.maxRoomsPerUser : this.limits.maxRoomsPerIp;
-    if (mine >= limit) {
-      return { error: `Mỗi ${ownerId ? 'tài khoản' : 'thiết bị'} mở tối đa ${limit} phòng cùng lúc`, status: 429 };
+    const live = [...this.rooms.values()];
+    const { maxRoomsPerIp, maxRoomsPerUser } = this.limits;
+    if (live.filter((e) => e.ownerIp === ip).length >= maxRoomsPerIp) {
+      return { error: `Mỗi thiết bị mở tối đa ${maxRoomsPerIp} phòng cùng lúc`, status: 429 };
+    }
+    if (ownerId && live.filter((e) => e.ownerId === ownerId).length >= maxRoomsPerUser) {
+      return { error: `Mỗi tài khoản mở tối đa ${maxRoomsPerUser} phòng cùng lúc`, status: 429 };
     }
     let code = newCode();
     while (this.rooms.has(code)) code = newCode();
@@ -70,6 +75,7 @@ export class RoomManager {
       ownerIp: ip,
       ownerId,
       createdAt: now,
+      claimedAt: null, // when a host first authenticated
       lastActiveAt: now,
       connections: 0,
       dirty: false,
@@ -106,16 +112,28 @@ export class RoomManager {
     entry.lastActiveAt = now;
   }
 
+  /** A host opened the host screen: the room is in real use. */
+  claim(entry, now) {
+    entry.claimedAt ??= now;
+  }
+
   close(code) {
     return this.rooms.delete(code);
   }
 
-  /** Close rooms nobody has been connected to for `idleMs`. Returns the closed codes. */
+  /**
+   * Close rooms nobody has been connected to for `idleMs`, rooms no host opened within
+   * `unclaimedMs` (connected sockets can't keep those alive), and any room older than `maxAgeMs`.
+   * Returns the closed codes.
+   */
   sweep(now) {
+    const { idleMs, unclaimedMs, maxAgeMs } = this.limits;
     const closed = [];
     for (const entry of this.rooms.values()) {
-      const idle = entry.connections === 0 && now - entry.lastActiveAt >= this.limits.idleMs;
-      if (idle) closed.push(entry.code);
+      const idle = entry.connections === 0 && now - entry.lastActiveAt >= idleMs;
+      const unclaimed = entry.claimedAt === null && now - entry.createdAt >= unclaimedMs;
+      const expired = now - entry.createdAt >= maxAgeMs;
+      if (idle || unclaimed || expired) closed.push(entry.code);
     }
     closed.forEach((code) => this.rooms.delete(code));
     return closed;
