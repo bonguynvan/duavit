@@ -4,7 +4,7 @@ import { sound } from './audio.js';
 import { toast } from './ui.js';
 
 const MAX_BYTES = 50 * 1024 * 1024;
-const DEFAULT_LABEL = 'Mặc định (nhạc 8-bit)';
+const DEFAULT_LABEL = 'Nhạc mặc định của map';
 // Some systems report no MIME type for these; the browser decides in the end (see 'soundtrack-error').
 const AUDIO_EXTENSIONS = /\.(mp3|m4a|aac|ogg|oga|opus|wav|flac|webm)$/i;
 const isAudio = (file) => file.type.startsWith('audio/') || (!file.type && AUDIO_EXTENSIONS.test(file.name));
