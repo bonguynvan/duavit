@@ -5,9 +5,9 @@
   "homepage": "https://duavit.peti.vn",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/peti-vn/duavit.git"
+    "url": "git+https://github.com/bonguynvan/duavit.git"
   },
-  "bugs": "https://github.com/peti-vn/duavit/issues",
+  "bugs": "https://github.com/bonguynvan/duavit/issues",
   "type": "module",
   "main": "src/index.js",
   "scripts": {

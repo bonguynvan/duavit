@@ -1,6 +1,6 @@
 # 🦆 Đua Vịt Peti
 
-[![test](https://github.com/peti-vn/duavit/actions/workflows/test.yml/badge.svg)](https://github.com/peti-vn/duavit/actions/workflows/test.yml)
+[![test](https://github.com/bonguynvan/duavit/actions/workflows/test.yml/badge.svg)](https://github.com/bonguynvan/duavit/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 Game đua nhân vật **ngẫu nhiên** cho livestream, sự kiện, lớp học và tiệc tùng: dán danh sách tên, bấm đua, cả phòng cùng xem ai về nhất.
@@ -30,7 +30,7 @@ Mọi phụ kiện, cú ném, cú ngã, emoji đều **chỉ là hiệu ứng h�
 Cần **Node.js 22.13+** (dùng `node:sqlite` có sẵn).
 
 ```bash
-git clone https://github.com/peti-vn/duavit.git
+git clone https://github.com/bonguynvan/duavit.git
 cd duavit
 npm install
 cp .env.example .env

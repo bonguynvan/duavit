@@ -2,7 +2,7 @@
 
 > Hướng dẫn này dùng tên miền của bản chính thức (`duavit.peti.vn`). Nếu tự host, hãy thay tên miền của
 > bạn trong `deploy/Caddyfile` (hoặc `deploy/edge/duavit.caddy`) và `.env` (`PUBLIC_URL`); có thể bỏ khối
-> `dua.peti.vn` (link ngắn) nếu không cần. Trang chủ `peti.vn` nằm ở repo riêng `peti-vn/peti.vn`.
+> `dua.peti.vn` (link ngắn) nếu không cần. Trang chủ `peti.vn` nằm ở repo riêng `bonguynvan/peti.vn`.
 
 Kết quả sau khi làm xong:
 
@@ -48,7 +48,7 @@ docker compose version          # kiểm tra
 
 ## 3. Lấy mã nguồn
 ```bash
-git clone https://github.com/peti-vn/duavit.git ~/duavit
+git clone https://github.com/bonguynvan/duavit.git ~/duavit
 cd ~/duavit
 ```
 

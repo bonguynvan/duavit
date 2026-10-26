@@ -2,7 +2,7 @@
 
 Random character racing game ("Đua vịt") with a provably fair algorithm, open source (MIT) and free to
 play at **https://duavit.peti.vn**. Built for livestreamers, events, classrooms and parties.
-`peti.vn` itself is a static link hub (separate repo `peti-vn/peti.vn`) for this and future crowd-friendly party games in
+`peti.vn` itself is a static link hub (separate repo `bonguynvan/peti.vn`) for this and future crowd-friendly party games in
 the same visual style (thick ink outlines, hard shadows, Baloo 2 + Be Vietnam Pro, cream/tomato/sun palette).
 All UI text is **Vietnamese**; racers are called **"nhân vật"** (not "con vật") in anything user-facing.
 Contributor guide (adding characters and maps): `CONTRIBUTING.md`.

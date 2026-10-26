@@ -1,7 +1,7 @@
 // Last slot of every map grid: build a map yourself (open source), or ask the author to build one.
 import { el } from './ui.js';
 
-const CONTRIBUTE_URL = 'https://github.com/peti-vn/duavit/blob/main/CONTRIBUTING.md#th%C3%AAm-map';
+const CONTRIBUTE_URL = 'https://github.com/bonguynvan/duavit/blob/main/CONTRIBUTING.md#th%C3%AAm-map';
 const REQUEST_MAIL = `mailto:hello@peti.vn?subject=${encodeURIComponent('Đặt làm map Đua Vịt')}`;
 
 export function mapRequestCard() {
