@@ -3,16 +3,18 @@
 import { FACE_COLORS, allowedAnimals, findMap, initialsOf, maxRaceMsFor, trackLengthFor } from '/shared/catalog.js';
 import { rankRacers } from '/shared/race.js';
 import { SIM_STEP_MS, simulateRace } from '/shared/simulate.js';
+import { randomItems } from './fun.js';
 
 const COUNTDOWN_MS = 3000;
 const EVENTS = [null, 'burst', 'stumble'];
 const eventCode = (event) => Math.max(0, EVENTS.indexOf(event));
 
 /**
- * @param {{ names: string[], mapId: string, durationSec: number | null, character: string, seed: string }} config
+ * @param {{ names: string[], mapId: string, durationSec: number | null, character: string, seed: string, fun?: boolean }} config
  *   character: an animal id, or 'random' (cosmetic only: never affects the result)
+ *   fun: random accessories (cosmetic only, Math.random, never the seed)
  */
-export function prepareRace({ names, mapId, durationSec, character, seed }) {
+export function prepareRace({ names, mapId, durationSec, character, seed, fun = false }) {
   const map = findMap(mapId);
   const trackLength = trackLengthFor(map, durationSec);
   const maxMs = maxRaceMsFor(trackLength);
@@ -25,7 +27,7 @@ export function prepareRace({ names, mapId, durationSec, character, seed }) {
     initials: initialsOf(name),
     color: FACE_COLORS[i % FACE_COLORS.length],
     animal: character === 'random' || !options.some((a) => a.id === character) ? pick() : character,
-    items: [],
+    items: fun ? randomItems(Math.random) : [], // cosmetic, never from the seed
     spectator: false,
   }));
 

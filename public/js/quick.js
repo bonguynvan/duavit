@@ -6,9 +6,10 @@ import { rankRacers } from '/shared/race.js';
 import { paintAnimalCard, paintMapCard } from './draw.js';
 import { RaceView } from './raceView.js';
 import { RaceRecorder, slugify } from './recorder.js';
-import { createSoundDirector, sound } from './audio.js';
+import { createSoundDirector, sound, soundForEffect } from './audio.js';
 import { el, formatTime, toast } from './ui.js';
 import { Playback, prepareRace } from './quick/playback.js';
+import { pickThrow } from './quick/fun.js';
 import { mountCommitBar } from './commitBar.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,6 +19,10 @@ const MAX_LANES = 12;
 const STATE_HZ_MS = 50;
 const BOARD_MS = 250;
 const BOARD_SIZE = 10;
+// Fun mode: a visual-only throw every 1.5–4 s once the racers are off.
+const FIRST_THROW_AFTER_MS = 2500;
+const THROW_MIN_MS = 1500;
+const THROW_SPREAD_MS = 2500;
 
 // ---------------- settings (remembered between visits) ----------------
 const saved = (() => {
@@ -30,6 +35,7 @@ const settings = {
   special: Boolean(saved.special),
   durationSec: saved.durationSec ?? 60,
   character: saved.character ?? 'random',
+  fun: saved.fun ?? true,
 };
 const persist = () => {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); } catch { /* private mode */ }
@@ -108,10 +114,10 @@ async function startRace() {
   stopRace();
   const seed = newSeed();
   const seedHash = await sha256Hex(seed);
-  const race = prepareRace({ names, mapId: settings.mapId, durationSec: settings.durationSec, character: settings.character, seed });
+  const race = prepareRace({ names, mapId: settings.mapId, durationSec: settings.durationSec, character: settings.character, seed, fun: settings.fun });
   raceView.showNames = names.length <= MAX_LANES;
   const playback = new Playback(race, { title: settings.title });
-  current = { race, playback, seed, seedHash, names, finished: false, boardAt: 0, video: null };
+  current = { race, playback, seed, seedHash, names, finished: false, boardAt: 0, video: null, nextThrowAt: playback.startsAt + FIRST_THROW_AFTER_MS };
 
   $('setup').hidden = true;
   $('race').hidden = false;
@@ -147,6 +153,7 @@ function tick() {
   raceView.setState(state);
   directSound(state, 0);
   recorder.setPaused(current.playback.paused);
+  maybeThrow(state);
   if (Date.now() - current.boardAt > BOARD_MS) {
     current.boardAt = Date.now();
     renderBoard(state);
@@ -156,6 +163,17 @@ function tick() {
     recorder.finish();
     setTimeout(() => showResults(state), 1200);
   }
+}
+
+/** Fun mode: now and then a racer throws something at the one ahead. Visual only. */
+function maybeThrow(state) {
+  const now = Date.now();
+  if (!settings.fun || state.phase !== 'racing' || current.playback.paused || now < current.nextThrowAt) return;
+  current.nextThrowAt = now + THROW_MIN_MS + Math.random() * THROW_SPREAD_MS;
+  const fx = pickThrow(state.race.racers, current.race.players, Math.random);
+  if (!fx) return;
+  raceView.addEffect(fx);
+  soundForEffect(fx);
 }
 
 function renderBoard(state) {
@@ -204,6 +222,7 @@ const csvCell = (v) => {
 $('names').value = settings.names;
 $('title').value = settings.title;
 $('special-maps').checked = settings.special;
+$('fun-mode').checked = settings.fun;
 renderNamesCount();
 renderMaps();
 renderDurations();
@@ -235,6 +254,10 @@ $('special-maps').addEventListener('change', () => {
   persist();
   renderMaps();
   renderCharacters();
+});
+$('fun-mode').addEventListener('change', () => {
+  settings.fun = $('fun-mode').checked;
+  persist();
 });
 $('character').addEventListener('change', () => {
   settings.character = $('character').value;
