@@ -1,0 +1,22 @@
+# App only, for a server that already runs a shared reverse proxy on ports 80/443
+# (one Caddy for several sites). The proxy forwards the domain to 127.0.0.1:${APP_PORT}.
+# Use it by putting COMPOSE_FILE=deploy/edge/compose.yml in .deploy.env (see deploy/README.md).
+name: duavit
+
+services:
+  app:
+    build: ../..
+    restart: unless-stopped
+    env_file: ../../.env
+    environment:
+      NODE_ENV: production
+      TRUST_PROXY: "1" # only the local proxy reaches the app; it sets X-Forwarded-For
+      DB_PATH: /app/data/duavit.sqlite
+    volumes:
+      - ../../data:/app/data # SQLite (users, sessions) — back this up
+      - ../../music:/app/public/music:ro # optional <mapId>.mp3 soundtracks
+    ports:
+      - "127.0.0.1:${APP_PORT:-3200}:3000" # loopback only, never reachable from the internet
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }

@@ -1,7 +1,7 @@
 # Triển khai lên VPS (Ubuntu + Docker)
 
 > Hướng dẫn này dùng tên miền của bản chính thức (`peti.vn`, `duavit.peti.vn`). Nếu tự host, hãy thay
-> tên miền của bạn trong `deploy/Caddyfile`, `deploy/update.sh` và `.env` (`PUBLIC_URL`); có thể bỏ khối
+> tên miền của bạn trong `deploy/Caddyfile` (hoặc `deploy/edge/duavit.caddy`) và `.env` (`PUBLIC_URL`); có thể bỏ khối
 > `peti.vn` / `www.peti.vn` / `dua.peti.vn` trong Caddyfile cùng volume `sites/peti` nếu không cần trang giới thiệu.
 
 Kết quả sau khi làm xong:
@@ -101,14 +101,32 @@ Script tự sao lưu database, kéo code mới, build lại và kiểm tra sức
 
 ## 7. Sao lưu
 ```bash
-docker compose exec -T app node src/tools/backup.js     # ghi vào data/backups/
+./deploy/backup.sh      # ghi vào data/backups/, xóa bản cũ hơn 14 ngày
 ```
-Nên đặt lịch hằng ngày (`crontab -e`):
+Nên đặt lịch hằng ngày, ví dụ file `/etc/cron.d/duavit-backup`:
 
 ```cron
-0 3 * * * cd ~/duavit && docker compose exec -T app node src/tools/backup.js && find data/backups -mtime +14 -delete
+15 3 * * * root /root/duavit/deploy/backup.sh >> /var/log/duavit-backup.log 2>&1
 ```
-Và thỉnh thoảng tải `data/backups/` về máy khác.
+Giữ đúng 14 ngày: trang Quyền riêng tư hứa như vậy. Thỉnh thoảng tải `data/backups/` về máy khác.
+
+## Máy đã có reverse proxy dùng chung (nhiều site trên một VPS)
+
+Nếu cổng 80/443 đã thuộc về một Caddy (hoặc nginx) phục vụ các site khác, **đừng** chạy Caddy trong
+`docker-compose.yml`; chỉ chạy app trên cổng loopback rồi để proxy chung chuyển tiếp:
+
+```bash
+echo 'COMPOSE_FILE=deploy/edge/compose.yml' > .deploy.env    # update.sh và backup.sh tự đọc file này
+echo 'APP_PORT=3200' >> .deploy.env                           # đổi nếu cổng đã có app khác
+set -a; . ./.deploy.env; set +a
+docker compose up -d --build                                  # app ở 127.0.0.1:3200
+```
+
+Rồi thêm site vào proxy chung, ví dụ chép `deploy/edge/duavit.caddy` vào thư mục site của Caddy, kiểm tra
+(`caddy validate`) và reload. Proxy phải **ghi đè** `X-Forwarded-For` bằng IP thật của người dùng
+(app tin hop đầu tiên khi `TRUST_PROXY=1`), và không nên bật access log (trang Quyền riêng tư cam kết không ghi IP).
+Nếu dùng Cloudflare, để bản ghi ở chế độ **DNS only**: ở chế độ proxy, app chỉ thấy IP của Cloudflare và
+giới hạn chống spam theo IP sẽ chặn nhầm người chơi.
 
 ## Xử lý sự cố
 | Hiện tượng | Kiểm tra |

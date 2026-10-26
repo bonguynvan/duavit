@@ -1,0 +1,22 @@
+# Site block for a shared Caddy (e.g. /srv/edge/conf/sites/duavit.caddy).
+# The app listens on 127.0.0.1:3200 (deploy/edge/compose.yml) and sets its own CSP.
+# No access log on purpose: the privacy policy (/quyen-rieng-tu) promises IPs are not logged.
+duavit.peti.vn {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy 127.0.0.1:3200 {
+		# The app trusts the first X-Forwarded-For hop (TRUST_PROXY=1): only this proxy may set it.
+		header_up X-Forwarded-For {remote_host}
+		header_up -CF-Connecting-IP
+		health_uri /healthz
+		health_interval 15s
+	}
+}
+
+# Short alias that just forwards to the game.
+dua.peti.vn {
+	redir https://duavit.peti.vn{uri} permanent
+}

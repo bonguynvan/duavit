@@ -4,3 +4,4 @@ coverage/
 *.log
 public/music/*.mp3
 data/
+.deploy.env
