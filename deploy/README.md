@@ -118,6 +118,8 @@ Nếu cổng 80/443 đã thuộc về một Caddy (hoặc nginx) phục vụ cá
 ```bash
 echo 'COMPOSE_FILE=deploy/edge/compose.yml' > .deploy.env    # update.sh và backup.sh tự đọc file này
 echo 'APP_PORT=3200' >> .deploy.env                           # đổi nếu cổng đã có app khác
+echo 'APP_UID=10010' >> .deploy.env                           # uid riêng: user/dự án khác trên máy không đọc được data/
+sudo chown -R 10010:10010 data
 set -a; . ./.deploy.env; set +a
 docker compose up -d --build                                  # app ở 127.0.0.1:3200
 ```
