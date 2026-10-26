@@ -35,7 +35,8 @@ DEV_LOGIN=1 npm start     # fake sign-in at /auth/dev (ignored when NODE_ENV=pro
 ```
 Env vars are documented in `.env.example`. Never commit `.env`, `data/` (SQLite) or `public/music/*.mp3`.
 Production deploy (Docker + Caddy): `deploy/README.md`. Production refuses to start without an https
-`PUBLIC_URL` and Google credentials (`src/config.js`).
+`PUBLIC_URL`; without Google credentials it starts with room creation closed (quick race, verify and
+the public pages keep working) and logs a warning (`src/config.js`).
 
 ## Architecture
 - `shared/` — runs in **both** Node and the browser (served at `/shared/*`):

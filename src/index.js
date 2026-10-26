@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { startServer } from './server.js';
 import { openDatabase } from './db.js';
-import { productionProblems } from './config.js';
+import { productionProblems, productionWarnings } from './config.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 
@@ -14,6 +14,7 @@ if (problems.length > 0) {
   console.error(`Cấu hình production chưa đủ:\n- ${problems.join('\n- ')}`);
   process.exit(1);
 }
+for (const warning of productionWarnings(env)) console.warn(`[config] ${warning}`);
 const server = await startServer({
   db: openDatabase(env.DB_PATH || './data/duavit.sqlite'),
   auth: {

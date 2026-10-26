@@ -28,7 +28,8 @@ function renderAccount() {
     box.replaceChildren(el('a', { class: 'btn', href: loginUrl('/') }, me.devLogin ? 'Đăng nhập thử (dev)' : 'Đăng nhập bằng Google'));
   } else {
     box.replaceChildren();
-    $('login-note').textContent = 'Máy chủ chưa bật đăng nhập.';
+    $('login-note').textContent = 'Tạo phòng đang tạm đóng, bạn dùng Đua nhanh trong lúc chờ nhé.';
+    $('create-room').disabled = true;
   }
 }
 
@@ -50,7 +51,7 @@ async function renderMyRooms() {
 
 async function createRoom() {
   if (!me.user) {
-    if (!me.loginEnabled) return showError('Máy chủ chưa bật đăng nhập nên chưa tạo phòng được.');
+    if (!me.loginEnabled) return showError('Tạo phòng đang tạm đóng, bạn dùng Đua nhanh trong lúc chờ nhé.');
     return location.assign(loginUrl('/?create=1')); // come back here and create right away
   }
   const button = $('create-room');
