@@ -10,7 +10,11 @@ echo "==> Backing up the database"
 docker compose exec -T app node src/tools/backup.js || echo "(backup skipped: app not running yet)"
 find data/backups -name "*.sqlite" -mtime +14 -delete 2>/dev/null || true # keep 14 days, as the privacy policy promises
 echo "==> Pulling latest code"
-git pull --ff-only
+if git rev-parse --abbrev-ref "@{u}" > /dev/null 2>&1; then
+  git pull --ff-only
+else
+  echo "(no upstream: code arrives by git push to this repo)"
+fi
 echo "==> Rebuilding and restarting"
 docker compose up -d --build
 docker image prune -f > /dev/null
