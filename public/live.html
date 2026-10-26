@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live · Đua Vịt Peti</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/live.css">
+  <script type="module" src="/js/live.js"></script>
+</head>
+<body>
+  <canvas id="race-canvas" aria-label="Đường đua"></canvas>
+  <ol class="live-chat" id="live-chat" aria-live="polite"></ol>
+
+  <section class="live-lobby" id="live-lobby">
+    <div class="live-card">
+      <p class="eyebrow" id="live-title">Cuộc đua sắp bắt đầu</p>
+      <h1>Quét để tham gia!</h1>
+      <img id="live-qr" alt="Mã QR vào phòng" width="300" height="300">
+      <p class="live-code">Mã phòng <strong id="live-code"></strong></p>
+      <p class="live-count" id="live-count"></p>
+    </div>
+  </section>
+</body>
+</html>

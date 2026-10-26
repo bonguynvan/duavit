@@ -1,0 +1,41 @@
+# Caddy obtains and renews Let's Encrypt certificates automatically for every site below.
+{
+	email {$ACME_EMAIL}
+}
+
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+}
+
+# Brand hub / link tree (static files).
+peti.vn {
+	import security_headers
+	encode zstd gzip
+	root * /srv/peti
+	header {
+		Content-Security-Policy "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		X-Frame-Options "DENY"
+	}
+	file_server
+}
+
+www.peti.vn {
+	redir https://peti.vn{uri} permanent
+}
+
+# The game. The app sets its own CSP and security headers; Caddy adds HSTS + compression.
+duavit.peti.vn {
+	import security_headers
+	encode zstd gzip
+	reverse_proxy app:3000
+}
+
+# Short alias that just forwards to the game.
+dua.peti.vn {
+	redir https://duavit.peti.vn{uri} permanent
+}

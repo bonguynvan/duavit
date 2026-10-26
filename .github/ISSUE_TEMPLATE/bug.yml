@@ -1,0 +1,30 @@
+name: 🐛 Báo lỗi
+description: Có gì đó chạy sai
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Chuyện gì xảy ra?
+      description: Mô tả lỗi, và bạn mong đợi điều gì.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Các bước tái hiện
+      placeholder: |
+        1. Vào /dua-nhanh
+        2. Dán 50 tên, chọn map Sa mạc
+        3. Bấm Bắt đầu…
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Thiết bị / trình duyệt
+      placeholder: iPhone 13 · Safari 18 / Windows · Chrome 130
+  - type: textarea
+    id: extra
+    attributes:
+      label: Ảnh chụp, log console (nếu có)

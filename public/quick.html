@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Đua nhanh · Đua Vịt Peti</title>
+  <meta name="description" content="Dán danh sách tên, bấm đua: đua ngẫu nhiên (random) với thuật toán công bằng kiểm chứng được, có quay video. Miễn phí, không cần đăng nhập.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/host.css">
+  <link rel="stylesheet" href="/css/quick.css">
+  <script type="module" src="/js/quick.js"></script>
+</head>
+<body>
+  <header class="quick-top">
+    <a class="brand" href="/"><span class="brand-flag" aria-hidden="true"></span>Đua Vịt <em>Peti</em></a>
+    <span class="eyebrow">🦆 Đua nhanh · miễn phí, không cần đăng nhập · <a class="fair-link" href="/cong-bang">ngẫu nhiên công bằng 🔒</a></span>
+  </header>
+
+  <main id="setup" class="quick-setup">
+    <section class="card names-card">
+      <h2>1. Danh sách người chơi</h2>
+      <textarea id="names" rows="12" spellcheck="false" placeholder="Mỗi dòng một tên, ví dụ:&#10;Minh Anh&#10;Thu Trang&#10;Hoàng Nam"></textarea>
+      <div class="names-tools">
+        <strong id="names-count">0 người</strong>
+        <label class="btn btn-ghost file-btn">📄 Nhập CSV / TXT<input id="names-file" type="file" accept=".csv,.txt,text/csv,text/plain"></label>
+        <button class="btn btn-ghost" type="button" id="names-clear">Xóa</button>
+      </div>
+      <p class="hint" id="names-hint">Tối đa 500 tên. Tên trùng sẽ được đánh số (2), (3)…</p>
+    </section>
+
+    <section class="card options-card">
+      <h2>2. Tùy chọn</h2>
+      <label class="field">Tên cuộc đua
+        <input id="title" type="text" maxlength="60" placeholder="VD: Random thứ tự thuyết trình">
+      </label>
+      <div class="option-row">
+        <span class="eyebrow">Map</span>
+        <label class="switch"><input type="checkbox" id="special-maps"> Hiện map đặc biệt (30/4)</label>
+      </div>
+      <div class="maps quick-maps" id="maps" role="radiogroup" aria-label="Map đua"></div>
+      <span class="eyebrow">Thời lượng</span>
+      <div class="duration-options" id="duration" role="radiogroup" aria-label="Thời lượng"></div>
+      <label class="field">Nhân vật
+        <select id="character"></select>
+      </label>
+    </section>
+
+    <button class="btn btn-primary btn-big start-quick" type="button" id="start">🏁 Bắt đầu đua</button>
+  </main>
+
+  <section id="race" class="quick-race" hidden>
+    <div class="race-stage" id="race-stage">
+      <canvas id="race-canvas" aria-label="Đường đua"></canvas>
+      <ol class="live-board" id="live-board" aria-label="Bảng xếp hạng trực tiếp"></ol>
+      <a class="commit-badge" id="commit" href="/cong-bang" target="_blank" rel="noopener" title="Mã cam kết = SHA-256 của seed ngẫu nhiên, công bố trước khi đua. Bấm để xem thuật toán công bằng."></a>
+      <div class="race-controls" role="toolbar" aria-label="Điều khiển">
+        <button class="btn" type="button" id="pause">⏸ Tạm dừng</button>
+        <button class="btn btn-ghost" type="button" id="fullscreen">⛶ Toàn màn hình</button>
+        <button class="btn btn-ghost" type="button" id="sound" aria-label="Bật/tắt nhạc">🔊</button>
+        <button class="btn btn-ghost" type="button" id="back">✎ Sửa danh sách</button>
+      </div>
+    </div>
+
+    <div class="card results" id="results" hidden>
+      <p class="eyebrow">Kết quả</p>
+      <h2 id="results-title">🏆 Chúc mừng!</h2>
+      <ol class="podium" id="podium"></ol>
+      <ol class="full-results" id="full-results" start="4"></ol>
+      <div class="results-actions">
+        <button class="btn btn-primary" type="button" id="again">🔁 Đua lại (cùng danh sách)</button>
+        <button class="btn btn-ghost" type="button" id="edit">✎ Sửa danh sách</button>
+        <button class="btn btn-ghost" type="button" id="copy-results">📋 Sao chép kết quả</button>
+        <button class="btn btn-ghost" type="button" id="download-csv">⬇ Kết quả CSV</button>
+        <a class="btn btn-teal" id="download-video" hidden>🎬 Tải video</a>
+      </div>
+      <details class="fairness">
+        <summary>🔒 Kiểm chứng kết quả (provably fair)</summary>
+        <p>Trước khi đua, trang đã công bố <strong>mã cam kết</strong> (SHA-256 của seed). Giờ seed được công bố: ai cũng có thể chạy lại cuộc đua và ra đúng kết quả này. <a class="fair-link" href="/cong-bang" target="_blank" rel="noopener">Thuật toán hoạt động thế nào?</a></p>
+        <dl>
+          <dt>Mã cam kết</dt><dd><code id="proof-hash"></code></dd>
+          <dt>Seed</dt><dd><code id="proof-seed"></code></dd>
+        </dl>
+        <div class="results-actions">
+          <button class="btn btn-ghost" type="button" id="download-proof">⬇ File kiểm chứng (.json)</button>
+          <a class="btn btn-ghost" href="/kiem-chung" target="_blank" rel="noopener">Mở trang kiểm chứng ↗</a>
+        </div>
+      </details>
+    </div>
+  </section>
+  <footer class="site-foot">
+    <a href="/cong-bang">Thuật toán công bằng</a>
+    <a href="/dieu-khoan">Điều khoản</a>
+    <a href="/quyen-rieng-tu">Quyền riêng tư</a>
+    <a href="https://github.com/peti-vn/duavit" rel="noopener">Mã nguồn mở</a>
+  </footer>
+</body>
+</html>

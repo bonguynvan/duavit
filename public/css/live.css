@@ -1,0 +1,27 @@
+/* OBS browser source: everything fills the frame, nothing to click. */
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--ink); background-image: none; }
+#race-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+
+.live-lobby {
+  position: fixed; inset: 0; display: grid; place-items: center; padding: 24px;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 210, 63, 0.25), transparent 60%), var(--cream);
+}
+.live-lobby[hidden] { display: none; }
+.live-card {
+  display: grid; justify-items: center; gap: 10px; text-align: center; padding: 28px 40px;
+  background: var(--paper); border: var(--border); border-radius: 24px; box-shadow: 8px 8px 0 var(--ink);
+}
+.live-card h1 { font-size: clamp(2rem, 5vw, 3.4rem); }
+.live-card img { width: min(42vh, 320px); height: auto; border: var(--border); border-radius: 14px; background: #fff; image-rendering: pixelated; }
+.live-code { margin: 0; font-weight: 700; }
+.live-code strong { display: block; font: 800 clamp(2rem, 5vw, 3rem) var(--font-display); letter-spacing: 0.2em; }
+.live-count { margin: 0; font: 800 1.3rem var(--font-display); color: var(--tomato); }
+
+.live-chat {
+  position: fixed; left: 16px; bottom: 16px; width: min(380px, 36vw); margin: 0; padding: 0;
+  list-style: none; display: grid; gap: 8px; pointer-events: none; z-index: 2;
+}
+.live-chat .msg { transition: opacity 500ms, transform 500ms; }
+.live-chat .bubble { box-shadow: var(--shadow-sm); }
+.live-chat .msg.leaving { opacity: 0; transform: translateX(-20px); }

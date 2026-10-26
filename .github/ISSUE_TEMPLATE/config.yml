@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 🔒 Báo lỗ hổng bảo mật
+    url: https://github.com/peti-vn/duavit/security/advisories/new
+    about: Báo riêng, đừng mở issue công khai.

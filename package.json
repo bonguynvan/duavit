@@ -1,0 +1,31 @@
+{
+  "name": "duavit",
+  "version": "1.0.0",
+  "description": "Đua Vịt Peti: random character racing party game with a provably fair algorithm, for livestreams, events and parties.",
+  "homepage": "https://duavit.peti.vn",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peti-vn/duavit.git"
+  },
+  "bugs": "https://github.com/peti-vn/duavit/issues",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test test/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage test/*.test.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.1"
+  }
+}

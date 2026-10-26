@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Thuật toán công bằng · Đua Vịt Peti</title>
+  <meta name="description" content="Cách Đua Vịt Peti chọn kết quả ngẫu nhiên công bằng (provably fair): seed bí mật, mã cam kết SHA-256 công bố trước khi đua, ai cũng chạy lại và kiểm chứng được.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/quick.css">
+  <link rel="stylesheet" href="/css/fair.css">
+  <script type="module" src="/js/fair.js"></script>
+</head>
+<body>
+  <header class="quick-top">
+    <a class="brand" href="/"><span class="brand-flag" aria-hidden="true"></span>Đua Vịt <em>Peti</em></a>
+    <span class="eyebrow">🔒 Thuật toán công bằng</span>
+  </header>
+
+  <main class="fair">
+    <section class="fair-hero">
+      <p class="eyebrow">Ngẫu nhiên · công bằng · kiểm chứng được</p>
+      <h1>Không ai sắp xếp được <em>kết quả</em>, kể cả host hay admin</h1>
+      <p class="lede">Mỗi cuộc đua được quyết định bởi một <strong>seed ngẫu nhiên</strong>. Mã băm SHA-256 của seed được công bố <strong>trước</strong> khi đua, seed được công bố <strong>sau</strong> khi đua. Ai cũng có thể chạy lại và ra đúng kết quả đó. Cách làm này gọi là <em>provably fair</em>.</p>
+      <div class="fair-cta">
+        <a class="btn btn-primary" href="/kiem-chung">Kiểm chứng một cuộc đua →</a>
+        <a class="btn btn-ghost" href="/dua-nhanh">Thử đua nhanh</a>
+      </div>
+    </section>
+
+    <ol class="fair-steps">
+      <li class="card">
+        <span class="step-no">1</span>
+        <h2>Tạo seed bí mật</h2>
+        <p>Trước mỗi lượt, máy tạo 32 byte ngẫu nhiên bằng <code>crypto.getRandomValues</code> (bộ sinh số ngẫu nhiên an toàn của hệ điều hành), viết thành 64 ký tự hex. Phòng đua: máy chủ tạo. Đua nhanh: chính trình duyệt của bạn tạo.</p>
+      </li>
+      <li class="card">
+        <span class="step-no">2</span>
+        <h2>Công bố mã cam kết</h2>
+        <p>Trên màn hình đua hiện <strong>🔒 Mã cam kết</strong> = SHA-256(seed). Từ mã này không thể đoán ngược ra seed, nhưng seed đã bị “khóa”: đổi dù một ký tự thì mã cam kết sẽ khác hoàn toàn.</p>
+      </li>
+      <li class="card">
+        <span class="step-no">3</span>
+        <h2>Đua theo seed</h2>
+        <p>Seed khởi động bộ sinh số giả ngẫu nhiên <strong>sfc32</strong>. Cuộc đua chạy theo từng bước cố định 50 ms; tốc độ mọi nhân vật dao động theo cùng một luật, chỉ phụ thuộc vào dãy số này và thứ tự danh sách.</p>
+      </li>
+      <li class="card">
+        <span class="step-no">4</span>
+        <h2>Công bố seed</h2>
+        <p>Đua xong, seed được công bố cùng file kiểm chứng (.json). Bạn kiểm tra SHA-256(seed) đúng bằng mã cam kết đã thấy, rồi chạy lại cuộc đua: kết quả phải trùng từng vị trí.</p>
+      </li>
+    </ol>
+
+    <section class="card fair-demo" aria-labelledby="sha-title">
+      <h2 id="sha-title">Thử SHA-256 ngay tại đây</h2>
+      <p class="hint">Gõ gì cũng được. Đổi một ký tự, cả mã băm đổi theo, và không có cách nào đi ngược từ mã băm về chữ ban đầu.</p>
+      <label class="field">Nội dung
+        <input id="sha-input" type="text" spellcheck="false" value="Đua Vịt Peti">
+      </label>
+      <p class="hash-out"><span class="eyebrow">SHA-256</span><code id="sha-output">…</code></p>
+    </section>
+
+    <section class="card fair-demo" aria-labelledby="seed-title">
+      <h2 id="seed-title">Cùng seed → cùng dãy số</h2>
+      <p class="hint">Đây đúng là mã nguồn trò chơi dùng. Bấm tạo seed mới hoặc dán một seed đã công bố: dãy số ngẫu nhiên luôn giống nhau trên mọi máy.</p>
+      <label class="field">Seed (64 ký tự hex)
+        <input id="seed-input" type="text" spellcheck="false" maxlength="64">
+      </label>
+      <div class="fair-cta">
+        <button class="btn" type="button" id="seed-new">🎲 Tạo seed mới</button>
+      </div>
+      <p class="hash-out"><span class="eyebrow">Mã cam kết = SHA-256(seed)</span><code id="seed-hash">…</code></p>
+      <p class="hash-out"><span class="eyebrow">5 số ngẫu nhiên đầu tiên (0 → 1)</span><code id="seed-numbers">…</code></p>
+    </section>
+
+    <section class="card fair-faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Câu hỏi thường gặp</h2>
+      <details>
+        <summary>Host có làm nhân vật nào chạy nhanh hơn được không?</summary>
+        <p>Không. Host chỉ chọn map, danh sách và thời lượng. Tốc độ không có nút chỉnh nào; mọi nhân vật dùng chung một luật và chung một dãy số. Nếu host đổi seed sau khi mã cam kết đã hiện, mã sẽ không khớp và trang kiểm chứng báo sai ngay.</p>
+      </details>
+      <details>
+        <summary>Chọn nhân vật hay phụ kiện có ảnh hưởng không?</summary>
+        <p>Không. Nhân vật, phụ kiện, ném gạch, ném vỏ chuối, emoji… chỉ để vui, không đọc vào dãy số ngẫu nhiên. Không con nào có lợi thế sẵn.</p>
+      </details>
+      <details>
+        <summary>Vì sao người dẫn đầu giữa chừng vẫn có thể thua?</summary>
+        <p>Tốc độ mỗi bước dao động ngẫu nhiên, người bị bỏ xa được bám đuổi nhẹ, và đoạn nước rút cuối hoàn toàn ngẫu nhiên. Cuộc đua vì vậy hồi hộp tới vạch đích, nhưng vẫn chỉ do seed quyết định.</p>
+      </details>
+      <details>
+        <summary>Thứ tự trong danh sách có quan trọng không?</summary>
+        <p>Có, khi kiểm chứng: số ngẫu nhiên được chia cho tay đua theo đúng thứ tự danh sách, nên phải nhập đúng thứ tự (file .json đã ghi sẵn). Thứ tự được chốt trước khi đua, cùng lúc với mã cam kết.</p>
+      </details>
+      <details>
+        <summary>“Có tay đua bị mời ra giữa chừng” nghĩa là gì?</summary>
+        <p>Nếu host mời một người ra khỏi cuộc đua khi đang chạy, kết quả trên màn hình sẽ khác bản chạy lại. Trang kết quả ghi rõ cảnh báo này để mọi người biết.</p>
+      </details>
+      <details>
+        <summary>Tôi có cần tin máy chủ không?</summary>
+        <p>Không cần. Trang <a href="/kiem-chung">kiểm chứng</a> chạy hoàn toàn trên trình duyệt của bạn bằng cùng mã nguồn với cuộc đua (<a href="/shared/fair.js">fair.js</a>, <a href="/shared/simulate.js">simulate.js</a>), không gửi gì lên máy chủ.</p>
+      </details>
+    </section>
+  </main>
+  <footer class="site-foot">
+    <a href="/cong-bang" aria-current="page">Thuật toán công bằng</a>
+    <a href="/dieu-khoan">Điều khoản</a>
+    <a href="/quyen-rieng-tu">Quyền riêng tư</a>
+    <a href="https://github.com/peti-vn/duavit" rel="noopener">Mã nguồn mở</a>
+  </footer>
+</body>
+</html>

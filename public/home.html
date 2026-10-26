@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Đua Vịt Peti · Đua ngẫu nhiên, công bằng</title>
+  <meta name="description" content="Đua nhân vật ngẫu nhiên (random) cho livestream và sự kiện: dán danh sách tên, thuật toán công bằng kiểm chứng được (provably fair), quay video.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/home.css">
+  <script type="module" src="/js/home.js"></script>
+</head>
+<body>
+  <header class="home-top">
+    <span class="brand"><span class="brand-flag" aria-hidden="true"></span>Đua Vịt <em>Peti</em></span>
+    <div class="account" id="account"></div>
+  </header>
+
+  <div class="home-hero"><canvas id="hero-canvas" aria-hidden="true"></canvas></div>
+
+  <main class="home">
+    <section class="home-copy">
+      <p class="eyebrow">Đua ngẫu nhiên</p>
+      <h1>Ai sẽ về <em>nhất</em>?</h1>
+      <p class="lede">Tạo phòng, mời mọi người quét QR hoặc dán sẵn danh sách tên, dùng thuật toán ngẫu nhiên công bằng để quyết định. 
+        <a class="fair-link" href="/cong-bang">Công bằng thế nào?</a></p>
+    </section>
+
+    <section class="home-actions">
+      <a class="card home-card quick-card" href="/dua-nhanh">
+        <h2>🦆 Đua nhanh</h2>
+        <p>Dán danh sách tên rồi bấm đua. Miễn phí, không cần đăng nhập, có quay video. Hợp để chọn ngẫu nhiên, chia đội, xếp thứ tự trên livestream.</p>
+        <span class="btn btn-teal btn-big">Đua ngay →</span>
+      </a>
+      <div class="card home-card">
+        <h2>🏁 Tổ chức cuộc đua</h2>
+        <p>Bạn sẽ nhận link màn hình host để chiếu hoặc đưa lên livestream. <span id="login-note">Cần đăng nhập Google.</span></p>
+        <button class="btn btn-primary btn-big" type="button" id="create-room">Tạo phòng đua</button>
+        <p class="home-error" id="create-error" role="alert" hidden></p>
+        <p class="consent-note">Khi đăng nhập, bạn đồng ý với <a href="/dieu-khoan">Điều khoản</a> và <a href="/quyen-rieng-tu">Quyền riêng tư</a>.</p>
+      </div>
+      <form class="card home-card" id="join-form" autocomplete="off">
+        <h2>🎟️ Vào phòng</h2>
+        <p>Nhập mã phòng 6 ký tự host đưa cho bạn.</p>
+        <div class="join-row">
+          <input id="join-code" type="text" inputmode="text" maxlength="6" placeholder="VD: K7QX2A" aria-label="Mã phòng" required>
+          <button class="btn" type="submit">Vào</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card my-rooms" id="my-rooms" hidden>
+      <h2>📋 Phòng của tôi</h2>
+      <ul class="my-rooms-list" id="my-rooms-list"></ul>
+    </section>
+
+    <ol class="steps home-steps">
+      <li><span class="step-no">1</span><strong>Tạo phòng</strong><small>Đăng nhập Google; người chơi không cần tài khoản</small></li>
+      <li><span class="step-no">2</span><strong>Mời người chơi</strong><small>Quét QR, hoặc host tự thêm tên</small></li>
+      <li><span class="step-no">3</span><strong>Bấm đua!</strong><small>Ngẫu nhiên, <a class="fair-link" href="/cong-bang">kiểm chứng được</a>, có quay video</small></li>
+    </ol>
+  </main>
+  <footer class="site-foot">
+    <a href="/cong-bang">Thuật toán công bằng</a>
+    <a href="/dieu-khoan">Điều khoản</a>
+    <a href="/quyen-rieng-tu">Quyền riêng tư</a>
+    <a href="https://github.com/peti-vn/duavit" rel="noopener">Mã nguồn mở</a>
+  </footer>
+</body>
+</html>

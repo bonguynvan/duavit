@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kiểm chứng kết quả · Đua Vịt Peti</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/quick.css">
+  <script type="module" src="/js/verify.js"></script>
+</head>
+<body>
+  <header class="quick-top">
+    <a class="brand" href="/"><span class="brand-flag" aria-hidden="true"></span>Đua Vịt <em>Peti</em></a>
+    <span class="eyebrow">🔒 Kiểm chứng kết quả</span>
+  </header>
+  <main class="quick-setup verify">
+    <section class="card options-card">
+      <h2>Dữ liệu cuộc đua</h2>
+      <p class="hint">Tải file kiểm chứng (.json) host cung cấp, hoặc tự nhập. Trang này chạy lại đúng thuật toán của cuộc đua ngay trên trình duyệt của bạn. <a class="fair-link" href="/cong-bang">Thuật toán công bằng là gì?</a></p>
+      <label class="btn btn-ghost file-btn">📄 Mở file kiểm chứng<input id="proof-file" type="file" accept=".json,application/json"></label>
+      <label class="field">Mã cam kết (SHA-256, công bố trước khi đua)<input id="seed-hash" type="text" spellcheck="false"></label>
+      <label class="field">Seed (công bố sau khi đua)<input id="seed" type="text" spellcheck="false"></label>
+      <label class="field">Quãng đường (m)<input id="track-length" type="number" min="1" step="1"></label>
+      <label class="field">Giới hạn thời gian (ms)<input id="max-ms" type="number" min="1" step="1"></label>
+      <label class="field">Danh sách tay đua (đúng thứ tự)<textarea id="entrants" rows="8" spellcheck="false"></textarea></label>
+      <button class="btn btn-primary btn-big" type="button" id="verify">Kiểm chứng</button>
+    </section>
+    <section class="card results">
+      <h2>Kết quả chạy lại</h2>
+      <p class="verdict" id="verdict">Chưa kiểm chứng.</p>
+      <ol class="full-results" id="replay"></ol>
+    </section>
+  </main>
+  <footer class="site-foot">
+    <a href="/cong-bang">Thuật toán công bằng</a>
+    <a href="/dieu-khoan">Điều khoản</a>
+    <a href="/quyen-rieng-tu">Quyền riêng tư</a>
+    <a href="https://github.com/peti-vn/duavit" rel="noopener">Mã nguồn mở</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Đua Vịt Peti</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/player.css">
+  <script type="module" src="/js/player.js"></script>
+</head>
+<body>
+  <header class="top">
+    <span class="brand"><span class="brand-flag" aria-hidden="true"></span>Đua Vịt <em>Peti</em></span>
+    <span class="top-actions">
+      <button class="sound-toggle" type="button" id="sound-toggle" aria-pressed="false" aria-label="Bật/tắt âm thanh">🔇</button>
+      <span class="map-chip" id="map-chip"></span>
+    </span>
+  </header>
+
+  <div class="layout" id="layout">
+  <main>
+    <section id="view-welcome" class="welcome" hidden>
+      <div class="welcome-hero">
+        <canvas id="welcome-canvas" aria-hidden="true"></canvas>
+      </div>
+      <div class="welcome-copy">
+        <p class="eyebrow">Đua nhân vật ngẫu nhiên · công bằng, kiểm chứng được</p>
+        <h1>Ai sẽ về <em>nhất</em>?</h1>
+      </div>
+      <p class="room-live" id="room-live" aria-live="polite"><span class="dot pulse"></span><span id="room-live-text">Đang kết nối tới phòng…</span></p>
+      <div class="cta">
+        <button class="btn btn-primary btn-big" type="button" id="go-play">🏁 Vào chơi</button>
+        <button class="btn btn-ghost btn-big" type="button" id="go-watch">👀 Vào xem</button>
+      </div>
+      <ol class="steps">
+        <li><span class="step-no">1</span><strong>Nhập tên</strong><small>Mặt nhân vật là chữ cái đầu tên bạn</small></li>
+        <li><span class="step-no">2</span><strong>Chọn thú &amp; phụ kiện</strong><small>20 nhân vật (có cả xe tăng, trực thăng, Dinh mini!), đồ miễn phí</small></li>
+        <li><span class="step-no">3</span><strong>Xem đua &amp; ném gạch</strong><small>Vui thôi, không đổi kết quả 😉</small></li>
+      </ol>
+      <p class="host-link">Muốn tổ chức một cuộc đua? <a href="/">Tạo phòng của riêng bạn →</a></p>
+    </section>
+
+    <section id="view-join" class="stack" hidden>
+      <button class="back-link" type="button" id="back-welcome">← Quay lại</button>
+      <div class="hero">
+        <p class="eyebrow">Đua ngẫu nhiên</p>
+        <h1>Nhập tên, chọn<br>nhân vật của bạn!</h1>
+      </div>
+      <form id="join-form" class="card stack" autocomplete="off">
+        <label class="field">Tên của bạn
+          <input id="name-input" type="text" maxlength="20" placeholder="VD: Minh Anh" required enterkeyhint="done">
+        </label>
+        <fieldset class="role-pick">
+          <legend class="field-label">Bạn muốn</legend>
+          <label><input type="radio" name="role" value="race" checked><span>🏁 Vào đua</span></label>
+          <label><input type="radio" name="role" value="watch"><span>👀 Chỉ xem (khán giả)</span></label>
+        </fieldset>
+        <div class="stack-sm">
+          <span class="field-label">Chọn nhân vật <small>· tốc độ ngẫu nhiên, như nhau cho mọi nhân vật</small></span>
+          <div class="animal-grid" id="join-animals" role="group" aria-label="Chọn nhân vật"></div>
+        </div>
+        <button class="btn btn-primary btn-big" type="submit" id="join-btn">Vào hàng chờ →</button>
+      </form>
+    </section>
+
+    <section id="view-lobby" class="stack" hidden>
+      <div class="card me-card">
+        <canvas id="me-canvas" aria-hidden="true"></canvas>
+        <div>
+          <p class="eyebrow">Bạn đã vào hàng chờ</p>
+          <h2 id="me-name"></h2>
+          <p class="status pulse" id="lobby-status">Đang chờ host bắt đầu…</p>
+          <button class="btn btn-ghost role-btn" type="button" id="role-btn"></button>
+        </div>
+      </div>
+      <div class="card shop-card">
+        <div class="demo-head">
+          <h3>🛍️ Phụ kiện miễn phí</h3>
+          <span class="tag" id="shop-count">0/3</span>
+        </div>
+        <p class="shop-note">Chọn tối đa 3 món, hiện trên đầu nhân vật. Chỉ để vui, <strong>không ảnh hưởng tốc độ</strong>. Gạch, đá, vỏ chuối thì ném được lúc đua!</p>
+        <div class="shop-grid" id="shop-grid"></div>
+      </div>
+      <div class="card demo-card">
+        <div class="demo-head">
+          <h3>🎬 Xem thử cuộc đua</h3>
+          <span class="tag">Demo · không tính điểm</span>
+        </div>
+        <div class="demo-frame"><canvas id="demo-canvas" aria-label="Cuộc đua demo"></canvas></div>
+      </div>
+      <details class="card" id="change-animal">
+        <summary>Đổi nhân vật</summary>
+        <div class="animal-grid" id="lobby-animals" role="group" aria-label="Đổi nhân vật"></div>
+      </details>
+      <button class="btn btn-ghost" type="button" id="leave-btn">Rời phòng</button>
+    </section>
+
+    <section id="view-race" class="stack" hidden>
+      <p class="race-note" id="race-note" hidden></p>
+      <div class="race-frame"><canvas id="race-canvas" aria-label="Đường đua"></canvas></div>
+      <div class="throw-bar" id="throw-bar" hidden></div>
+      <div class="react-bar" id="react-bar" role="group" aria-label="Thả emoji"></div>
+      <div class="card result-card" id="result-card" hidden>
+        <p class="eyebrow">Kết quả của bạn</p>
+        <div class="result-rank" id="result-rank"></div>
+        <p id="result-time"></p>
+        <p class="status pulse">Chờ host mở lượt mới…</p>
+      </div>
+      <div class="card">
+        <p class="eyebrow" id="ranking-title">Bảng xếp hạng trực tiếp</p>
+        <ol class="ranking" id="ranking"></ol>
+      </div>
+    </section>
+  </main>
+
+  <aside class="card room-panel" id="room-panel" aria-label="Phòng đua" hidden>
+    <h2 id="rp-title">Phòng đua</h2>
+    <p class="rp-meta" id="rp-meta"></p>
+    <h3>🏁 Tay đua <span id="rp-racer-count"></span></h3>
+    <ul class="rp-list" id="rp-racers"></ul>
+    <h3>👀 Khán giả <span id="rp-audience-count"></span></h3>
+    <ul class="rp-list" id="rp-audience"></ul>
+    <p class="rp-empty" id="rp-audience-empty">Chưa có khán giả nào</p>
+  </aside>
+
+  <button class="chat-fab" id="chat-fab" type="button" aria-label="Mở chat" aria-controls="chat-sheet" aria-expanded="false" hidden>
+    💬<span class="badge" id="chat-badge" hidden>0</span>
+  </button>
+  <section class="chat-sheet" id="chat-sheet" aria-label="Chat chung" hidden>
+    <header class="chat-head">
+      <h2>Chat chung</h2>
+      <button class="btn btn-ghost chat-close" type="button" id="chat-close" aria-label="Đóng chat">✕</button>
+    </header>
+    <ol class="chat-log" id="chat-log" aria-live="polite"></ol>
+    <form class="chat-form" id="chat-form" autocomplete="off">
+      <input id="chat-input" type="text" placeholder="Nhắn gì đó cho cả phòng…" enterkeyhint="send" aria-label="Tin nhắn">
+      <button class="btn btn-primary" type="submit">Gửi</button>
+    </form>
+  </section>
+  </div>
+</body>
+</html>

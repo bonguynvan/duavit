@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Host · Đua Vịt Peti</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/host.css">
+  <script type="module" src="/js/host.js"></script>
+</head>
+<body>
+  <div id="denied" class="denied" hidden>
+    <div class="card">
+      <h1>Không vào được màn hình host</h1>
+      <p id="denied-reason"></p>
+      <p>Mở <code>/host</code> trên chính máy chạy server, hoặc dùng link có <code>?key=…</code> in ra trong terminal.</p>
+    </div>
+  </div>
+
+  <div id="lobby" class="lobby" hidden>
+    <header class="lobby-head">
+      <span class="brand"><span class="brand-flag" aria-hidden="true"></span>Đua Vịt <em>Peti</em></span>
+      <form class="title-form" id="title-form" autocomplete="off">
+        <label for="title-input" class="eyebrow">Tên cuộc đua</label>
+        <input id="title-input" type="text" maxlength="60" placeholder="VD: Cuộc đua Tất niên 2026">
+        <button class="btn" type="submit">Lưu</button>
+      </form>
+      <button class="btn btn-ghost sound-btn" type="button" id="sound-btn" aria-pressed="true">🔊 Nhạc</button>
+    </header>
+
+    <aside class="card join-card">
+      <p class="eyebrow">Quét để tham gia</p>
+      <img id="qr" alt="Mã QR tham gia" width="360" height="360">
+      <p class="room-code">Mã phòng <strong id="room-code"></strong></p>
+      <p class="join-url" id="join-url"></p>
+      <p class="join-note">Mở link hoặc vào trang chủ, nhập mã phòng</p>
+      <div class="share-actions">
+        <button class="btn btn-ghost" type="button" id="copy-player">📋 Link người chơi</button>
+        <button class="btn btn-ghost" type="button" id="copy-live" title="Dán vào OBS (Browser Source) để đưa cuộc đua lên livestream">📺 Link OBS</button>
+        <button class="btn btn-ghost" type="button" id="copy-host" title="Mở màn hình host trên máy khác. Đừng chia sẻ công khai!">🔑 Link host</button>
+      </div>
+    </aside>
+
+    <section class="maps-panel">
+      <div class="maps-head">
+        <h2>Chọn map đua</h2>
+        <label class="switch"><input type="checkbox" id="special-maps"> Map đặc biệt (30/4)</label>
+      </div>
+      <div class="maps" id="maps" role="radiogroup" aria-label="Map đua"></div>
+      <div class="duration">
+        <span class="eyebrow">Thời lượng mỗi lượt</span>
+        <div class="duration-options" id="duration" role="radiogroup" aria-label="Thời lượng cuộc đua"></div>
+      </div>
+    </section>
+
+    <section class="card roster">
+      <div class="roster-head">
+        <div>
+          <h2><span id="player-count">0</span> tay đua</h2>
+          <p class="roster-sub" id="roster-sub"></p>
+        </div>
+        <button class="btn btn-ghost" type="button" id="add-person" aria-expanded="false" aria-controls="add-person-form">+ Thêm người</button>
+      </div>
+      <form class="add-person" id="add-person-form" autocomplete="off" hidden>
+        <div class="add-person-row">
+          <label class="field">Tên người chơi
+            <input id="add-person-name" type="text" maxlength="20" placeholder="VD: Chị Lan kế toán" required>
+          </label>
+          <div class="add-person-actions">
+            <button class="btn btn-primary" type="submit">Thêm</button>
+            <button class="btn btn-ghost" type="button" id="add-person-close">Đóng</button>
+          </div>
+        </div>
+        <p class="eyebrow">Chọn nhân vật</p>
+        <div class="animal-grid add-person-animals" id="add-person-animals" role="group" aria-label="Nhân vật"></div>
+      </form>
+      <ul class="roster-list" id="roster"></ul>
+      <p class="empty" id="roster-empty">Chưa có ai… mời mọi người quét mã QR nhé!</p>
+      <div class="audience" id="audience" hidden>
+        <h3>👀 Khán giả <span id="audience-count"></span></h3>
+        <ul class="audience-list" id="audience-list"></ul>
+      </div>
+      <div class="videos">
+        <div class="videos-head">
+          <h3>🎬 Video các lượt đua</h3>
+        </div>
+        <p class="empty-sm" id="videos-empty">Mỗi lượt đua được quay lại thành video — bấm Tải khi cần.</p>
+        <ul class="videos-list" id="videos-list"></ul>
+      </div>
+    </section>
+
+    <section class="card chat-card" aria-label="Chat chung">
+      <h2>💬 Chat chung</h2>
+      <ol class="chat-log" id="chat-log" aria-live="polite"></ol>
+      <form class="chat-form" id="chat-form" autocomplete="off">
+        <input id="chat-input" type="text" placeholder="Thông báo tới cả phòng…" aria-label="Tin nhắn của host">
+        <button class="btn btn-primary" type="submit">Gửi</button>
+      </form>
+    </section>
+
+    <footer class="lobby-foot">
+      <button class="btn btn-primary btn-big start-btn" type="button" id="start">🏁 Bắt đầu đua!</button>
+    </footer>
+  </div>
+
+  <div id="arena" class="arena" hidden>
+    <canvas id="race-canvas" aria-label="Đường đua"></canvas>
+    <ol class="arena-chat" id="arena-chat" aria-live="polite"></ol>
+    <div class="race-controls" id="race-controls" role="toolbar" aria-label="Điều khiển cuộc đua">
+      <button class="btn" type="button" id="pause-btn">⏸ Tạm dừng</button>
+      <button class="btn btn-ghost" type="button" id="restart-btn">↻ Bắt đầu lại</button>
+      <button class="btn btn-ghost" type="button" id="abort-btn">⏹ Hủy lượt</button>
+      <button class="btn btn-ghost" type="button" id="arena-sound-btn" aria-label="Bật/tắt nhạc">🔊</button>
+    </div>
+    <a class="commit-badge" id="commit-badge" href="/cong-bang" target="_blank" rel="noopener" title="Mã cam kết = SHA-256 của seed ngẫu nhiên, công bố trước khi đua. Bấm để xem thuật toán công bằng." hidden></a>
+    <div class="arena-badge"><span class="rec" id="rec-dot" hidden>⏺ REC</span><span id="arena-map"></span> · <span id="arena-timer">0.0s</span></div>
+    <div class="podium-layer" id="podium-layer" hidden>
+      <div class="card podium-card">
+        <p class="eyebrow">Kết quả</p>
+        <h2>🏆 Chúc mừng!</h2>
+        <ol class="podium" id="podium"></ol>
+        <ol class="others" id="others" start="4"></ol>
+        <details class="fairness" id="fairness">
+          <summary>🔒 Kiểm chứng kết quả</summary>
+          <dl>
+            <dt>Mã cam kết</dt><dd><code id="proof-hash"></code></dd>
+            <dt>Seed</dt><dd><code id="proof-seed"></code></dd>
+          </dl>
+          <p class="hint" id="proof-note"></p>
+          <button class="btn btn-ghost" type="button" id="download-proof">⬇ File kiểm chứng (.json)</button>
+          <a class="btn btn-ghost" href="/kiem-chung" target="_blank" rel="noopener">Trang kiểm chứng ↗</a>
+          <a class="btn btn-ghost" href="/cong-bang" target="_blank" rel="noopener">Thuật toán công bằng ↗</a>
+        </details>
+        <div class="podium-actions">
+          <button class="btn btn-ghost" type="button" id="to-lobby">Về sảnh chờ</button>
+          <a class="btn btn-teal" id="podium-video" hidden>⬇ Tải video</a>
+          <button class="btn btn-primary" type="button" id="rematch">Đua lại ngay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

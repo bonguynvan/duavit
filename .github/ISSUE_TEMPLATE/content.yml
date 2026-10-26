@@ -1,0 +1,24 @@
+name: 🗺️ Ý tưởng map / nhân vật
+description: Đề xuất map, nhân vật hoặc phụ kiện mới
+labels: [content]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Loại
+      options: [Map, Nhân vật, Phụ kiện, Khác]
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Ý tưởng
+      description: Tên, chủ đề, màu sắc, phong cảnh, những nhân vật đi kèm… Có ảnh tham khảo thì càng tốt.
+    validations:
+      required: true
+  - type: checkboxes
+    id: self
+    attributes:
+      label: Bạn có muốn tự làm không?
+      options:
+        - label: Mình sẽ gửi PR (xem CONTRIBUTING.md)

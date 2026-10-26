@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Quản trị · Đua Vịt Peti</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script type="module" src="/js/admin.js"></script>
+</head>
+<body>
+  <header class="admin-top">
+    <a class="brand" href="/"><span class="brand-flag" aria-hidden="true"></span>Đua Vịt <em>Peti</em></a>
+    <span class="eyebrow">🛠 Quản trị</span>
+    <span class="refresh" id="refreshed" aria-live="polite"></span>
+  </header>
+
+  <main class="admin">
+    <section class="stats" id="stats" aria-label="Thống kê"></section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2>🏁 Phòng đang mở <span id="room-count"></span></h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mã</th><th>Tên cuộc đua</th><th>Chủ phòng</th><th>Trạng thái</th><th>Người chơi</th><th>Kết nối</th><th>Tuổi</th><th></th></tr></thead>
+          <tbody id="rooms"></tbody>
+        </table>
+      </div>
+      <p class="empty" id="rooms-empty" hidden>Chưa có phòng nào.</p>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2>👤 Người dùng</h2>
+        <form id="user-search" role="search">
+          <input id="user-query" type="search" placeholder="Tìm theo email hoặc tên" aria-label="Tìm người dùng">
+        </form>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tên</th><th>Email</th><th>Vai trò</th><th>Phòng</th><th>Đăng nhập gần nhất</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody id="users"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

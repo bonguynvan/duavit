@@ -1,0 +1,4 @@
+# Always LF: these files run on Linux (Docker/VPS); CRLF breaks shell scripts.
+* text=auto eol=lf
+*.mp3 binary
+*.png binary

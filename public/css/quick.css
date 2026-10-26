@@ -1,0 +1,72 @@
+body { padding: 0 0 48px; overflow-x: hidden; }
+.quick-top { max-width: 1200px; margin: 0 auto; padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.quick-top .brand { text-decoration: none; color: var(--ink); }
+
+/* ---------- setup ---------- */
+.quick-setup {
+  max-width: 1200px; margin: 0 auto; padding: 0 16px; display: grid; gap: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: start;
+}
+.quick-setup h2 { font-size: 1.5rem; margin-bottom: 12px; }
+.names-card textarea {
+  width: 100%; min-height: 320px; resize: vertical; font: 600 1rem/1.6 var(--font-body); color: var(--ink);
+  border: var(--border); border-radius: 14px; padding: 12px 14px; background: #fff;
+}
+.names-card textarea:focus { outline: none; border-color: var(--tomato); box-shadow: 0 0 0 4px rgba(255, 90, 54, 0.25); }
+.names-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.names-tools strong { font: 800 1.1rem var(--font-display); margin-right: auto; }
+.names-tools .btn { padding: 8px 14px; font-size: 0.95rem; }
+.file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.file-btn:focus-within { outline: 3px dashed var(--tomato); outline-offset: 3px; }
+.hint { margin: 8px 0 0; color: var(--ink-soft); font-weight: 600; font-size: 0.9rem; }
+.options-card { display: grid; gap: 12px; }
+.option-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.quick-maps { margin-top: 0; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.options-card select {
+  font: 700 1rem var(--font-body); border: var(--border); border-radius: 12px; padding: 10px 12px; background: #fff; color: var(--ink);
+}
+.start-quick { grid-column: 1 / -1; justify-self: center; font-size: 1.8rem; padding: 16px 48px; }
+
+/* ---------- race ---------- */
+.quick-race { max-width: 1400px; margin: 0 auto; padding: 0 16px; display: grid; gap: 18px; }
+.race-stage { position: relative; border: var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: var(--ink); }
+#race-canvas { display: block; width: 100%; height: min(72vh, 760px); }
+.race-stage:fullscreen { border: 0; border-radius: 0; }
+.race-stage:fullscreen #race-canvas { height: 100vh; }
+.live-board {
+  position: absolute; right: 12px; top: 64px; width: min(260px, 32%); margin: 0; padding: 8px; list-style: none;
+  background: rgba(255, 253, 248, 0.92); border: 2px solid var(--ink); border-radius: 12px; display: grid; gap: 2px;
+}
+.live-board:empty { display: none; }
+.live-board li { display: grid; grid-template-columns: 28px 1fr auto; gap: 6px; font-weight: 700; font-size: 0.85rem; align-items: center; }
+.live-board .pos { font: 800 1rem var(--font-display); text-align: center; }
+.live-board .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.live-board .meta { color: var(--ink-soft); font-size: 0.75rem; }
+.commit-badge {
+  position: absolute; left: 12px; bottom: 12px; margin: 0; max-width: 60%; font: 700 0.75rem var(--font-body);
+  color: #fff; background: rgba(29, 26, 47, 0.7); border-radius: 999px; padding: 4px 10px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.quick-race .race-controls { position: absolute; right: 12px; bottom: 12px; }
+
+.results { display: grid; gap: 12px; }
+.results h2 { font-size: 2rem; }
+.full-results { margin: 0; padding-left: 2.2em; columns: 3 220px; font-weight: 700; max-height: 340px; overflow: auto; }
+.full-results small { color: var(--ink-soft); }
+.results-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.results-actions .btn { text-decoration: none; padding: 10px 16px; font-size: 1rem; }
+.fairness summary { font: 800 1.1rem var(--font-display); cursor: pointer; }
+.fairness p { font-weight: 600; color: var(--ink-soft); }
+.fairness dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0 0 12px; }
+.fairness dt { font-weight: 800; }
+.fairness dd { margin: 0; }
+.fairness code { word-break: break-all; font-size: 0.85rem; }
+
+.verdict { font-weight: 800; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--ink); background: #fff; }
+.verdict.ok { background: #b6f2c9; }
+.verdict.bad { background: #ffc9bd; }
+
+@media (max-width: 860px) {
+  .quick-setup { grid-template-columns: 1fr; }
+  .live-board { display: none; }
+}

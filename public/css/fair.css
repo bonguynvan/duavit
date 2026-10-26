@@ -1,0 +1,42 @@
+/* /cong-bang: how the provably fair race works */
+.fair { max-width: 1100px; margin: 0 auto; padding: 8px 16px 48px; display: grid; gap: 24px; }
+
+.fair-hero { display: grid; gap: 12px; padding: 12px 0 4px; }
+.fair-hero h1 { font-size: clamp(2.2rem, 1.4rem + 3.6vw, 4rem); max-width: 18ch; }
+.fair-hero h1 em { font-style: normal; color: var(--tomato); }
+.fair-hero .lede { font-size: 1.1rem; font-weight: 600; line-height: 1.6; max-width: 65ch; margin: 0; }
+.fair-cta { display: flex; gap: 10px; flex-wrap: wrap; }
+.fair-cta .btn { text-decoration: none; }
+
+.fair-steps {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.fair-steps li { position: relative; padding-top: 30px; }
+.fair-steps li:nth-child(2) { background: #fff3c4; }
+.fair-steps li:nth-child(4) { background: #dff5f1; }
+.fair-steps .step-no {
+  position: absolute; top: -16px; left: 16px; width: 38px; height: 38px; display: grid; place-items: center;
+  font: 800 1.2rem var(--font-display); background: var(--tomato); color: #fff;
+  border: var(--border); border-radius: 50%; box-shadow: var(--shadow-sm);
+}
+.fair-steps h2 { font-size: 1.35rem; margin-bottom: 8px; }
+.fair-steps p { margin: 0; font-weight: 600; color: var(--ink-soft); line-height: 1.55; }
+.fair code { font-size: 0.85em; background: rgba(29, 26, 47, 0.07); border-radius: 6px; padding: 1px 5px; word-break: break-all; }
+
+.fair-demo { display: grid; gap: 12px; }
+.fair-demo h2, .fair-faq h2 { font-size: 1.6rem; }
+.fair-demo .hint { margin: 0; }
+.hash-out { margin: 0; display: grid; gap: 4px; }
+.hash-out code {
+  display: block; padding: 10px 12px; font-size: 0.95rem; background: var(--ink); color: var(--sun);
+  border-radius: 10px; min-height: 2.6em;
+}
+
+.fair-faq { display: grid; gap: 8px; }
+.fair-faq details { border-top: 2px dashed rgba(29, 26, 47, 0.2); padding: 10px 0 2px; }
+.fair-faq summary { font: 800 1.1rem var(--font-display); cursor: pointer; }
+.fair-faq summary:focus-visible { outline: 3px dashed var(--tomato); outline-offset: 3px; }
+.fair-faq p { font-weight: 600; color: var(--ink-soft); line-height: 1.55; }
+.fair-faq a { color: var(--tomato); font-weight: 800; }
+

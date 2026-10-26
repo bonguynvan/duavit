@@ -1,0 +1,38 @@
+# Production stack on the VPS:
+#   peti.vn        -> static link hub (sites/peti), served by Caddy
+#   duavit.peti.vn -> the game (Node app), reverse-proxied by Caddy (HTTPS + WebSockets)
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      TRUST_PROXY: "1" # only Caddy talks to the app; it sets X-Forwarded-For
+      DB_PATH: /app/data/duavit.sqlite
+    volumes:
+      - ./data:/app/data # SQLite (users, sessions) — back this up
+      - ./music:/app/public/music:ro # optional <mapId>.mp3 soundtracks
+    expose:
+      - "3000" # reachable by Caddy only, never published to the internet
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites/peti:/srv/peti:ro
+      - caddy_data:/data # certificates — keep this volume
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
