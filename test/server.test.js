@@ -95,6 +95,20 @@ test('room pages exist only for live rooms; codes are case-insensitive', async (
   assert.equal((await fetch(`${url}/shared/catalog.js`)).status, 200);
 });
 
+test('anyone can create a room without an account by default', async () => {
+  const open = await startServer({ port: 0 });
+  const base = `http://127.0.0.1:${open.port}`;
+  try {
+    const { res, body } = await createRoom(base);
+    assert.equal(res.status, 201);
+    assert.match(body.hostUrl, /\/r\/[A-Z2-9]{6}\/host\?key=[0-9a-f]+$/, 'the host key travels in the first link');
+    const crossSite = await fetch(`${base}/api/rooms`, { method: 'POST', headers: { Origin: 'http://evil.example' } });
+    assert.equal(crossSite.status, 403, 'still same-origin only');
+  } finally {
+    await open.close();
+  }
+});
+
 test('room creation is rate-limited per IP and capped per IP', async () => {
   const small = await startServer({ port: 0, requireLogin: false, roomLimits: { maxRoomsPerIp: 2 }, createPerMinute: 3 });
   const base = `http://127.0.0.1:${small.port}`;

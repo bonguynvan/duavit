@@ -17,7 +17,7 @@ Dùng để: chọn ngẫu nhiên một người, chia đội, xếp thứ tự 
 ## Tính năng
 
 - **Đua nhanh** (`/dua-nhanh`): không cần đăng nhập, chạy 100% trên trình duyệt. Dán tới 500 tên hoặc file CSV, chọn map và thời lượng, quay video, xuất kết quả CSV.
-- **Phòng chơi** (`/r/MÃ`): host tạo phòng (đăng nhập Google), người chơi quét QR bằng điện thoại, nhập tên, chọn nhân vật. Có chat, thả emoji, ném gạch (chỉ để vui).
+- **Phòng chơi** (`/r/MÃ`): host tạo phòng miễn phí (không cần tài khoản), người chơi quét QR bằng điện thoại, nhập tên, chọn nhân vật. Có chat, thả emoji, ném gạch (chỉ để vui).
 - **Màn hình OBS** (`/r/MÃ/live`) cho người livestream.
 - **Kiểm chứng** (`/kiem-chung`) và trang giải thích thuật toán (`/cong-bang`).
 - Nhiều map: Đồng cỏ, Sa mạc, Băng tuyết, Bãi biển, Nông trại, Đền Hùng, Công trường, Ba Đình, Dinh Độc Lập (map đặc biệt, host tự bật).
@@ -34,7 +34,7 @@ git clone https://github.com/peti-vn/duavit.git
 cd duavit
 npm install
 cp .env.example .env
-DEV_LOGIN=1 npm start        # đăng nhập giả ở /auth/dev, không cần Google
+npm start                    # tạo phòng không cần tài khoản; DEV_LOGIN=1 để thử trang /admin
 ```
 
 Mở <http://localhost:3000>. Muốn thử nhân vật hay map mới thì vào thẳng <http://localhost:3000/dua-nhanh>.
@@ -57,7 +57,7 @@ Nếu thấy dự án vui, hãy thả ⭐ cho repo nhé!
 
 ```
 shared/      chạy cả trên Node lẫn trình duyệt: catalog (nhân vật, map, luật), mô phỏng đua, thuật toán công bằng
-src/         server Express + Socket.IO: phòng, đăng nhập Google, SQLite, trang quản trị
+src/         server Express + Socket.IO: phòng, trang quản trị (đăng nhập Google), SQLite
 public/      trang web (ES modules thuần, không cần build): vẽ canvas, âm thanh, quay video
 deploy/      Caddyfile, script cập nhật, hướng dẫn triển khai
 test/        node:test (unit + integration qua socket thật)

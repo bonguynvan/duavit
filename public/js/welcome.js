@@ -3,6 +3,7 @@ import { drawAnimal, drawScenery } from './draw.js';
 
 const LANES = 3;
 const SCROLL_PX_PER_SEC = 90;
+const MAP_FADE_MS = 500;
 
 /** Deterministic per-animal personality so the parade looks like a chaotic race. */
 const runners = ANIMALS.map((animal, i) => ({
@@ -85,5 +86,18 @@ export class WelcomeParade {
         const y = sceneH + laneH * (r.lane + 0.88);
         drawAnimal(ctx, r.animal, { x, y, size, phase: sec * (8 + r.wobble * 3), moving: !this.reduceMotion, face: r.face });
       });
+    this.#fadeOnMapChange(ctx, map.id, t, w, h);
+  }
+
+  /** A new map fades in from the page colour instead of popping in. */
+  #fadeOnMapChange(ctx, mapId, t, w, h) {
+    if (mapId !== this.mapId) {
+      if (this.mapId !== undefined) this.switchedAt = t;
+      this.mapId = mapId;
+    }
+    const left = 1 - (t - (this.switchedAt ?? -Infinity)) / MAP_FADE_MS;
+    if (left <= 0) return;
+    ctx.fillStyle = `rgba(255, 246, 229, ${left.toFixed(3)})`;
+    ctx.fillRect(0, 0, w, h);
   }
 }

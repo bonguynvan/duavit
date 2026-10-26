@@ -91,7 +91,7 @@ export async function startServer({
   createPerMinute = 5,
   createRoom,
   db = openDatabase(':memory:'),
-  requireLogin = true,
+  requireLogin = false, // ROOMS_REQUIRE_LOGIN=1 brings back "sign in to create a room"
   auth = {},
 } = {}) {
   const rooms = new RoomManager({ ...roomLimits, createRoom });
@@ -153,7 +153,7 @@ export async function startServer({
   app.post('/api/rooms', (req, res) => {
     const now = Date.now();
     if (!isSameOrigin(req)) return res.status(403).json({ error: 'Yêu cầu không hợp lệ' });
-    // Creating a room needs an account; joining one never does.
+    // Rooms are free to create (per-IP limits below); an operator can require sign-in instead.
     if (requireLogin && !req.user) return res.status(401).json({ error: 'Đăng nhập để tạo phòng', login: '/auth/google?returnTo=/' });
     const ip = clientIp(req.headers, req.socket.remoteAddress, trustProxy);
     if (!allowCreate(ip, now)) return res.status(429).json({ error: 'Tạo phòng nhanh quá, đợi một phút nhé' });

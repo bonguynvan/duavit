@@ -62,14 +62,14 @@ Các giá trị cần điền:
 ```dotenv
 PUBLIC_URL=https://duavit.peti.vn
 NODE_ENV=production
-GOOGLE_CLIENT_ID=...            # từ Google Cloud Console
+GOOGLE_CLIENT_ID=...            # tùy chọn: chỉ cần cho trang /admin
 GOOGLE_CLIENT_SECRET=...
 ADMIN_EMAILS=email-cua-ban@gmail.com
 ACME_EMAIL=email-cua-ban@gmail.com   # Let's Encrypt gửi cảnh báo hết hạn chứng chỉ
 DEV_LOGIN=0
 ```
 
-Google Cloud Console → OAuth client → **Authorized redirect URIs** phải có:
+Nếu dùng trang quản trị: Google Cloud Console → OAuth client → **Authorized redirect URIs** phải có:
 `https://duavit.peti.vn/auth/google/callback`
 
 Thư mục dữ liệu (app chạy bằng user `node`, uid 1000):

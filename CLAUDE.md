@@ -10,7 +10,9 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
 ## Product model
 - **Đua nhanh** `/dua-nhanh` — free, no login, runs 100% in the browser (paste up to 500 names /
   CSV, pick map + duration, race, video, results CSV). Like viral "duck racing" pickers.
-- **Rooms** — creating a room requires **Google sign-in**; joining (`/r/CODE`) is free, no login.
+- **Rooms** — creating (`POST /api/rooms`) and joining (`/r/CODE`) are free, no account; abuse is held back by
+  per-IP limits. "Phòng của tôi" is per browser (`public/js/myRooms.js`, codes only; the host key stays in
+  the room's own storage). `ROOMS_REQUIRE_LOGIN=1` brings back "sign in to create a room".
   Host screen `/r/CODE/host`, OBS view `/r/CODE/live`, verify page `/kiem-chung`.
 - Races are **purely random** and **provably fair** (seed commit/reveal). Host never influences speed.
   Cosmetic items, throws ("ném gạch"), falls, emoji reactions are **visual only** — never change results.
@@ -19,7 +21,7 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
 - Admin page `/admin` (role from `ADMIN_EMAILS`; non-admins get 404): stats, live rooms, users, ban.
 - Fairness explainer `/cong-bang`; link to it wherever a commitment hash shows.
 - Legal pages `/dieu-khoan` (`terms.html`) and `/quyen-rieng-tu` (`privacy.html`), linked from the
-  `site-foot` footer of every public page and next to the sign-in button. The service is free, takes no
+  `site-foot` footer of every public page and next to the "Tạo phòng" button. The service is free, takes no
   money, sells nothing, and results have no monetary value. **The privacy policy describes exactly what
   the code stores** — when you add a cookie, a DB column, a log, a third-party request or change a
   retention time (`SESSION_DAYS`, `ROOM_IDLE_MINUTES`, backups), update `privacy.html` in the same change.
@@ -35,8 +37,8 @@ DEV_LOGIN=1 npm start     # fake sign-in at /auth/dev (ignored when NODE_ENV=pro
 ```
 Env vars are documented in `.env.example`. Never commit `.env`, `data/` (SQLite) or `public/music/*.mp3`.
 Production deploy (Docker + Caddy): `deploy/README.md`. Production refuses to start without an https
-`PUBLIC_URL`; without Google credentials it starts with room creation closed (quick race, verify and
-the public pages keep working) and logs a warning (`src/config.js`).
+`PUBLIC_URL`; without Google credentials it starts and only `/admin` is off (rooms stay open unless
+`ROOMS_REQUIRE_LOGIN=1`), with a startup warning (`src/config.js`).
 
 ## Architecture
 - `shared/` — runs in **both** Node and the browser (served at `/shared/*`):
@@ -104,7 +106,7 @@ chia đội, xếp thứ tự. The only exception is the prohibition clause of `
 "đánh bạc" / "cá cược" explicitly to forbid them.
 
 ## Content boundaries
-- Google is the only sign-in.
+- Google is the only sign-in, and only operators use it (for `/admin`); players and hosts never need an account.
 - Original art only: no copyrighted characters, brand logos or real people's likenesses.
 - Do not depict real groups of people (ethnic, national, political, religious) as animals or as
   slurs. Respectful historical/cultural imagery (e.g. 30/4 tanks, flags, the evacuation helicopter)

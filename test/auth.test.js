@@ -78,7 +78,7 @@ before(async () => {
     googleCalls.push({ url, body: Object.fromEntries(new URLSearchParams(init.body)) });
     return new Response(JSON.stringify({ id_token: idToken(nextClaims) }), { status: 200, headers: { 'content-type': 'application/json' } });
   };
-  server = await startServer({ port: 0, auth: { clientId: CLIENT_ID, clientSecret: 'shh', fetchImpl: fakeGoogle } });
+  server = await startServer({ port: 0, requireLogin: true, auth: { clientId: CLIENT_ID, clientSecret: 'shh', fetchImpl: fakeGoogle } });
   base = `http://127.0.0.1:${server.port}`;
 });
 
@@ -104,7 +104,7 @@ async function signIn(claims = goodClaims(), returnTo = '/?create=1') {
 
 test('sign in with Google, create a room, own it, sign out', async () => {
   const anonymous = await fetch(`${base}/api/rooms`, { method: 'POST', headers: { Origin: base } });
-  assert.equal(anonymous.status, 401, 'creating a room needs an account');
+  assert.equal(anonymous.status, 401, 'with ROOMS_REQUIRE_LOGIN, creating a room needs an account');
 
   const { back, sid } = await signIn();
   assert.equal(back.status, 302);

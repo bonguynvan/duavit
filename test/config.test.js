@@ -14,11 +14,14 @@ test('production refuses to start without an https PUBLIC_URL', () => {
   assert.equal(productionProblems({ ...good, PUBLIC_URL: 'http://duavit.peti.vn' }).length, 1);
 });
 
-test('production without Google credentials starts, with room creation closed and a warning', () => {
+test('production without Google credentials starts with a warning: only /admin is off', () => {
   for (const env of [{ ...good, GOOGLE_CLIENT_SECRET: '' }, { ...good, GOOGLE_CLIENT_ID: '', GOOGLE_CLIENT_SECRET: '' }]) {
-    assert.deepEqual(productionProblems(env), [], 'quick race and the public pages still work');
+    assert.deepEqual(productionProblems(env), [], 'rooms, quick race and the public pages still work');
     assert.equal(productionWarnings(env).length, 1);
+    assert.match(productionWarnings(env)[0], /\/admin/);
   }
+  const gated = productionWarnings({ ...good, GOOGLE_CLIENT_SECRET: '', ROOMS_REQUIRE_LOGIN: '1' });
+  assert.match(gated[0], /không ai tạo phòng được/, 'requiring sign-in without Google closes room creation');
 });
 
 test('development needs nothing', () => {
