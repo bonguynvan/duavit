@@ -17,10 +17,10 @@ export const ANIMALS = [
   { id: 'elephant', name: 'Voi', color: '#a7b1c2' },
   { id: 'frog', name: 'Ếch', color: '#6cc04a' },
   { id: 'mouse', name: 'Chuột', color: '#b8b2a7' },
-  { id: 'tank', name: 'Xe tăng 390', color: '#55703f' },
-  { id: 'tank843', name: 'Xe tăng 843', color: '#4f6a45' },
-  { id: 'helicopter', name: 'Trực thăng', color: '#5f6b4e' },
-  { id: 'palace', name: 'Dinh mini', color: '#f4f1ea' },
+  { id: 'tank', name: 'Xe tăng 390', color: '#55703f', group: 'saigon' },
+  { id: 'tank843', name: 'Xe tăng 843', color: '#4f6a45', group: 'saigon' },
+  { id: 'helicopter', name: 'Trực thăng', color: '#5f6b4e', group: 'saigon' },
+  { id: 'palace', name: 'Dinh mini', color: '#f4f1ea', group: 'saigon' },
   // Map-exclusive characters (`maps`): only offered on those maps.
   { id: 'giong', name: 'Thánh Gióng', color: '#6b6f78', maps: ['denhung'] },
   { id: 'dragon', name: 'Rồng', color: '#3f9d6a', maps: ['denhung'] },
@@ -162,6 +162,27 @@ export const allowedAnimals = (map) =>
     ? ANIMALS.filter((a) => map.allowedAnimals.includes(a.id))
     : ANIMALS.filter((a) => !a.maps); // map-exclusive characters stay on their own map
 export const isAnimalAllowed = (map, animalId) => allowedAnimals(map).some((a) => a.id === animalId);
+
+/**
+ * Tabs of the character picker, in display order. A character's group is its `group`, else the map it
+ * belongs to (`maps`), else 'animals'. New themed maps/characters add a group here.
+ */
+export const CHARACTER_GROUPS = [
+  { id: 'animals', name: 'Động vật', icon: '🐾' },
+  { id: 'saigon', name: '30/4', icon: '⭐' },
+  { id: 'denhung', name: 'Đền Hùng', icon: '🥁' },
+  { id: 'congtruong', name: 'Công trường', icon: '🏗️' },
+  { id: 'badinh', name: 'Ba Đình', icon: '🏛️' },
+];
+export const groupOf = (animal) => animal.group ?? animal.maps?.[0] ?? 'animals';
+
+/** The picker's tabs for a map: only groups with characters the map allows, each with those characters. */
+export function characterGroups(map) {
+  const allowed = allowedAnimals(map);
+  return CHARACTER_GROUPS
+    .map((group) => ({ ...group, animals: allowed.filter((a) => groupOf(a) === group.id) }))
+    .filter((group) => group.animals.length > 0);
+}
 
 /** Stand-in when someone's animal isn't allowed on the map: stable per player (seed), so it doesn't flicker. */
 export function animalForMap(map, animalId, seed = 0) {

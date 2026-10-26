@@ -41,6 +41,7 @@ export const ANIMALS = [
 - `name`: tên tiếng Việt hiển thị cho người chơi.
 - `color`: màu chính dạng `#rrggbb`.
 - `maps: ['mapId']` (tùy chọn): nhân vật chỉ xuất hiện trên những map đó.
+- `group` (tùy chọn): tab của nhân vật trong bảng chọn (`CHARACTER_GROUPS`). Mặc định nhân vật riêng của map vào tab của map đó, còn lại vào "Động vật". Một bộ nhân vật theo chủ đề mới thì thêm một nhóm vào `CHARACTER_GROUPS`.
 
 ### 2. Viết hàm vẽ (painter)
 

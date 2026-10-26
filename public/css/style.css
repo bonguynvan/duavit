@@ -173,3 +173,16 @@ input[type='text']:focus { outline: none; border-color: var(--tomato); box-shado
 .music-picker .file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .music-picker .file-btn:focus-within { outline: 3px dashed var(--tomato); outline-offset: 3px; }
 .music-note { color: var(--ink-soft); font-weight: 600; font-size: 0.8rem; }
+
+/* Character picker tabs: one per character group the map allows (player.js createPicker) */
+.picker-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.picker-tab {
+  font: 800 0.95rem var(--font-display); color: var(--ink); background: var(--paper); cursor: pointer;
+  border: 2px solid var(--ink); border-radius: 999px; padding: 5px 14px;
+  transition: transform 120ms var(--ease), background-color 120ms;
+}
+.picker-tab small { font: 700 0.75rem var(--font-body); color: var(--ink-soft); }
+.picker-tab:hover { transform: translateY(-1px); }
+.picker-tab:focus-visible { outline: 3px dashed var(--tomato); outline-offset: 2px; }
+.picker-tab[aria-selected='true'] { background: var(--ink); color: #fff; box-shadow: 2px 2px 0 var(--tomato); }
+.picker-tab[aria-selected='true'] small { color: var(--sun); }

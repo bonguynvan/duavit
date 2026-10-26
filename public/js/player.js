@@ -1,4 +1,4 @@
-import { ANIMALS, MAPS, REACTIONS, RULES, animalForMap, findAnimal, findItem, findMap, initialsOf, isAnimalAllowed } from '/shared/catalog.js';
+import { ANIMALS, MAPS, REACTIONS, RULES, animalForMap, characterGroups, findAnimal, findItem, findMap, groupOf, initialsOf, isAnimalAllowed } from '/shared/catalog.js';
 import { paintAnimalCard } from './draw.js';
 import { RaceView, itemIcons } from './raceView.js';
 import { rankRacers } from '/shared/race.js';
@@ -28,7 +28,8 @@ let myId = null;
 let resumed = false;
 let seenSelf = false;
 let welcomed = false; // first visit shows the welcome screen, then the join form
-let joinAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)].id;
+const STARTERS = ANIMALS.filter((a) => groupOf(a) === 'animals'); // the picker opens on the animals tab
+let joinAnimal = STARTERS[Math.floor(Math.random() * STARTERS.length)].id;
 
 const PHONE_VIEW_METRES = 45;
 const raceView = new RaceView($('race-canvas'), {
@@ -47,22 +48,54 @@ function forget() {
 const currentMap = () => findMap(state?.mapId) ?? MAPS[0];
 const me = () => state?.players.find((p) => p.id === myId) ?? null;
 
-/** Builds the 8 animal buttons once; `update` repaints faces, tags and selection. */
+/**
+ * Character picker: one tab per character group the map allows (tabs only when there are several),
+ * and the grid shows the active group. Builds the buttons once; `update` repaints faces and selection.
+ */
 function createPicker(container, onPick) {
+  const tabs = el('div', { class: 'picker-tabs', role: 'tablist', 'aria-label': 'Nhóm nhân vật' });
+  container.before(tabs);
   const buttons = ANIMALS.map((animal) => {
     const canvas = el('canvas', { 'aria-hidden': 'true' });
     const button = el('button', { type: 'button', class: 'animal-option', 'aria-pressed': 'false', onclick: () => onPick(animal.id) }, canvas, el('span', {}, animal.name));
     container.append(button);
     return { animal, button, canvas };
   });
+  let activeGroup = null;
+  let tabsKey = '';
+  let last = null;
+
+  const render = (selectedId, face, map) => {
+    const groups = characterGroups(map);
+    if (!groups.some((g) => g.id === activeGroup)) {
+      // Open on the selected character's group (or the first one) when the map changes.
+      const selected = findAnimal(selectedId);
+      const own = selected && isAnimalAllowed(map, selectedId) ? groupOf(selected) : null;
+      activeGroup = groups.find((g) => g.id === own)?.id ?? groups[0]?.id ?? null;
+    }
+    const key = groups.map((g) => g.id).join();
+    if (key !== tabsKey) { // rebuild only when the set changes, so a focused tab keeps focus
+      tabsKey = key;
+      tabs.replaceChildren(...groups.map((g) => el('button', {
+        type: 'button', role: 'tab', class: 'picker-tab', 'data-group': g.id,
+        onclick: () => { activeGroup = g.id; render(...last); },
+      }, `${g.icon} ${g.name} `, el('small', {}, String(g.animals.length)))));
+    }
+    tabs.hidden = groups.length < 2;
+    for (const tab of tabs.children) tab.setAttribute('aria-selected', String(tab.dataset.group === activeGroup));
+    const shown = new Set(groups.find((g) => g.id === activeGroup)?.animals.map((a) => a.id));
+    buttons.forEach(({ animal, button, canvas }) => {
+      button.hidden = !shown.has(animal.id);
+      button.setAttribute('aria-pressed', String(animal.id === selectedId));
+      if (!button.hidden) paintAnimalCard(canvas, animal, face);
+    });
+  };
+
   return {
-    /** Repaint faces/selection; animals the current map doesn't allow are hidden. */
+    /** Repaint faces/selection for `map`; characters outside the active group are hidden. */
     update(selectedId, face, map) {
-      buttons.forEach(({ animal, button, canvas }) => {
-        button.hidden = !isAnimalAllowed(map, animal.id);
-        button.setAttribute('aria-pressed', String(animal.id === selectedId));
-        if (!button.hidden) paintAnimalCard(canvas, animal, face);
-      });
+      last = [selectedId, face, map];
+      render(selectedId, face, map);
     },
   };
 }

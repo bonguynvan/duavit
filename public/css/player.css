@@ -228,6 +228,12 @@ main { container-type: inline-size; }
   .layout.joined .chat-form { padding-bottom: 12px; }
   .chat-fab, .chat-close { display: none !important; }
   main { max-width: 760px; }
+  /* Join form: name, role, the character tabs and the button all fit in a 1080p window. */
+  .layout:not(.joined) main:has(> #view-join:not([hidden])) { max-width: 1040px; }
+  #join-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 18px; align-items: end; }
+  #join-form > .stack-sm, #join-form > #join-btn { grid-column: 1 / -1; }
+  #join-animals { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+  #view-join .hero h1 br { display: none; } /* one line: there is room on a desktop */
   #race-canvas { height: min(66vh, 680px); }
   .race-frame { margin: 0; }
 }
@@ -237,6 +243,14 @@ main { container-type: inline-size; }
   .layout.joined main { grid-column: 2; grid-row: 1; }
   .layout.joined .room-panel { grid-column: 1; grid-row: 1; position: sticky; top: 16px; max-height: calc(100vh - 100px); }
   .layout.joined .chat-sheet { grid-column: 3; grid-row: 1; height: calc(100vh - 100px); } /* header sits above on first paint */
+}
+
+/* Short laptop screens (1366x768): tighter join form so the button stays on screen. */
+@media (min-width: 900px) and (max-height: 860px) {
+  #view-join { gap: 12px; }
+  #view-join .hero h1 { font-size: 2.2rem; }
+  #join-form { gap: 12px; }
+  #join-animals .animal-option canvas { aspect-ratio: 1 / 0.68; }
 }
 
 /* Lobby goes two-column whenever the main column itself is wide enough. */

@@ -1,7 +1,7 @@
 // Guards for contributed characters and maps: every catalog entry must have its art registered.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ANIMALS, ITEMS, MAPS } from '../shared/catalog.js';
+import { ANIMALS, CHARACTER_GROUPS, ITEMS, MAPS, allowedAnimals, characterGroups, findMap, groupOf } from '../shared/catalog.js';
 import { HEAD_TOP, PAINTERS, drawAnimal, drawScenery } from '../public/js/draw.js';
 import { SCENERY } from '../public/js/scenery.js';
 
@@ -71,5 +71,18 @@ test('map-exclusive characters and allowed lists point at real entries', () => {
   }
   for (const animal of ANIMALS) {
     for (const id of animal.maps ?? []) assert.ok(mapIds.has(id), `"${animal.id}" is tied to unknown map "${id}"`);
+  }
+});
+
+test('every character belongs to a known group, and the picker shows the groups a map allows', () => {
+  const groupIds = new Set(CHARACTER_GROUPS.map((g) => g.id));
+  for (const animal of ANIMALS) assert.ok(groupIds.has(groupOf(animal)), `group of "${animal.id}"`);
+  const ids = (mapId) => characterGroups(findMap(mapId)).map((g) => g.id);
+  assert.deepEqual(ids('meadow'), ['animals', 'saigon'], 'ordinary maps: animals first, then the 30/4 vehicles');
+  assert.deepEqual(ids('denhung'), ['denhung'], 'a map with its own cast shows only that group');
+  assert.deepEqual(ids('saigon'), ['saigon']);
+  for (const map of MAPS) {
+    const listed = characterGroups(map).flatMap((g) => g.animals.map((a) => a.id)).sort();
+    assert.deepEqual(listed, allowedAnimals(map).map((a) => a.id).sort(), `groups cover exactly what "${map.id}" allows`);
   }
 });
