@@ -1,4 +1,4 @@
-// Characters for Phố siêu anh hùng and Vòng quanh thế giới. Every hero here is an original design.
+// Characters for Phố siêu anh hùng and Vòng quanh thế giới. Our own drawings with fun look-alike nicknames.
 // Same conventions as painters.js: facing right, origin on the ground under the body, ~100 units long.
 import { FONT, circle, drawFace, ellipse, leg, roundedPath, shade, shape, stroke, swing, thinLine } from './paint.js';
 import { nonLa } from './painters-holiday.js';
@@ -129,6 +129,32 @@ function ninja(ctx, c, p, m, face) {
   stroke(ctx, '#e63946', 3, () => ctx.arc(10, -76, 13.5, Math.PI * 1.1, Math.PI * 1.9));
 }
 
+function buiCay(ctx, c, p, m, face) {
+  // A chatty little bush waddling on its roots, waving twig arms and blurting out a word now and then.
+  [[-8, Math.PI], [8, 0]].forEach(([x, o]) => leg(ctx, x, -24, 22, swing(p, o, m, 0.6), '#6b4226', 5));
+  const wave = swing(p * 1.5, 0, m, 0.5);
+  leg(ctx, -22, -50, 18, -2.2 + wave, '#6b4226', 3.5);
+  leg(ctx, 22, -54, 18, 2.2 - wave, '#6b4226', 3.5);
+  [[-16, -40, 15], [16, -42, 15], [0, -32, 16], [-10, -60, 15], [12, -62, 15], [0, -74, 13]].forEach(([x, y, r], i) => {
+    circle(ctx, x, y, r, i % 2 ? c : shade(c, -0.08));
+  });
+  [[-18, -48], [8, -70], [20, -36]].forEach(([x, y]) => circle(ctx, x, y, 2.6, '#ef476f'));
+  drawFace(ctx, 4, -50, 11, face, shade(c, -0.3));
+  if (m && Math.sin(p * 0.4) > 0.55) {
+    shape(ctx, '#ffffff', () => {
+      roundedPath(ctx, 14, -102, 30, 15, 6);
+      ctx.moveTo(18, -87);
+      ctx.lineTo(16, -80);
+      ctx.lineTo(24, -87);
+    }, 1.5);
+    ctx.fillStyle = '#1d1a2f';
+    ctx.font = `800 9px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Tui nè!', 29, -94);
+  }
+}
+
 // ---------------- Vòng quanh thế giới ----------------
 
 function astronaut(ctx, c, p, m, face) {
@@ -235,12 +261,12 @@ function wheel(ctx, x, y, r, p) {
 }
 
 export const WORLD_PAINTERS = {
-  starShield, nonLaHero, robot, ninja,
+  starShield, nonLaHero, robot, ninja, buiCay,
   astronaut, mummy, cowboy, doubleDecker,
 };
 
 /** Where accessories float above each character (animal units). */
 export const WORLD_HEAD_TOP = {
-  starShield: [0, -100], nonLaHero: [26, -100], robot: [4, -110], ninja: [10, -94],
+  starShield: [0, -100], nonLaHero: [26, -100], robot: [4, -110], ninja: [10, -94], buiCay: [0, -92],
   astronaut: [2, -102], mummy: [2, -96], cowboy: [-6, -108], doubleDecker: [0, -80],
 };

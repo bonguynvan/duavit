@@ -22,10 +22,10 @@ export const ANIMALS = [
   { id: 'helicopter', name: 'Trực thăng', color: '#5f6b4e', group: 'saigon' },
   { id: 'palace', name: 'Dinh mini', color: '#f4f1ea', group: 'saigon' },
   { id: 'nhaTho', name: 'Nhà thờ Đức Bà mini', color: '#c8613f', group: 'saigon' },
-  { id: 'cotDien', name: 'Cột điện', color: '#b9b4a8', group: 'saigon' },
+  { id: 'cotDien', name: 'Cột điện rối nùi', color: '#b9b4a8', group: 'saigon' },
   // Everyday people: on every regular map, in their own tab.
-  { id: 'nongDan', name: 'Nông dân đội nón', color: '#6b8f4e', group: 'people' },
-  { id: 'xeBo', name: 'Nông dân đi xe bò', color: '#4f7a8f', group: 'people' },
+  { id: 'nongDan', name: 'Anh Hai Lúa', color: '#6b8f4e', group: 'people' },
+  { id: 'xeBo', name: 'Bác Ba xe bò', color: '#4f7a8f', group: 'people' },
   // Map-exclusive characters (`maps`): only offered on those maps.
   { id: 'giong', name: 'Thánh Gióng', color: '#6b6f78', maps: ['denhung'] },
   { id: 'dragon', name: 'Rồng', color: '#3f9d6a', maps: ['denhung'] },
@@ -39,20 +39,21 @@ export const ANIMALS = [
   { id: 'flowerBike', name: 'Xe đạp hoa', color: '#2f6b4f', maps: ['badinh'] },
   { id: 'tram', name: 'Tàu điện', color: '#b5523b', maps: ['badinh'] },
   { id: 'vespa', name: 'Vespa', color: '#8fd3c8', maps: ['badinh'] },
-  // Original heroes (no copyrighted characters).
-  { id: 'starShield', name: 'Hiệp sĩ Khiên Sao', color: '#2d4fa0', maps: ['sieuanhhung'] },
+  // Playful look-alike heroes: our own drawings, just fun nicknames.
+  { id: 'starShield', name: 'Đội trưởng Mễ', color: '#2d4fa0', maps: ['sieuanhhung'] },
   { id: 'nonLaHero', name: 'Siêu nhân Nón Lá', color: '#18a999', maps: ['sieuanhhung'] },
-  { id: 'robot', name: 'Robot Thép', color: '#9aa0aa', maps: ['sieuanhhung'] },
-  { id: 'ninja', name: 'Ninja', color: '#2b2d42', maps: ['sieuanhhung'] },
-  { id: 'astronaut', name: 'Phi hành gia', color: '#f4f1ea', maps: ['vongquanh'] },
-  { id: 'mummy', name: 'Xác ướp', color: '#efe4c8', maps: ['vongquanh'] },
-  { id: 'cowboy', name: 'Cao bồi', color: '#a0522d', maps: ['vongquanh'] },
+  { id: 'robot', name: 'Người sắt đồng nát', color: '#9aa0aa', maps: ['sieuanhhung'] },
+  { id: 'ninja', name: 'Ninja ú òa', color: '#2b2d42', maps: ['sieuanhhung'] },
+  { id: 'buiCay', name: 'Bụi cây biết nói', color: '#5fa04e', maps: ['sieuanhhung'] },
+  { id: 'astronaut', name: 'Phi hành gia Cuội', color: '#f4f1ea', maps: ['vongquanh'] },
+  { id: 'mummy', name: 'Xác ướp mất ngủ', color: '#efe4c8', maps: ['vongquanh'] },
+  { id: 'cowboy', name: 'Cao bồi miền Tây', color: '#a0522d', maps: ['vongquanh'] },
   { id: 'flagBro', name: 'Anh trai cờ Mỹ', color: '#d62828', maps: ['vongquanh'] },
-  { id: 'doubleDecker', name: 'Xe buýt hai tầng', color: '#d62828', maps: ['vongquanh'] },
-  { id: 'banhMi', name: 'Bánh mì', color: '#e3a04f', maps: ['chodem'] },
-  { id: 'traSua', name: 'Trà sữa', color: '#c8a27c', maps: ['chodem'] },
-  { id: 'pho', name: 'Tô phở', color: '#f7f3ea', maps: ['chodem'] },
-  { id: 'saurieng', name: 'Sầu riêng', color: '#9bbf3a', maps: ['chodem'] },
+  { id: 'doubleDecker', name: 'Xe buýt Luân Đôn', color: '#d62828', maps: ['vongquanh'] },
+  { id: 'banhMi', name: 'Bánh mì ổ bự', color: '#e3a04f', maps: ['chodem'] },
+  { id: 'traSua', name: 'Trà sữa full topping', color: '#c8a27c', maps: ['chodem'] },
+  { id: 'pho', name: 'Phở tái nạm', color: '#f7f3ea', maps: ['chodem'] },
+  { id: 'saurieng', name: 'Sầu riêng thơm lừng', color: '#9bbf3a', maps: ['chodem'] },
 ];
 
 export const MAPS = [
@@ -127,7 +128,7 @@ MAPS.push(
   },
   {
     id: 'sieuanhhung', name: 'Phố siêu anh hùng', trackLength: 660,
-    allowedAnimals: ['starShield', 'nonLaHero', 'robot', 'ninja'],
+    allowedAnimals: ['starShield', 'nonLaHero', 'robot', 'ninja', 'buiCay'],
     cheers: ['POW! BAM! VÈO!', 'Cứu thế giới xong rồi đua tiếp!', 'Siêu anh hùng về đích!'],
     palette: { skyTop: '#141a3d', skyBottom: '#4b3f8f', ground: '#3a3f4b', laneA: '#5a5f6b', laneB: '#525763', line: '#ffd23f' },
   },
