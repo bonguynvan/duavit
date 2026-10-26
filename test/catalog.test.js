@@ -57,6 +57,8 @@ test('every map has scenery, a full palette and a sane track length', () => {
     for (const key of PALETTE_KEYS) assert.match(map.palette?.[key] ?? '', HEX_COLOR, `palette.${key} of "${map.id}"`);
     assert.ok(Number.isInteger(map.trackLength) && map.trackLength >= 300 && map.trackLength <= 1200, `trackLength of "${map.id}"`);
     if (map.finish) assert.ok(FINISH_STYLES.includes(map.finish), `unknown finish "${map.finish}" on "${map.id}"`);
+    // Soundtracks are files the host drops in: an offset tuned for one file cuts the intro of any other.
+    assert.equal(map.musicStart, undefined, `map "${map.id}" must play its soundtrack from 0:00`);
     assert.doesNotThrow(() => drawScenery(stubContext(), map, 800, 300, 1234, 56), `drawing scenery "${map.id}"`);
   }
 });

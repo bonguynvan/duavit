@@ -1,5 +1,4 @@
 // Procedural chiptune music + sound effects (Web Audio), plus optional per-map mp3 soundtracks.
-import { findMap } from '/shared/catalog.js';
 
 const STORAGE_KEY = 'peti.sound';
 const LOOKAHEAD_S = 0.12;
@@ -139,7 +138,7 @@ class SoundEngine {
    * It goes through the same master gain, so mute and video recording include it.
    * Resolves false when the file doesn't exist.
    */
-  async playTrack(url, { paused = false, start = 0 } = {}) {
+  async playTrack(url, { paused = false } = {}) {
     if (this.trackUrl !== url) {
       this.stopTrack();
       this.trackUrl = url;
@@ -149,12 +148,7 @@ class SoundEngine {
       }
       if (!this.#ensureContext()) return false;
       const audio = new Audio(url);
-      // Loop by hand so every repeat jumps back to `start` instead of replaying the intro.
-      audio.addEventListener('loadedmetadata', () => { audio.currentTime = Math.min(start, audio.duration || start); }, { once: true });
-      audio.addEventListener('ended', () => {
-        audio.currentTime = start;
-        audio.play().catch(() => {});
-      });
+      audio.loop = true; // user-supplied file: always from 0:00, never skip its intro
       const source = this.ctx.createMediaElementSource(audio);
       this.trackGain = this.ctx.createGain();
       this.trackGain.gain.value = TRACK_VOLUME;
@@ -338,7 +332,7 @@ export function createSoundDirector() {
     sound.setMusic(state.phase === 'lobby' || state.phase === 'finished' ? 'lobby' : paused ? 'paused' : 'race');
     // Map soundtrack (public/music/<mapId>.mp3) plays from the countdown to the podium.
     if (race && state.phase !== 'lobby' && sound.enabled) {
-      sound.playTrack(`${MUSIC_DIR}/${race.mapId}.mp3`, { paused, start: findMap(race.mapId)?.musicStart ?? 0 });
+      sound.playTrack(`${MUSIC_DIR}/${race.mapId}.mp3`, { paused });
     }
     else if (sound.track || sound.trackUrl) sound.stopTrack();
 

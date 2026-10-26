@@ -80,7 +80,6 @@ MAPS.push({
   id: 'saigon', name: 'Dinh Độc Lập', trackLength: 700,
   allowedAnimals: ['tank', 'tank843', 'helicopter', 'palace'], // vehicles + the mini palace only
   special: true, // 30/4 theme: hidden on the public site unless the host turns special maps on
-  musicStart: 13, // seconds: skip the intro of public/music/saigon.mp3 (also where each loop restarts)
   finish: 'palace-gate', // the finish line is the palace gate
   palette: { skyTop: '#5bb8f0', skyBottom: '#dff3ff', ground: '#cdbb98', laneA: '#71757e', laneB: '#676b74', line: '#f7f7f7' },
 });
