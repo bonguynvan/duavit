@@ -13,6 +13,9 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
 - **Rooms** — creating (`POST /api/rooms`) and joining (`/r/CODE`) are free, no account; abuse is held back by
   per-IP limits. "Phòng của tôi" is per browser (`public/js/myRooms.js`, codes only; the host key stays in
   the room's own storage). `ROOMS_REQUIRE_LOGIN=1` brings back "sign in to create a room".
+  Rooms close when empty for 30 min, when no host opened them within 10 min, and after 12 h at most;
+  per-IP limits count an IPv6 /64 as one client (`clientIp` in `src/sockets.js`). With rooms open to
+  everyone, Google sign-in only admits `ADMIN_EMAILS` (for `/admin`); nobody else gets a user row.
   Host screen `/r/CODE/host`, OBS view `/r/CODE/live`, verify page `/kiem-chung`.
 - Races are **purely random** and **provably fair** (seed commit/reveal). Host never influences speed.
   Cosmetic items, throws ("ném gạch"), falls, emoji reactions are **visual only** — never change results.

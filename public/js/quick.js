@@ -116,6 +116,7 @@ async function startRace() {
   stopRace();
   const seed = newSeed();
   const seedHash = await sha256Hex(seed);
+  stopRace(); // a double click may have started another race while we awaited: keep only this one
   const race = prepareRace({ names, mapId: settings.mapId, durationSec: settings.durationSec, character: settings.character, seed, fun: settings.fun });
   raceView.showNames = names.length <= MAX_LANES;
   const playback = new Playback(race, { title: settings.title });

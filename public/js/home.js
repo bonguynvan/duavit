@@ -37,7 +37,8 @@ async function logout() {
 }
 
 // ---------- "Phòng của tôi": rooms created in this browser, still open ----------
-const roomExists = (code) => fetch(`/r/${code}`, { method: 'HEAD' }).then((r) => r.ok).catch(() => true);
+// Only a 404 means closed: a hiccup (5xx, 429, offline) must not drop a live room from the list.
+const roomExists = (code) => fetch(`/r/${code}`, { method: 'HEAD' }).then((r) => r.status !== 404).catch(() => true);
 
 async function renderMyRooms() {
   const saved = loadSavedRooms();

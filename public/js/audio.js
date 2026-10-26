@@ -143,7 +143,7 @@ class SoundEngine {
     if (this.trackUrl !== url) {
       this.stopTrack();
       this.trackUrl = url;
-      const exists = url.startsWith('blob:') || (await trackExists(url)); // a picked file is always there
+      const exists = !brokenTracks.has(url) && (url.startsWith('blob:') || (await trackExists(url))); // a picked file is always there
       if (!exists || this.trackUrl !== url) {
         if (this.trackUrl === url) this.trackUrl = null;
         return false;
@@ -151,10 +151,18 @@ class SoundEngine {
       if (!this.#ensureContext()) return false;
       const audio = new Audio(url);
       audio.loop = true; // user-supplied file: always from 0:00, never skip its intro
-      const source = this.ctx.createMediaElementSource(audio);
+      // A file the browser can't decode: drop it (never retry it) and fall back to the default music.
+      audio.addEventListener('error', () => {
+        if (this.track !== audio) return; // stopTrack() clearing src also fires "error"
+        brokenTracks.add(url);
+        this.stopTrack();
+        if (this.customTrack === url) this.customTrack = null;
+        window.dispatchEvent(new CustomEvent('soundtrack-error', { detail: { url } }));
+      });
+      this.trackSource = this.ctx.createMediaElementSource(audio);
       this.trackGain = this.ctx.createGain();
       this.trackGain.gain.value = TRACK_VOLUME;
-      source.connect(this.trackGain).connect(this.master);
+      this.trackSource.connect(this.trackGain).connect(this.master);
       this.track = audio;
       this.setExternalMusic(true);
     }
@@ -175,8 +183,12 @@ class SoundEngine {
     if (this.track) {
       this.track.pause();
       this.track.src = '';
+      this.trackSource.disconnect();
+      this.trackGain.disconnect();
     }
     this.track = null;
+    this.trackSource = null;
+    this.trackGain = null;
     this.trackUrl = null;
     this.setExternalMusic(false);
   }
@@ -310,6 +322,7 @@ class SoundEngine {
 }
 
 const trackChecks = new Map();
+const brokenTracks = new Set(); // urls the browser failed to decode this session
 /** HEAD request once per url: lets the host just drop mp3 files into public/music. */
 function trackExists(url) {
   if (!trackChecks.has(url)) {
