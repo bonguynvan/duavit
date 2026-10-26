@@ -137,6 +137,8 @@ function stopRace() {
   raceView.stop();
   raceView.lockSize(false);
   current = null;
+  directSound({ phase: 'lobby', race: null }, 0); // stops the soundtrack and any pending countdown beeps
+  sound.setMusic('none');
 }
 
 function tick() {
@@ -246,7 +248,6 @@ const backToSetup = () => {
   $('race').hidden = true;
   $('setup').hidden = false;
 };
-$('back').addEventListener('click', backToSetup);
 $('edit').addEventListener('click', backToSetup);
 $('pause').addEventListener('click', () => {
   if (!current || current.finished) return;
