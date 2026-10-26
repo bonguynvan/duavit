@@ -11,9 +11,11 @@ import { el, formatTime, toast } from './ui.js';
 import { Playback, prepareRace } from './quick/playback.js';
 import { pickThrow } from './quick/fun.js';
 import { mountCommitBar } from './commitBar.js';
+import { mountMusicPicker } from './musicPicker.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
+mountMusicPicker(document.querySelector('.music-picker'));
 const STORE_KEY = 'peti.quick';
 const MAX_LANES = 12;
 const STATE_HZ_MS = 50;

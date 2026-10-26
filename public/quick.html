@@ -46,6 +46,15 @@
         <select id="character"></select>
       </label>
       <label class="switch"><input type="checkbox" id="fun-mode"> 🎉 Phụ kiện &amp; ném vui <small class="switch-note">chỉ là hình ảnh, không ảnh hưởng kết quả</small></label>
+      <div class="music-picker">
+        <span class="eyebrow">Nhạc nền</span>
+        <div class="music-row">
+          <span class="music-name">Mặc định (nhạc 8-bit)</span>
+          <label class="btn btn-ghost file-btn">🎵 Chọn nhạc từ máy<input type="file" accept="audio/*"></label>
+          <button class="btn btn-ghost music-clear" type="button" hidden>✕ Bỏ</button>
+        </div>
+        <small class="music-note">File chỉ phát trên trình duyệt này, không tải lên máy chủ. Nhạc có bản quyền có thể bị tắt tiếng khi livestream.</small>
+      </div>
     </section>
 
     <button class="btn btn-primary btn-big start-quick" type="button" id="start">🏁 Bắt đầu đua</button>

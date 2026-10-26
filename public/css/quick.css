@@ -70,4 +70,5 @@ body { padding: 0 0 48px; overflow-x: hidden; }
 @media (max-width: 480px) {
   .start-quick { justify-self: stretch; font-size: 1.5rem; padding: 14px 20px; }
 }
-.switch-note { color: var(--ink-soft); font-weight: 600; font-size: 0.8rem; }
+.options-card .switch { flex-wrap: wrap; }
+.switch-note { flex-basis: 100%; padding-left: 24px; color: var(--ink-soft); font-weight: 600; font-size: 0.8rem; }

@@ -6,9 +6,11 @@ import { createSoundDirector, sound, soundForEffect } from './audio.js';
 import { el, formatTime, request, roomStorage, socket, toast } from './net.js';
 import { mountChat, messageNode } from './chat.js';
 import { mountCommitBar } from './commitBar.js';
+import { mountMusicPicker } from './musicPicker.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
+mountMusicPicker(document.querySelector('.music-picker'));
 // The host key arrives once in the link (?key=…); keep it per room and wipe it from the
 // address bar so it doesn't end up on a projector, in a screenshot or in browser history.
 const urlKey = new URLSearchParams(location.search).get('key');

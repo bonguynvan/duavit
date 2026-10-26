@@ -208,3 +208,4 @@ body { overflow-x: hidden; }
   .join-card { position: static; transform: none; }
   .start-btn { width: 100%; font-size: 1.5rem; }
 }
+.maps-panel .music-picker { margin-top: 16px; }

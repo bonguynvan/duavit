@@ -16,6 +16,10 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
   Host screen `/r/CODE/host`, OBS view `/r/CODE/live`, verify page `/kiem-chung`.
 - Races are **purely random** and **provably fair** (seed commit/reveal). Host never influences speed.
   Cosmetic items, throws ("ném gạch"), falls, emoji reactions are **visual only** — never change results.
+  Quick race "fun mode" (`public/js/quick/fun.js`) hands out random accessories and auto-throws with
+  `Math.random` only — never the seed, never positions.
+- Soundtrack: a song picked on the device (`musicPicker.js`, blob: URL, never uploaded) wins over
+  `public/music/<mapId>.mp3`, which wins over the built-in chiptune. Always played from 0:00.
 - Maps flagged `special: true` (e.g. the 30/4 "Dinh Độc Lập" map) are **opt-in per room**
   (`allowSpecialMaps`, off by default) and hidden in quick race unless toggled.
 - Admin page `/admin` (role from `ADMIN_EMAILS`; non-admins get 404): stats, live rooms, users, ban.

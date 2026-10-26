@@ -62,6 +62,7 @@ class SoundEngine {
     this.step = 0;
     this.nextTime = 0;
     this.recordDest = null;
+    this.customTrack = null; // blob: URL of a song picked on this device
   }
 
   /** Load the saved on/off preference (or the page's default). */
@@ -142,7 +143,8 @@ class SoundEngine {
     if (this.trackUrl !== url) {
       this.stopTrack();
       this.trackUrl = url;
-      if (!(await trackExists(url)) || this.trackUrl !== url) {
+      const exists = url.startsWith('blob:') || (await trackExists(url)); // a picked file is always there
+      if (!exists || this.trackUrl !== url) {
         if (this.trackUrl === url) this.trackUrl = null;
         return false;
       }
@@ -160,6 +162,13 @@ class SoundEngine {
     if (paused) this.track.pause();
     else this.track.play().catch(() => { /* blocked until the first tap; retried on the next state */ });
     return true;
+  }
+
+  /** A soundtrack the user picked on their device (blob: URL, never uploaded); null = the map's own. */
+  setCustomTrack(url) {
+    if (this.customTrack === url) return;
+    this.customTrack = url;
+    if (this.track) this.stopTrack(); // the next state update starts the right one
   }
 
   stopTrack() {
@@ -330,9 +339,9 @@ export function createSoundDirector() {
     const paused = Boolean(race?.paused);
     const racing = state.phase === 'countdown' || state.phase === 'racing';
     sound.setMusic(state.phase === 'lobby' || state.phase === 'finished' ? 'lobby' : paused ? 'paused' : 'race');
-    // Map soundtrack (public/music/<mapId>.mp3) plays from the countdown to the podium.
+    // Soundtrack (picked file, else public/music/<mapId>.mp3) plays from the countdown to the podium.
     if (race && state.phase !== 'lobby' && sound.enabled) {
-      sound.playTrack(`${MUSIC_DIR}/${race.mapId}.mp3`, { paused });
+      sound.playTrack(sound.customTrack ?? `${MUSIC_DIR}/${race.mapId}.mp3`, { paused });
     }
     else if (sound.track || sound.trackUrl) sound.stopTrack();
 

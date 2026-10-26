@@ -163,3 +163,13 @@ input[type='text']:focus { outline: none; border-color: var(--tomato); box-shado
 .commit-copy { flex: none; padding: 6px 12px; font-size: 0.85rem; box-shadow: none; }
 @media (max-width: 480px) { .commit-label-text { display: none; } }
 .fair-link { color: var(--tomato); font-weight: 800; }
+
+/* "Nhạc nền": a song picked on this device (never uploaded) instead of the default music */
+.music-picker { display: grid; gap: 8px; }
+.music-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.music-name { flex: 1 1 160px; min-width: 0; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.music-row .btn { padding: 8px 14px; font-size: 0.95rem; }
+.music-picker .file-btn { position: relative; }
+.music-picker .file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.music-picker .file-btn:focus-within { outline: 3px dashed var(--tomato); outline-offset: 3px; }
+.music-note { color: var(--ink-soft); font-weight: 600; font-size: 0.8rem; }
