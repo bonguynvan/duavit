@@ -16,7 +16,7 @@ function wheel(ctx, x, y, r, p, rim = '#9aa0aa') {
 }
 
 /** Conical hat (nón lá) sitting on a face badge. */
-function nonLa(ctx, x, y, r) {
+export function nonLa(ctx, x, y, r) {
   poly(ctx, [[x - r * 1.5, y - r * 0.55], [x, y - r * 1.75], [x + r * 1.5, y - r * 0.55]], '#e9d18c');
 }
 

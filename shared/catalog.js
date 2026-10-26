@@ -21,6 +21,11 @@ export const ANIMALS = [
   { id: 'tank843', name: 'Xe tăng 843', color: '#4f6a45', group: 'saigon' },
   { id: 'helicopter', name: 'Trực thăng', color: '#5f6b4e', group: 'saigon' },
   { id: 'palace', name: 'Dinh mini', color: '#f4f1ea', group: 'saigon' },
+  { id: 'nhaTho', name: 'Nhà thờ Đức Bà mini', color: '#c8613f', group: 'saigon' },
+  { id: 'cotDien', name: 'Cột điện rối nùi', color: '#b9b4a8', group: 'saigon' },
+  // Everyday people: on every regular map, in their own tab.
+  { id: 'nongDan', name: 'Anh Hai Lúa', color: '#6b8f4e', group: 'people' },
+  { id: 'xeBo', name: 'Bác Ba xe bò', color: '#4f7a8f', group: 'people' },
   // Map-exclusive characters (`maps`): only offered on those maps.
   { id: 'giong', name: 'Thánh Gióng', color: '#6b6f78', maps: ['denhung'] },
   { id: 'dragon', name: 'Rồng', color: '#3f9d6a', maps: ['denhung'] },
@@ -34,6 +39,21 @@ export const ANIMALS = [
   { id: 'flowerBike', name: 'Xe đạp hoa', color: '#2f6b4f', maps: ['badinh'] },
   { id: 'tram', name: 'Tàu điện', color: '#b5523b', maps: ['badinh'] },
   { id: 'vespa', name: 'Vespa', color: '#8fd3c8', maps: ['badinh'] },
+  // Playful look-alike heroes: our own drawings, just fun nicknames.
+  { id: 'starShield', name: 'Đội trưởng Mễ', color: '#2d4fa0', maps: ['sieuanhhung'] },
+  { id: 'nonLaHero', name: 'Siêu nhân Nón Lá', color: '#18a999', maps: ['sieuanhhung'] },
+  { id: 'robot', name: 'Người sắt đồng nát', color: '#9aa0aa', maps: ['sieuanhhung'] },
+  { id: 'ninja', name: 'Ninja ú òa', color: '#2b2d42', maps: ['sieuanhhung'] },
+  { id: 'buiCay', name: 'Bụi cây biết nói', color: '#5fa04e', maps: ['sieuanhhung'] },
+  { id: 'astronaut', name: 'Phi hành gia Cuội', color: '#f4f1ea', maps: ['vongquanh'] },
+  { id: 'mummy', name: 'Xác ướp mất ngủ', color: '#efe4c8', maps: ['vongquanh'] },
+  { id: 'cowboy', name: 'Cao bồi miền Tây', color: '#a0522d', maps: ['vongquanh'] },
+  { id: 'flagBro', name: 'Anh trai cờ Mỹ', color: '#d62828', maps: ['vongquanh'] },
+  { id: 'doubleDecker', name: 'Xe buýt Luân Đôn', color: '#d62828', maps: ['vongquanh'] },
+  { id: 'banhMi', name: 'Bánh mì ổ bự', color: '#e3a04f', maps: ['chodem'] },
+  { id: 'traSua', name: 'Trà sữa full topping', color: '#c8a27c', maps: ['chodem'] },
+  { id: 'pho', name: 'Phở tái nạm', color: '#f7f3ea', maps: ['chodem'] },
+  { id: 'saurieng', name: 'Sầu riêng thơm lừng', color: '#9bbf3a', maps: ['chodem'] },
 ];
 
 export const MAPS = [
@@ -78,7 +98,7 @@ export const ITEMS = [
 /** Emoji anyone in the room can float over the race. */
 MAPS.push({
   id: 'saigon', name: 'Dinh Độc Lập', trackLength: 700,
-  allowedAnimals: ['tank', 'tank843', 'helicopter', 'palace'], // vehicles + the mini palace only
+  allowedAnimals: ['tank', 'tank843', 'helicopter', 'palace', 'nhaTho', 'cotDien'], // Saigon cast only
   special: true, // 30/4 theme: hidden on the public site unless the host turns special maps on
   finish: 'palace-gate', // the finish line is the palace gate
   palette: { skyTop: '#5bb8f0', skyBottom: '#dff3ff', ground: '#cdbb98', laneA: '#71757e', laneB: '#676b74', line: '#f7f7f7' },
@@ -105,6 +125,25 @@ MAPS.push(
     finish: 'flag-raise', // the flag goes up the pole + fireworks
     cheers: ['Độc lập – Tự do – Hạnh phúc', 'Không có gì quý hơn độc lập, tự do', 'Hà Nội mùa thu!'],
     palette: { skyTop: '#7ec8f2', skyBottom: '#e9f6ff', ground: '#9ccf63', laneA: '#8a8d93', laneB: '#80838a', line: '#ffffff' },
+  },
+  {
+    id: 'sieuanhhung', name: 'Phố siêu anh hùng', trackLength: 660,
+    allowedAnimals: ['starShield', 'nonLaHero', 'robot', 'ninja', 'buiCay'],
+    cheers: ['POW! BAM! VÈO!', 'Cứu thế giới xong rồi đua tiếp!', 'Siêu anh hùng về đích!'],
+    palette: { skyTop: '#141a3d', skyBottom: '#4b3f8f', ground: '#3a3f4b', laneA: '#5a5f6b', laneB: '#525763', line: '#ffd23f' },
+  },
+  {
+    id: 'vongquanh', name: 'Vòng quanh thế giới', trackLength: 720,
+    allowedAnimals: ['astronaut', 'mummy', 'cowboy', 'flagBro', 'doubleDecker'],
+    finish: 'ribbon',
+    cheers: ['Bonjour! Hello! Xin chào!', 'Đi một ngày đàng, học một sàng khôn', 'Về đích là về nhà!'],
+    palette: { skyTop: '#6ec6f5', skyBottom: '#e6f7ff', ground: '#9ccf63', laneA: '#d9c49a', laneB: '#cfb98d', line: '#ffffff' },
+  },
+  {
+    id: 'chodem', name: 'Chợ đêm', trackLength: 640,
+    allowedAnimals: ['banhMi', 'traSua', 'pho', 'saurieng'],
+    cheers: ['Ăn gì cũng được, về nhất là được!', 'Nóng hổi vừa thổi vừa đua!', 'Chợ đêm vui quá trời!'],
+    palette: { skyTop: '#1d1640', skyBottom: '#6a3d7a', ground: '#5c4a3a', laneA: '#7a6a58', laneB: '#706050', line: '#ffd23f' },
   },
 );
 
@@ -169,10 +208,14 @@ export const isAnimalAllowed = (map, animalId) => allowedAnimals(map).some((a) =
  */
 export const CHARACTER_GROUPS = [
   { id: 'animals', name: 'Động vật', icon: '🐾' },
+  { id: 'people', name: 'Con người', icon: '👨‍🌾' },
   { id: 'saigon', name: '30/4', icon: '⭐' },
   { id: 'denhung', name: 'Đền Hùng', icon: '🥁' },
   { id: 'congtruong', name: 'Công trường', icon: '🏗️' },
   { id: 'badinh', name: 'Ba Đình', icon: '🏛️' },
+  { id: 'sieuanhhung', name: 'Siêu anh hùng', icon: '🦸' },
+  { id: 'vongquanh', name: 'Thế giới', icon: '🌍' },
+  { id: 'chodem', name: 'Chợ đêm', icon: '🏮' },
 ];
 export const groupOf = (animal) => animal.group ?? animal.maps?.[0] ?? 'animals';
 

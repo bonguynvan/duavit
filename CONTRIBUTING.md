@@ -62,7 +62,7 @@ Quy ước hệ tọa độ:
 
 - Nhân vật **quay mặt sang phải**, gốc tọa độ `(0, 0)` nằm **trên mặt đất, giữa thân**; trục y âm là đi lên.
 - Dài khoảng **100 đơn vị** (từ khoảng -50 đến +50), cao không quá ~105 đơn vị.
-- Dùng các hàm có sẵn trong `public/js/paint.js` (`shape`, `ellipse`, `circle`, `poly`, `stroke`, `leg`, `swing`, `shade`…) để có viền mực dày giống phong cách chung.
+- Dùng các hàm có sẵn trong `public/js/paint.js` (`shape`, `ellipse`, `circle`, `poly`, `stroke`, `thinLine`, `leg`, `swing`, `shade`…) để có viền mực dày giống phong cách chung.
 - Bắt buộc gọi `drawFace(ctx, x, y, r, face, c)`: đó là huy hiệu chữ cái đầu tên người chơi.
 - Dùng `swing(p, offset, m)` cho chân/tay để nhân vật đứng yên khi `m === false`.
 
@@ -125,7 +125,7 @@ Map tự dùng nhạc 8-bit có sẵn. **Không** commit file mp3 vào repo; xem
 
 ## Quy tắc nội dung
 
-- **Tự vẽ, tự sáng tác.** Không dùng nhân vật có bản quyền (Doraemon, Pikachu, Mario…), logo thương hiệu, hay hình người thật.
+- **Tự vẽ.** Đừng chép y nguyên hình nhân vật nổi tiếng (Doraemon, Pikachu, Mario…), logo thương hiệu hay hình người thật. Nhân vật "chế" vui do bạn tự vẽ, đặt tên gần gũi kiểu *Đội trưởng Mễ*, *Bụi cây biết nói*, *Người sắt đồng nát* thì cứ thoải mái: dự án chỉ để chơi vui, không kiếm tiền từ nhân vật.
 - **Không** vẽ một nhóm người, dân tộc, quốc gia, tôn giáo… thành con vật hay hình ảnh xúc phạm. Hình ảnh lịch sử, văn hóa được hoan nghênh nếu thể hiện trân trọng; chủ đề nhạy cảm thì đặt `special: true`.
 - Toàn bộ chữ trên giao diện bằng **tiếng Việt**; người đua gọi là **"nhân vật"**.
 - **Không dùng từ ngữ cờ bạc**: "may rủi", "may mắn", "cầu may", "giải thưởng", "tiền thưởng", "trúng thưởng", "cược"… Hãy dùng "ngẫu nhiên", "random", "thuật toán công bằng". (Ngoại lệ duy nhất: điều khoản cấm trong `/dieu-khoan`.)

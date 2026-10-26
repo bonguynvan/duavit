@@ -2,17 +2,24 @@
 // Primitives live in paint.js, characters in painters*.js, backgrounds in scenery*.js.
 import { ANIMAL_PAINTERS } from './painters.js';
 import { HOLIDAY_HEAD_TOP, HOLIDAY_PAINTERS } from './painters-holiday.js';
+import { FOOD_HEAD_TOP, FOOD_PAINTERS } from './painters-food.js';
+import { PEOPLE_HEAD_TOP, PEOPLE_PAINTERS } from './painters-people.js';
+import { SAIGON_HEAD_TOP, SAIGON_PAINTERS } from './painters-saigon.js';
+import { WORLD_HEAD_TOP, WORLD_PAINTERS } from './painters-world.js';
 import { SCENERY } from './scenery.js';
 import { HOLIDAY_SCENERY } from './scenery-holiday.js';
+import { WORLD_SCENERY } from './scenery-world.js';
 
-export const PAINTERS = { ...ANIMAL_PAINTERS, ...HOLIDAY_PAINTERS };
+export const PAINTERS = {
+  ...ANIMAL_PAINTERS, ...HOLIDAY_PAINTERS, ...SAIGON_PAINTERS, ...PEOPLE_PAINTERS, ...WORLD_PAINTERS, ...FOOD_PAINTERS,
+};
 
 // Where accessories float: above the head/ears of each animal (animal units).
 export const HEAD_TOP = {
   horse: [38, -104], rabbit: [22, -80], turtle: [40, -42], cat: [32, -74], dog: [34, -74], pig: [34, -62],
   penguin: [4, -79], camel: [42, -100], tiger: [36, -74], fox: [33, -80], cow: [36, -80], chicken: [16, -78],
   duck: [22, -62], elephant: [42, -83], frog: [26, -57], mouse: [30, -64], tank: [6, -72], tank843: [6, -72], helicopter: [12, -92], palace: [24, -64],
-  ...HOLIDAY_HEAD_TOP,
+  ...HOLIDAY_HEAD_TOP, ...SAIGON_HEAD_TOP, ...PEOPLE_HEAD_TOP, ...WORLD_HEAD_TOP, ...FOOD_HEAD_TOP,
 };
 export const EMOJI_FONT = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
 const ITEM_SIZE = 22;
@@ -85,5 +92,5 @@ export function paintAnimalCard(canvas, animal, face, items = []) {
 export { drawScenery, paintMapCard } from './scenery.js';
 
 // Holiday map backgrounds plug into the same table drawScenery() reads.
-Object.assign(SCENERY, HOLIDAY_SCENERY);
+Object.assign(SCENERY, HOLIDAY_SCENERY, WORLD_SCENERY);
 export { drawFace, starFlag, INK, FONT } from './paint.js';
