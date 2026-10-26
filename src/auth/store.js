@@ -31,7 +31,11 @@ export class AuthStore {
   }
 
   #roleFor(email) {
-    return this.adminEmails.has(email.toLowerCase()) ? 'admin' : 'user';
+    return this.isAdminEmail(email) ? 'admin' : 'user';
+  }
+
+  isAdminEmail(email) {
+    return this.adminEmails.has(String(email).toLowerCase());
   }
 
   /** The stored role is only a snapshot from login; the current ADMIN_EMAILS always wins. */

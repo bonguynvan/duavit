@@ -34,10 +34,10 @@ export function isSameOrigin(req) {
  * @param {{
  *   store: import('./store.js').AuthStore, clientId?: string, clientSecret?: string,
  *   baseUrl: (req) => string, ipOf: (req) => string, secureCookies: boolean,
- *   fetchImpl?: typeof fetch, devLogin?: boolean,
- * }} opts
+ *   fetchImpl?: typeof fetch, devLogin?: boolean, adminsOnly?: boolean,
+ * }} opts  adminsOnly: when rooms need no account, only ADMIN_EMAILS may sign in (nobody else is stored)
  */
-export function registerAuth(app, { store, clientId, clientSecret, baseUrl, ipOf, secureCookies, fetchImpl, devLogin = false }) {
+export function registerAuth(app, { store, clientId, clientSecret, baseUrl, ipOf, secureCookies, fetchImpl, devLogin = false, adminsOnly = false }) {
   const pending = new Map(); // state -> { verifier, returnTo, expires, ip }
   const pendingPerIp = new Map(); // ip -> open sign-ins
   const dropPending = (state) => {
@@ -91,6 +91,9 @@ export function registerAuth(app, { store, clientId, clientSecret, baseUrl, ipOf
     try {
       const tokens = await exchangeCode({ code, verifier: flow.verifier, clientId, clientSecret, redirectUri: `${baseUrl(req)}/auth/google/callback`, fetchImpl });
       const identity = identityFromIdToken(tokens.id_token, { clientId });
+      if (adminsOnly && !store.isAdminEmail(identity.email)) {
+        return res.status(403).type('text/plain; charset=utf-8').send('Đăng nhập chỉ dành cho quản trị viên. Bạn không cần tài khoản để chơi hay tạo phòng.');
+      }
       const user = store.upsertGoogleUser(identity, Date.now());
       if (user.banned) return res.status(403).type('text/plain; charset=utf-8').send('Tài khoản này đã bị khóa.');
       startSession(res, user);

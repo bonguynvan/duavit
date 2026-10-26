@@ -85,17 +85,17 @@ before(async () => {
 after(() => server.close());
 
 /** Walk the OAuth dance; returns the session cookie value. */
-async function signIn(claims = goodClaims(), returnTo = '/?create=1') {
+async function signIn(claims = goodClaims(), returnTo = '/?create=1', at = base) {
   nextClaims = claims;
-  const start = await fetch(`${base}/auth/google?returnTo=${encodeURIComponent(returnTo)}`, { redirect: 'manual' });
+  const start = await fetch(`${at}/auth/google?returnTo=${encodeURIComponent(returnTo)}`, { redirect: 'manual' });
   assert.equal(start.status, 302);
   const google = new URL(start.headers.get('location'));
   assert.equal(google.origin + google.pathname, 'https://accounts.google.com/o/oauth2/v2/auth');
   assert.equal(google.searchParams.get('code_challenge_method'), 'S256');
-  assert.equal(google.searchParams.get('redirect_uri'), `${base}/auth/google/callback`);
+  assert.equal(google.searchParams.get('redirect_uri'), `${at}/auth/google/callback`);
   const state = google.searchParams.get('state');
   const stateCookie = start.headers.getSetCookie().find((c) => c.startsWith('peti_oauth='));
-  const back = await fetch(`${base}/auth/google/callback?code=auth-code&state=${state}`, {
+  const back = await fetch(`${at}/auth/google/callback?code=auth-code&state=${state}`, {
     redirect: 'manual',
     headers: { cookie: stateCookie.split(';')[0] },
   });
@@ -159,6 +159,23 @@ test('the callback rejects a missing/forged state and bad tokens', async () => {
 test('open redirects are impossible after sign-in', async () => {
   const { back } = await signIn(goodClaims(), 'https://evil.example/steal');
   assert.equal(back.headers.get('location'), '/');
+});
+
+test('when rooms need no account, only admins can sign in (nobody else is stored)', async () => {
+  const fakeGoogle = async () => new Response(JSON.stringify({ id_token: idToken(nextClaims) }), { status: 200, headers: { 'content-type': 'application/json' } });
+  const open = await startServer({ port: 0, auth: { clientId: CLIENT_ID, clientSecret: 'shh', fetchImpl: fakeGoogle, adminEmails: ['boss@example.com'] } });
+  const at = `http://127.0.0.1:${open.port}`;
+  try {
+    const visitor = await signIn(goodClaims({ sub: 'visitor', email: 'visitor@example.com' }), '/', at);
+    assert.equal(visitor.back.status, 403);
+    assert.equal(visitor.sid, undefined, 'no session for a non-admin');
+    const admin = await signIn(goodClaims({ sub: 'boss', email: 'Boss@example.com' }), '/admin', at);
+    assert.equal(admin.back.status, 302);
+    const { users } = await (await fetch(`${at}/api/admin/overview`, { headers: { cookie: admin.sid } })).json();
+    assert.deepEqual(users.map((u) => u.email), ['boss@example.com'], 'the visitor left no account behind');
+  } finally {
+    await open.close();
+  }
 });
 
 test('per-account room limit applies to signed-in creators', async () => {

@@ -130,6 +130,7 @@ export async function startServer({
     secureCookies: auth.secureCookies ?? publicUrl.startsWith('https://'),
     fetchImpl: auth.fetchImpl,
     devLogin: auth.devLogin === true,
+    adminsOnly: !requireLogin,
   });
 
   app.get('/', page('home.html'));
