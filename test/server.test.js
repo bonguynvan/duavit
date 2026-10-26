@@ -148,6 +148,15 @@ test('static files are always revalidated; soundtracks 404 when absent', async (
   assert.equal((await fetch(`${url}/music/no-such-map.mp3`, { method: 'HEAD' })).status, 404);
 });
 
+test('the favicon is served, and /favicon.ico points to it', async () => {
+  const svg = await fetch(`${url}/favicon.svg`);
+  assert.equal(svg.status, 200);
+  assert.match(svg.headers.get('content-type'), /image\/svg\+xml/);
+  const ico = await fetch(`${url}/favicon.ico`, { redirect: 'manual' });
+  assert.equal(ico.status, 301);
+  assert.equal(ico.headers.get('location'), '/favicon.svg');
+});
+
 test('cross-origin socket connections are refused', async () => {
   const path = `/socket.io/?EIO=4&transport=polling&room=${main.code}`;
   assert.equal((await fetch(`${url}${path}`, { headers: { Origin: 'http://evil.example' } })).status, 403);

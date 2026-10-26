@@ -111,6 +111,8 @@ export async function startServer({
     app.use(`/${dir}`, express.static(path.join(PUBLIC, dir), { setHeaders: noCache, index: false }));
   }
   app.use('/shared', express.static(path.join(ROOT, 'shared'), { setHeaders: noCache, index: false }));
+  app.get('/favicon.svg', (_req, res) => res.set('Cache-Control', 'public, max-age=86400').sendFile(path.join(PUBLIC, 'favicon.svg')));
+  app.get('/favicon.ico', (_req, res) => res.redirect(301, '/favicon.svg')); // browsers and bots ask for it by name
 
   const page = (file) => (_req, res) => res.set('Cache-Control', 'no-cache').sendFile(path.join(PUBLIC, file));
   const roomPage = (file) => (req, res) => {
