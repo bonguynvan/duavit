@@ -12,6 +12,7 @@ import { Playback, prepareRace } from './quick/playback.js';
 import { pickThrow } from './quick/fun.js';
 import { mountCommitBar } from './commitBar.js';
 import { mountMusicPicker } from './musicPicker.js';
+import { mapRequestCard } from './mapRequest.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
@@ -69,7 +70,7 @@ function renderMaps() {
     }, canvas, el('span', {}, map.name));
     requestAnimationFrame(() => paintMapCard(canvas, map));
     return button;
-  }));
+  }), mapRequestCard());
 }
 
 function renderDurations() {

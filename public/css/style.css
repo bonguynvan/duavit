@@ -186,3 +186,19 @@ input[type='text']:focus { outline: none; border-color: var(--tomato); box-shado
 .picker-tab:focus-visible { outline: 3px dashed var(--tomato); outline-offset: 2px; }
 .picker-tab[aria-selected='true'] { background: var(--ink); color: #fff; box-shadow: 2px 2px 0 var(--tomato); }
 .picker-tab[aria-selected='true'] small { color: var(--sun); }
+
+/* Last slot of the map grids (mapRequest.js): build a map yourself, or ask the author for one.
+   Compact so it never makes its grid row taller than the map cards. */
+.map-request {
+  display: grid; align-content: center; gap: 8px; padding: 10px; min-width: 0;
+  border: 3px dashed var(--ink); border-radius: 14px; background: rgba(255, 255, 255, 0.55);
+}
+.map-request strong { font: 800 0.95rem var(--font-display); }
+.map-request a {
+  padding: 7px 10px; color: var(--ink); text-decoration: none; font: 800 0.88rem var(--font-display);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 10px;
+  transition: transform 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.map-request a:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-sm); }
+.map-request a:focus-visible { outline: 3px dashed var(--tomato); outline-offset: 2px; }

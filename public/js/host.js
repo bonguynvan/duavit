@@ -7,6 +7,7 @@ import { el, formatTime, request, roomStorage, socket, toast } from './net.js';
 import { mountChat, messageNode } from './chat.js';
 import { mountCommitBar } from './commitBar.js';
 import { mountMusicPicker } from './musicPicker.js';
+import { mapRequestCard } from './mapRequest.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
@@ -41,6 +42,7 @@ const mapButtons = MAPS.map((map) => {
   $('maps').append(button);
   return { map, button, canvas };
 });
+$('maps').append(mapRequestCard()); // stays last: map buttons are only hidden, never re-added
 
 // ---------- race duration (host picks; default follows the map) ----------
 const formatDuration = (s) => (s % 60 === 0 ? `${s / 60} phút` : s > 60 ? `${(s / 60).toLocaleString('vi-VN')} phút` : `${s} giây`);
