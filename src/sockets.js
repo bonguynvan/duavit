@@ -56,7 +56,7 @@ function socketsIn(io, code) {
  * Wire every socket event. Each socket belongs to exactly one room, chosen by the
  * `room` query parameter on connect; nothing ever crosses between rooms.
  */
-export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, maxSocketsPerIp, store }) {
+export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, maxSocketsPerIp, store, onRaceStart = () => {} }) {
   const socketsPerIp = new Map();
   const authFailures = new Map(); // "ip|room" -> { count, lockedUntil }
 
@@ -237,7 +237,11 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
     hostAction('host:duration', ({ seconds }) => room.setDuration(seconds ?? null));
     hostAction('host:specialMaps', ({ allowed }) => room.setSpecialMaps(allowed === true));
     hostAction('host:allCharacters', ({ on }) => room.setAllCharacters(on === true));
-    hostAction('host:start', () => room.start(Date.now()));
+    hostAction('host:start', () => {
+      const result = room.start(Date.now());
+      if (!result.error) onRaceStart(room.race?.entrants.length ?? 0); // daily counter for the dashboard
+      return result;
+    });
     hostAction('host:lobby', () => room.backToLobby());
     hostAction('host:pause', () => room.pauseRace(Date.now()));
     hostAction('host:resume', () => room.resumeRace(Date.now()));

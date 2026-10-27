@@ -3,6 +3,7 @@ import { WelcomeParade } from './welcome.js';
 import { el } from './ui.js';
 import { loadSavedRooms, rememberRoom, saveRooms } from './myRooms.js';
 import { track } from './analytics.js';
+import { onStatus } from './statusBanner.js';
 
 const $ = (id) => document.getElementById(id);
 const CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/;
@@ -101,3 +102,9 @@ const params = new URLSearchParams(location.search);
 if (params.get('login') === 'cancelled') showError('Bạn đã huỷ đăng nhập.');
 if (params.has('create') || params.has('login')) history.replaceState(null, '', '/');
 if (params.get('create') === '1' && me.user) createRoom();
+
+// Maintenance (set from the peti.vn admin): the create button waits until it is over.
+onStatus(({ maintenance }) => {
+  $('create-room').disabled = maintenance;
+  $('create-room').title = maintenance ? 'Đang bảo trì, tạm thời chưa tạo được phòng mới' : '';
+});

@@ -14,6 +14,8 @@
 
 # The game. The app sets its own CSP and security headers; Caddy adds HSTS + compression.
 duavit.peti.vn {
+	# Operator API: only the admin dashboard on this server may call it (it goes to the app directly).
+	respond /api/ops/* 404
 	import security_headers
 	encode zstd gzip
 	reverse_proxy app:3000

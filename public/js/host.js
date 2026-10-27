@@ -9,6 +9,7 @@ import { mountCommitBar } from './commitBar.js';
 import { mountMusicPicker } from './musicPicker.js';
 import { mapRequestCard } from './mapRequest.js';
 import { track } from './analytics.js';
+import { showStatus } from './statusBanner.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
@@ -491,3 +492,6 @@ $('start').addEventListener('click', startRace);
 $('rematch').addEventListener('click', startRace);
 $('to-lobby').addEventListener('click', () => act('host:lobby'));
 requestAnimationFrame(tickTimer);
+
+// Announcement / maintenance pushed by the server the moment the operator changes it.
+socket.on('status', showStatus);

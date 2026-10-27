@@ -137,6 +137,8 @@ async function startRace() {
   const race = prepareRace({ names, mapId: settings.mapId, durationSec: settings.durationSec, character: settings.character, seed, fun: settings.fun, allCharacters: settings.allCharacters });
   raceView.showNames = names.length <= MAX_LANES;
   track('quick_race_start', { map_id: settings.mapId, racers: names.length });
+  // The operator dashboard counts quick races per day: only the number of racers is sent.
+  fetch('/api/stats/quick-race', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ racers: names.length }), keepalive: true }).catch(() => {});
   const playback = new Playback(race, { title: settings.title });
   current = { race, playback, seed, seedHash, names, finished: false, boardAt: 0, video: null, nextThrowAt: playback.startsAt + FIRST_THROW_AFTER_MS };
 

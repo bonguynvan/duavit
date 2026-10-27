@@ -151,6 +151,7 @@ export class RoomManager {
       ownerId: e.ownerId,
       title: e.room.title,
       phase: e.room.phase,
+      mapId: e.room.mapId,
       players: e.room.players.size,
       connections: e.connections,
       ageMin: Math.round((now - e.createdAt) / 60000),
