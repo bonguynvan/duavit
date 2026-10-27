@@ -28,6 +28,17 @@ const MIGRATIONS = [
      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
      expires_at INTEGER NOT NULL
    );`,
+  // Operator dashboard: daily counters (numbers only) and site-wide switches (maintenance, announcement).
+  `CREATE TABLE daily_stats (
+     day TEXT NOT NULL,
+     metric TEXT NOT NULL,
+     value INTEGER NOT NULL,
+     PRIMARY KEY (day, metric)
+   );
+   CREATE TABLE settings (
+     key TEXT PRIMARY KEY,
+     value TEXT NOT NULL
+   );`,
 ];
 
 /**

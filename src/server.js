@@ -11,12 +11,17 @@ import { AuthStore } from './auth/store.js';
 import { isSameOrigin, registerAuth } from './auth/routes.js';
 import { clientIp, closeRoom, publicBaseUrl, registerSockets, roomLinks, sweepRooms, tickRooms } from './sockets.js';
 import { isGa4Id } from '../shared/analyticsUrl.js';
+import { DailyStats } from './stats.js';
+import { Settings } from './settings.js';
+import { registerOps } from './ops.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
 const TICK_MS = 50;
 const SWEEP_MS = 60 * 1000;
 const CREATE_WINDOW_MS = 60 * 1000;
+const QUICK_STATS_PER_MINUTE = 10; // quick races counted per IP and minute (a counter, not a log)
+const MAINTENANCE_MESSAGE = 'Đang bảo trì: tạm thời chưa tạo được phòng mới. Phòng đang chạy vẫn đua bình thường.';
 
 // Google Analytics hosts, allowed only when a GA4_ID is configured.
 const GA_SCRIPT = 'https://www.googletagmanager.com';
@@ -98,6 +103,8 @@ export async function startServer({
   db = openDatabase(':memory:'),
   requireLogin = false, // ROOMS_REQUIRE_LOGIN=1 brings back "sign in to create a room"
   ga4Id = '', // Google Analytics 4 measurement id; empty (or malformed) = no analytics at all
+  opsToken = '', // OPS_TOKEN for the peti.vn admin dashboard (src/ops.js); empty = no operator API
+  gameName = 'Đua vịt',
   auth = {},
 } = {}) {
   const analyticsId = isGa4Id(ga4Id) ? ga4Id : null;
@@ -105,6 +112,9 @@ export async function startServer({
   const store = new AuthStore(db, { sessionDays: auth.sessionDays, adminEmails: auth.adminEmails ?? [] });
   const baseUrl = (req) => publicBaseUrl(req.headers, { publicUrl, trustProxy });
   const allowCreate = createLimiter(createPerMinute);
+  const allowQuickStat = createLimiter(QUICK_STATS_PER_MINUTE);
+  const stats = new DailyStats(db);
+  const settings = new Settings(db);
   // Changes on every server start; open tabs reload themselves when they see a new one.
   const buildId = randomBytes(4).toString('hex');
 
@@ -164,9 +174,25 @@ export async function startServer({
     return res.type('image/svg+xml').set('Cache-Control', 'no-cache').send(svg);
   });
 
+  // Maintenance flag + announcement for every page's banner (set from the peti.vn admin).
+  app.get('/api/status', (_req, res) => res.set('Cache-Control', 'no-store').json(settings.get()));
+
+  // Quick races run in the browser: the page reports one, so the dashboard can count them (numbers only).
+  app.post('/api/stats/quick-race', express.json({ limit: '1kb' }), (req, res) => {
+    if (!isSameOrigin(req)) return res.status(403).end();
+    const racers = Number(req.body?.racers);
+    if (!Number.isInteger(racers) || racers < 2 || racers > 500) return res.status(400).end();
+    const now = Date.now();
+    if (!allowQuickStat(clientIp(req.headers, req.socket.remoteAddress, trustProxy), now)) return res.status(429).end();
+    stats.add('quickRaces', 1, now);
+    stats.add('quickRacers', racers, now);
+    return res.status(204).end();
+  });
+
   app.post('/api/rooms', (req, res) => {
     const now = Date.now();
     if (!isSameOrigin(req)) return res.status(403).json({ error: 'Yêu cầu không hợp lệ' });
+    if (settings.get().maintenance) return res.status(503).json({ error: MAINTENANCE_MESSAGE, maintenance: true });
     // Rooms are free to create (per-IP limits below); an operator can require sign-in instead.
     if (requireLogin && !req.user) return res.status(401).json({ error: 'Đăng nhập để tạo phòng', login: '/auth/google?returnTo=/' });
     const ip = clientIp(req.headers, req.socket.remoteAddress, trustProxy);
@@ -174,6 +200,7 @@ export async function startServer({
     const result = rooms.create({ ip, now, ownerId: req.user?.id ?? null });
     if (result.error) return res.status(result.status).json({ error: result.error });
     const { code, hostKey } = result.entry;
+    stats.add('roomsCreated', 1, now);
     return res.status(201).json({ code, ...roomLinks(baseUrl(req), code, hostKey) });
   });
 
@@ -250,12 +277,28 @@ export async function startServer({
     return res.json({ ok: true, banned, closedRooms: closed });
   }));
 
+  const onRaceStart = (racers) => {
+    const now = Date.now();
+    stats.add('roomRaces', 1, now);
+    stats.add('roomRacers', racers, now);
+  };
+  const sockets = registerSockets(io, rooms, { buildId, trustProxy, publicUrl, maxSocketsPerIp, store, onRaceStart });
+  registerOps(app, {
+    token: opsToken,
+    game: { id: 'duavit', name: gameName, url: publicUrl },
+    rooms,
+    closeRoom: (code) => closeRoom(io, rooms, code),
+    stats,
+    settings,
+    onSettings: (next) => io.emit('status', next),
+    startedAt,
+  });
   app.use((_req, res) => notFound(res));
-  const sockets = registerSockets(io, rooms, { buildId, trustProxy, publicUrl, maxSocketsPerIp, store });
 
   const ticker = setInterval(() => tickRooms(io, rooms, Date.now()), TICK_MS);
   const sweeper = setInterval(() => {
     sweepRooms(io, rooms, Date.now());
+    stats.peak('peakPlayers', rooms.list(Date.now()).reduce((n, r) => n + r.players, 0), Date.now());
     store.purgeExpired(Date.now());
     allowCreate.prune(Date.now());
     sockets.prune(Date.now());

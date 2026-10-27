@@ -108,6 +108,6 @@ test('list gives an admin overview without secrets', () => {
   const { entry } = rooms.create({ ip: 'a', now: 0 });
   entry.room.setTitle('Cúp Peti');
   const [row] = rooms.list(120000);
-  assert.deepEqual(row, { code: entry.code, ownerId: null, title: 'Cúp Peti', phase: 'lobby', players: 0, connections: 0, ageMin: 2, idleMin: 2 });
+  assert.deepEqual(row, { code: entry.code, ownerId: null, title: 'Cúp Peti', phase: 'lobby', mapId: 'meadow', players: 0, connections: 0, ageMin: 2, idleMin: 2 });
   assert.ok(!JSON.stringify(rooms.list(0)).includes(entry.hostKey));
 });

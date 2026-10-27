@@ -2,6 +2,8 @@
 # The app listens on 127.0.0.1:3200 (deploy/edge/compose.yml) and sets its own CSP.
 # No access log on purpose: the privacy policy (/quyen-rieng-tu) promises IPs are not logged.
 duavit.peti.vn {
+	# Operator API: only the admin dashboard on this server may call it (it goes to the app directly).
+	respond /api/ops/* 404
 	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"

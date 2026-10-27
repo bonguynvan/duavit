@@ -10,6 +10,7 @@ import { WelcomeParade } from './welcome.js';
 import { createRoomPanel } from './roomPanel.js';
 import { createSoundDirector, sound, soundForEffect } from './audio.js';
 import { pageContaining, paginate } from './paging.js';
+import { showStatus } from './statusBanner.js';
 
 
 const PREVIEW_COLOR = '#ff5a36';
@@ -459,3 +460,6 @@ $('leave-btn').addEventListener('click', async () => {
   forget();
   render();
 });
+
+// Announcement / maintenance pushed by the server the moment the operator changes it.
+socket.on('status', showStatus);

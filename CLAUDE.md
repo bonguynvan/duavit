@@ -29,6 +29,11 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
   choice; visitors can opt out on the privacy page, stored as localStorage `peti.analytics=off`). CSP opens GA hosts only when `GA4_ID` is set. Page views send a cleaned
   address (`shared/analyticsUrl.js`: no query/hash, `/r/:code`), never host keys, room codes, names or chat.
   Events: `quick_race_start`, `room_create`, `race_start`. Not loaded on `/r/CODE/live` (OBS) or `/admin`.
+- Operator API for the peti.vn admin dashboard (`src/ops.js`): `/api/ops/overview|rooms/:code/close|settings`, only with
+  `OPS_TOKEN` (32+ chars, Bearer) and blocked at the public proxy (`respond /api/ops/* 404` in the Caddy site files).
+  Daily counters in `daily_stats` (`src/stats.js`, numbers only, Asia/Ho_Chi_Minh days); maintenance + announcement in
+  `settings` (`src/settings.js`), shown by `public/js/statusBanner.js` (poll `/api/status`, socket `status` push);
+  maintenance blocks `POST /api/rooms` only. Quick races report `POST /api/stats/quick-race {racers}`.
 - Admin page `/admin` (role from `ADMIN_EMAILS`; non-admins get 404): stats, live rooms, users, ban.
 - Fairness explainer `/cong-bang`; link to it wherever a commitment hash shows.
 - Legal pages `/dieu-khoan` (`terms.html`) and `/quyen-rieng-tu` (`privacy.html`), linked from the
