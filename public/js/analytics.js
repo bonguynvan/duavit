@@ -1,17 +1,15 @@
-// Google Analytics 4, only with consent. Nothing loads, and nothing is shown, unless the server has a GA4_ID
-// and the visitor tapped "Đồng ý". Page views report a cleaned address (no host keys, no room codes).
+// Google Analytics 4: page views + a few events whenever the server has a GA4_ID. Page views report a
+// cleaned address (no host keys, no room codes). Visitors can switch it off for their browser on the
+// privacy page.
 import { GA4_ID } from '/analytics-config.js';
 import { cleanLocation } from '/shared/analyticsUrl.js';
 import { el } from './ui.js';
 
-const CONSENT_KEY = 'peti.analytics'; // 'granted' | 'denied'
+const OPT_OUT_KEY = 'peti.analytics'; // 'off' = this browser opted out
 let loaded = false;
 
-const readConsent = () => {
-  try { return localStorage.getItem(CONSENT_KEY); } catch { return null; }
-};
-const writeConsent = (value) => {
-  try { localStorage.setItem(CONSENT_KEY, value); } catch { /* private mode: ask again next time */ }
+const optedOut = () => {
+  try { return localStorage.getItem(OPT_OUT_KEY) === 'off'; } catch { return false; }
 };
 
 function gtag() {
@@ -45,44 +43,26 @@ function clearCookies() {
   }
 }
 
-function showBar() {
-  if (document.querySelector('.consent-bar')) return;
-  const answer = (value) => () => {
-    writeConsent(value);
-    bar.remove();
-    if (value === 'granted') load();
-  };
-  const bar = el('div', { class: 'consent-bar', role: 'dialog', 'aria-label': 'Thống kê truy cập' },
-    el('p', {}, 'Cho phép đếm lượt truy cập bằng Google Analytics để chúng mình cải thiện trang? ',
-      el('a', { href: '/quyen-rieng-tu' }, 'Chi tiết')),
-    el('div', { class: 'consent-actions' },
-      el('button', { type: 'button', class: 'btn btn-ghost', onclick: answer('denied') }, 'Không'),
-      el('button', { type: 'button', class: 'btn btn-primary', onclick: answer('granted') }, 'Đồng ý')));
-  document.body.append(bar);
-}
-
-/** Report a custom event (only once the visitor agreed). */
+/** Report a custom event. */
 export function track(name, params = {}) {
   if (loaded) gtag('event', name, params);
 }
 
 if (GA4_ID) {
-  const consent = readConsent();
-  if (consent === 'granted') load();
-  else if (consent === null) showBar();
-  // The privacy page lets visitors change their mind.
-  const settings = document.getElementById('analytics-settings');
-  if (settings) {
-    settings.hidden = false;
-    settings.addEventListener('click', () => {
-      if (readConsent() === 'granted') {
-        writeConsent('denied');
-        clearCookies();
-        location.reload(); // gtag.js cannot be unloaded: start clean
-      } else {
-        try { localStorage.removeItem(CONSENT_KEY); } catch { /* ignore */ }
-        showBar();
-      }
+  if (!optedOut()) load();
+  // Privacy page: switch analytics off (or back on) for this browser.
+  const toggle = document.getElementById('analytics-settings');
+  if (toggle) {
+    const label = () => { toggle.textContent = optedOut() ? 'Bật lại thống kê trên trình duyệt này' : 'Tắt thống kê trên trình duyệt này'; };
+    label();
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => {
+      try {
+        if (optedOut()) localStorage.removeItem(OPT_OUT_KEY);
+        else localStorage.setItem(OPT_OUT_KEY, 'off');
+      } catch { /* storage blocked: nothing to remember */ }
+      if (optedOut()) clearCookies();
+      location.reload(); // gtag.js cannot be unloaded: start clean
     });
   }
 }

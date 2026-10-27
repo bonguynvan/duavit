@@ -96,7 +96,19 @@ cd ~/duavit && ./deploy/update.sh
 ```
 Script tự sao lưu database, kéo code mới, build lại và kiểm tra sức khỏe app.
 
-## 7. Sao lưu
+## 7. Vào trang quản trị `/admin`
+Email của bạn phải có trong `ADMIN_EMAILS` (file `.env`). Chưa cấu hình đăng nhập Google vẫn vào được bằng
+link đăng nhập tạo ngay trên máy chủ (dùng 1 lần, hết hạn sau 10 phút):
+
+```bash
+cd ~/duavit
+docker compose exec app node src/tools/admin-link.js            # email đầu tiên trong ADMIN_EMAILS
+docker compose exec app node src/tools/admin-link.js ban@peti.vn # hoặc chỉ định email
+```
+Mở link được in ra, trình duyệt sẽ vào thẳng `/admin` và giữ đăng nhập như bình thường. Đổi `ADMIN_EMAILS`
+thì khởi động lại app (`docker compose up -d`).
+
+## 8. Sao lưu
 ```bash
 ./deploy/backup.sh      # ghi vào data/backups/, xóa bản cũ hơn 14 ngày
 ```

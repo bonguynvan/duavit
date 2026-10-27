@@ -104,6 +104,15 @@ export function registerAuth(app, { store, clientId, clientSecret, baseUrl, ipOf
     }
   });
 
+  // One-time admin link made on the server with src/tools/admin-link.js (works without Google sign-in).
+  app.get('/auth/link', (req, res) => {
+    const user = store.redeemLoginLink(req.query.token, Date.now());
+    if (!user) return res.status(400).type('text/plain; charset=utf-8').send('Link đăng nhập không hợp lệ, đã dùng hoặc đã hết hạn. Tạo link mới trên máy chủ.');
+    if (!store.isAdminEmail(user.email)) return res.status(403).type('text/plain; charset=utf-8').send('Link này không thuộc tài khoản quản trị.');
+    startSession(res, user);
+    return res.redirect(302, '/admin');
+  });
+
   // Local development only: fake sign-in without Google credentials. Never in production.
   if (devLogin) {
     app.get('/auth/dev', (req, res) => {

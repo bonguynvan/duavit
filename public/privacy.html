@@ -5,7 +5,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Quyền riêng tư · Đua Vịt Peti</title>
-  <meta name="description" content="Đua Vịt Peti thu thập rất ít dữ liệu: không quảng cáo, không bán dữ liệu, thống kê truy cập chỉ khi bạn đồng ý. Đua nhanh chạy hoàn toàn trên trình duyệt của bạn.">
+  <meta name="description" content="Đua Vịt Peti thu thập rất ít dữ liệu: không quảng cáo, không bán dữ liệu, có thống kê lượt truy cập ẩn danh. Đua nhanh chạy hoàn toàn trên trình duyệt của bạn.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
   <link rel="stylesheet" href="/css/style.css">
@@ -33,7 +33,7 @@
         <li><strong>Không cần tài khoản</strong> để chơi hay tạo phòng. Chỉ đội vận hành đăng nhập (Google) để quản trị.</li>
         <li>Tên người chơi, chat trong phòng chỉ nằm trong bộ nhớ và <strong>mất khi phòng đóng</strong>.</li>
         <li><strong>Không quảng cáo, không bán hay chia sẻ dữ liệu</strong>, không thu thông tin thanh toán.</li>
-        <li>Thống kê lượt truy cập (Google Analytics) <strong>chỉ bật khi bạn bấm “Đồng ý”</strong>, và bạn đổi ý được bất cứ lúc nào.</li>
+        <li>Chúng mình đếm lượt truy cập bằng <strong>Google Analytics</strong>; bạn tắt được cho trình duyệt của mình ở mục 5.</li>
         <li>Bạn có thể yêu cầu xem hoặc xóa dữ liệu bất cứ lúc nào.</li>
       </ul>
     </section>
@@ -78,12 +78,12 @@
       <p>Bản sao lưu cơ sở dữ liệu (chỉ gồm tài khoản và phiên đăng nhập) được giữ tối đa 14 ngày. Chỉ quản trị viên của dịch vụ xem được danh sách tài khoản.</p>
 
       <h2>3. Dữ liệu chỉ nằm trên thiết bị của bạn</h2>
-      <p>Trình duyệt của bạn lưu (localStorage) danh sách tên và cài đặt của Đua nhanh, cài đặt âm thanh, mã các phòng bạn đã tạo, mã để quay lại phòng và lựa chọn của bạn về thống kê truy cập. File nhạc bạn tự chọn chỉ được phát ngay trên trình duyệt, không tải lên máy chủ. Video cuộc đua được quay và tải về ngay trên máy bạn. Những dữ liệu này không được gửi cho chúng mình; bạn xóa được bằng cách xóa dữ liệu trang web trong trình duyệt.</p>
+      <p>Trình duyệt của bạn lưu (localStorage) danh sách tên và cài đặt của Đua nhanh, cài đặt âm thanh, mã các phòng bạn đã tạo, mã để quay lại phòng và lựa chọn tắt thống kê (nếu bạn tắt). File nhạc bạn tự chọn chỉ được phát ngay trên trình duyệt, không tải lên máy chủ. Video cuộc đua được quay và tải về ngay trên máy bạn. Những dữ liệu này không được gửi cho chúng mình; bạn xóa được bằng cách xóa dữ liệu trang web trong trình duyệt.</p>
 
       <h2>4. Những điều chúng mình không làm</h2>
       <ul>
         <li>Không bán, cho thuê hay chia sẻ dữ liệu cá nhân cho bên khác để quảng cáo.</li>
-        <li>Không dùng pixel theo dõi hay cookie quảng cáo. Công cụ phân tích duy nhất là Google Analytics, và chỉ chạy khi bạn đồng ý (xem mục 5).</li>
+        <li>Không dùng pixel theo dõi hay cookie quảng cáo. Công cụ phân tích duy nhất là Google Analytics (xem mục 5).</li>
         <li>Không thu thông tin thanh toán: dịch vụ miễn phí và không có giao dịch tiền.</li>
         <li>Không dùng dữ liệu để quyết định kết quả cuộc đua; kết quả chỉ phụ thuộc vào seed ngẫu nhiên (<a href="/cong-bang">xem cách hoạt động</a>).</li>
       </ul>
@@ -92,8 +92,8 @@
       <ul>
         <li><strong>Google</strong> khi quản trị viên đăng nhập (theo chính sách quyền riêng tư của Google). Chúng mình chỉ nhận mã định danh, email và tên hiển thị.</li>
         <li><strong>Google Fonts</strong>: trình duyệt tải phông chữ từ máy chủ của Google, nên Google có thể nhận địa chỉ IP và thông tin trình duyệt của bạn.</li>
-        <li><strong>Google Analytics 4</strong>, chỉ khi bạn bấm “Đồng ý” ở thanh hỏi cuối trang: đếm lượt xem trang và vài thao tác (bắt đầu đua nhanh, tạo phòng, bắt đầu một lượt đua) kèm map và số người đua. Google nhận địa chỉ IP, thông tin trình duyệt/thiết bị và đặt cookie <code>_ga</code>, <code>_ga_*</code>; dữ liệu được giữ tối đa 2 tháng. Chúng mình <strong>không</strong> gửi tên người chơi, nội dung chat, mã phòng hay link host, và đã tắt Google Signals cùng quảng cáo cá nhân hóa.
-          <button class="btn btn-ghost analytics-settings" type="button" id="analytics-settings" hidden>Đổi lựa chọn thống kê</button></li>
+        <li><strong>Google Analytics 4</strong>: đếm lượt xem trang và vài thao tác (bắt đầu đua nhanh, tạo phòng, bắt đầu một lượt đua) kèm map và số người đua. Google nhận địa chỉ IP, thông tin trình duyệt/thiết bị và đặt cookie <code>_ga</code>, <code>_ga_*</code>; dữ liệu được giữ tối đa 2 tháng. Chúng mình <strong>không</strong> gửi tên người chơi, nội dung chat, mã phòng hay link host, và đã tắt Google Signals cùng quảng cáo cá nhân hóa.
+          <button class="btn btn-ghost analytics-settings" type="button" id="analytics-settings" hidden>Tắt thống kê trên trình duyệt này</button></li>
         <li><strong>Nhà cung cấp máy chủ</strong> đặt tại Việt Nam, nơi lưu cơ sở dữ liệu.</li>
       </ul>
 
