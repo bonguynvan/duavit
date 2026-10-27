@@ -1,7 +1,7 @@
 // Guards for contributed characters and maps: every catalog entry must have its art registered.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ANIMALS, CHARACTER_GROUPS, ITEMS, MAPS, allowedAnimals, characterGroups, findMap, groupOf } from '../shared/catalog.js';
+import { ANIMALS, CHARACTER_GROUPS, ITEMS, MAPS, allowedAnimals, characterGroups, findMap, groupOf, withCast } from '../shared/catalog.js';
 import { HEAD_TOP, PAINTERS, drawAnimal, drawScenery } from '../public/js/draw.js';
 import { SCENERY } from '../public/js/scenery.js';
 
@@ -72,6 +72,14 @@ test('map-exclusive characters and allowed lists point at real entries', () => {
   for (const animal of ANIMALS) {
     for (const id of animal.maps ?? []) assert.ok(mapIds.has(id), `"${animal.id}" is tied to unknown map "${id}"`);
   }
+});
+
+test('withCast opens a map to every character without touching the catalog', () => {
+  const denhung = findMap('denhung');
+  assert.equal(allowedAnimals(withCast(denhung, true)).length, ANIMALS.length);
+  assert.equal(allowedAnimals(denhung).length, 4, 'the catalog entry is unchanged');
+  assert.equal(withCast(denhung, false), denhung);
+  assert.equal(characterGroups(withCast(denhung, true))[0].id, 'denhung', "the map's own tab first");
 });
 
 test('the Tết map lets everyone race with any character, its own tab first', () => {

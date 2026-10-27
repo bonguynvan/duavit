@@ -1,6 +1,6 @@
 // Quick race: the whole race is simulated up-front from a seed (instant results, provably
 // fair), then played back in real time for the RaceView. Pause just stops the clock.
-import { FACE_COLORS, allowedAnimals, findMap, initialsOf, maxRaceMsFor, trackLengthFor } from '/shared/catalog.js';
+import { FACE_COLORS, allowedAnimals, findMap, initialsOf, maxRaceMsFor, trackLengthFor, withCast } from '/shared/catalog.js';
 import { rankRacers } from '/shared/race.js';
 import { SIM_STEP_MS, simulateRace } from '/shared/simulate.js';
 import { randomItems } from './fun.js';
@@ -14,8 +14,8 @@ const eventCode = (event) => Math.max(0, EVENTS.indexOf(event));
  *   character: an animal id, or 'random' (cosmetic only: never affects the result)
  *   fun: random accessories (cosmetic only, Math.random, never the seed)
  */
-export function prepareRace({ names, mapId, durationSec, character, seed, fun = false }) {
-  const map = findMap(mapId);
+export function prepareRace({ names, mapId, durationSec, character, seed, fun = false, allCharacters = false }) {
+  const map = withCast(findMap(mapId), allCharacters);
   const trackLength = trackLengthFor(map, durationSec);
   const maxMs = maxRaceMsFor(trackLength);
   const ids = names.map((_, i) => `r${i}`);

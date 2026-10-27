@@ -193,7 +193,7 @@ test('host access needs that room\'s key; wrong keys are locked out', async () =
 
 test('non-host sockets cannot control the room', async () => {
   const player = await client();
-  for (const event of ['host:start', 'host:addPlayer', 'host:duration', 'host:specialMaps', 'host:lobby', 'host:map', 'host:kick', 'host:pause', 'host:resume', 'host:restart', 'host:abort', 'host:title', 'host:spectator']) {
+  for (const event of ['host:start', 'host:addPlayer', 'host:duration', 'host:specialMaps', 'host:allCharacters', 'host:lobby', 'host:map', 'host:kick', 'host:pause', 'host:resume', 'host:restart', 'host:abort', 'host:title', 'host:spectator']) {
     const reply = await ask(player, event, {});
     assert.ok(reply.error, `${event} should be rejected`);
   }

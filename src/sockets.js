@@ -236,6 +236,7 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
     hostAction('host:map', ({ mapId }) => room.setMap(mapId));
     hostAction('host:duration', ({ seconds }) => room.setDuration(seconds ?? null));
     hostAction('host:specialMaps', ({ allowed }) => room.setSpecialMaps(allowed === true));
+    hostAction('host:allCharacters', ({ on }) => room.setAllCharacters(on === true));
     hostAction('host:start', () => room.start(Date.now()));
     hostAction('host:lobby', () => room.backToLobby());
     hostAction('host:pause', () => room.pauseRace(Date.now()));
@@ -285,7 +286,7 @@ export function tickRooms(io, rooms, now) {
     if (!changed && !entry.dirty) continue;
     entry.dirty = false;
     const snap = entry.room.snapshot(now);
-    const rosterKey = JSON.stringify([snap.players, snap.title, snap.mapId, snap.durationSec, snap.allowSpecialMaps]);
+    const rosterKey = JSON.stringify([snap.players, snap.title, snap.mapId, snap.durationSec, snap.allowSpecialMaps, snap.allCharacters]);
     if (rosterKey !== entry.lastRosterKey || !snap.race) {
       entry.lastRosterKey = rosterKey;
       io.to(entry.code).emit('state', snap);

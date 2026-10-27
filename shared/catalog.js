@@ -253,8 +253,17 @@ export function characterGroups(map) {
     .sort((a, b) => (b.id === map?.id) - (a.id === map?.id));
 }
 
-/** May a player's pick on this map become their usual character (what other maps give back)? */
-export const isEverydayPick = (map, animalId) => !map?.allowedAnimals && !findAnimal(animalId)?.maps;
+/**
+ * The map as a room / quick race plays it: with `allCharacters` the host opened it to every character
+ * of every map (maps like Tết are always open).
+ */
+export const withCast = (map, allCharacters) => (allCharacters && map && !map.allCharacters ? { ...map, allCharacters: true } : map);
+
+/**
+ * May a pick on `map` become the player's usual character (what ordinary maps give back)? Only an everyday
+ * character picked where everyday characters are on offer: not Ông Lân, not a tank on the vehicles-only map.
+ */
+export const isEverydayPick = (map, animalId) => (!map?.allowedAnimals || Boolean(map?.allCharacters)) && !findAnimal(animalId)?.maps;
 
 /** Stand-in when someone's animal isn't allowed on the map: stable per player (seed), so it doesn't flicker. */
 export function animalForMap(map, animalId, seed = 0) {

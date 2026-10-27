@@ -362,6 +362,27 @@ test('abort cancels the race and returns to the lobby without results', () => {
 
 const SAIGON_CAST = findMap('saigon').allowedAnimals;
 
+test('the host can open any map to every character, and close it again', () => {
+  const room = new Room({ rng: seededRng(6) });
+  const a = room.join('An', 'cat').player;
+  room.join('Bình', 'dog');
+  assert.ok(room.setMap('denhung').ok);
+  assert.ok(room.setAnimal(a.id, 'robot').error, 'Đền Hùng: its own cast only');
+  assert.ok(room.setAllCharacters(true).ok);
+  assert.equal(room.snapshot(0).allCharacters, true);
+  assert.equal(room.players.get(a.id).animal, 'cat', 'opening the cast gives everyone their usual pick back');
+  assert.ok(room.setAnimal(a.id, 'robot').player, 'any character now');
+  assert.ok(room.setMap('chodem').ok);
+  assert.equal(room.players.get(a.id).animal, 'robot', 'a themed pick survives map changes while the cast is open');
+  room.start(0);
+  assert.ok(room.setAllCharacters(false).error, 'not mid-race');
+  room.abortRace();
+  assert.ok(room.setAllCharacters(false).ok);
+  assert.ok(['banhMi', 'traSua', 'pho', 'saurieng'].includes(room.players.get(a.id).animal), 'closing it sends strays back to the map cast');
+  assert.ok(room.setMap('meadow').ok);
+  assert.equal(room.players.get(a.id).animal, 'cat', 'and the usual pick returns on ordinary maps');
+});
+
 test('on the Tết map any character may be picked; a themed pick does not replace the usual one', () => {
   const room = new Room({ rng: seededRng(5) });
   const a = room.join('An', 'cat').player;

@@ -1,4 +1,4 @@
-import { ANIMALS, MAPS, REACTIONS, RULES, animalForMap, characterGroups, findAnimal, findItem, findMap, groupOf, initialsOf, isAnimalAllowed } from '/shared/catalog.js';
+import { ANIMALS, MAPS, REACTIONS, RULES, animalForMap, characterGroups, findAnimal, findItem, findMap, groupOf, initialsOf, isAnimalAllowed, withCast } from '/shared/catalog.js';
 import { paintAnimalCard } from './draw.js';
 import { RaceView, itemIcons } from './raceView.js';
 import { rankRacers } from '/shared/race.js';
@@ -47,7 +47,9 @@ function forget() {
   storage.clear();
 }
 
-const currentMap = () => findMap(state?.mapId) ?? MAPS[0];
+// The map as this room plays it (the host may open it to every character).
+const currentMap = () => withCast(findMap(state?.mapId) ?? MAPS[0], state?.allCharacters);
+const castKey = () => `${state?.mapId}|${Boolean(currentMap().allCharacters)}`;
 const me = () => state?.players.find((p) => p.id === myId) ?? null;
 
 /**
@@ -183,8 +185,8 @@ function renderWelcome() {
 let joinPickerMap = null;
 function renderJoin(entering) {
   const map = currentMap();
-  if (!entering && joinPickerMap === map.id) return;
-  joinPickerMap = map.id;
+  if (!entering && joinPickerMap === castKey()) return;
+  joinPickerMap = castKey();
   // Themed event maps (Tết) start newcomers on their own cast, until they pick something themselves.
   const own = characterGroups(map).find((g) => g.id === map.id);
   if (own && !joinPickedByUser && groupOf(findAnimal(joinAnimal)) !== map.id) joinAnimal = own.animals[Math.floor(Math.random() * own.animals.length)].id;
@@ -194,7 +196,7 @@ function renderJoin(entering) {
 
 let lobbySignature = '';
 function renderLobby(player, entering) {
-  const signature = [state.mapId, player.animal, player.items.join(), player.spectator, player.queuePos, ...state.players.map((p) => `${p.id}:${p.connected}:${p.name}:${p.spectator}`)].join('|');
+  const signature = [castKey(), player.animal, player.items.join(), player.spectator, player.queuePos, ...state.players.map((p) => `${p.id}:${p.connected}:${p.name}:${p.spectator}`)].join('|');
   if (!entering && signature === lobbySignature) return; // race frames arrive at 20 Hz; skip identical repaints
   lobbySignature = signature;
   const face = { initials: player.initials, color: player.color };
