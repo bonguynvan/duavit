@@ -2,6 +2,7 @@ import { MAPS } from '/shared/catalog.js';
 import { WelcomeParade } from './welcome.js';
 import { el } from './ui.js';
 import { loadSavedRooms, rememberRoom, saveRooms } from './myRooms.js';
+import { track } from './analytics.js';
 
 const $ = (id) => document.getElementById(id);
 const CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/;
@@ -63,6 +64,7 @@ async function createRoom() {
     if (res.status === 401 && me.loginEnabled) return location.assign(loginUrl('/?create=1'));
     if (!res.ok) return showError(body.error ?? 'Không tạo được phòng, thử lại nhé');
     saveRooms(rememberRoom(loadSavedRooms(), body, Date.now()));
+    track('room_create');
     // The host link carries the secret key once; host.js stores it and cleans the address bar.
     location.assign(body.hostUrl);
   } catch {

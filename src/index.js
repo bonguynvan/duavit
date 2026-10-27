@@ -18,6 +18,7 @@ for (const warning of productionWarnings(env)) console.warn(`[config] ${warning}
 const server = await startServer({
   db: openDatabase(env.DB_PATH || './data/duavit.sqlite'),
   requireLogin: env.ROOMS_REQUIRE_LOGIN === '1',
+  ga4Id: (env.GA4_ID ?? '').trim(), // Google Analytics 4, e.g. G-XXXXXXXXXX (empty = off)
   auth: {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
