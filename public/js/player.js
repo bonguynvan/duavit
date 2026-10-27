@@ -9,6 +9,7 @@ import { createShop } from './shop.js';
 import { WelcomeParade } from './welcome.js';
 import { createRoomPanel } from './roomPanel.js';
 import { createSoundDirector, sound, soundForEffect } from './audio.js';
+import { pageContaining, paginate } from './paging.js';
 
 
 const PREVIEW_COLOR = '#ff5a36';
@@ -32,6 +33,7 @@ const STARTERS = ANIMALS.filter((a) => groupOf(a) === 'animals'); // the picker 
 let joinAnimal = STARTERS[Math.floor(Math.random() * STARTERS.length)].id;
 
 const PHONE_VIEW_METRES = 45;
+const PICKER_PAGE_SIZE = 8; // two rows of four on a phone
 const raceView = new RaceView($('race-canvas'), {
   highlightId: () => myId,
   focusId: () => (me()?.inRace ? myId : null), // spectators/waiters follow the leader
@@ -50,11 +52,21 @@ const me = () => state?.players.find((p) => p.id === myId) ?? null;
 
 /**
  * Character picker: one tab per character group the map allows (tabs only when there are several),
- * and the grid shows the active group. Builds the buttons once; `update` repaints faces and selection.
+ * and the grid shows the active group, a page at a time. Builds the buttons once; `update` repaints.
  */
 function createPicker(container, onPick) {
   const tabs = el('div', { class: 'picker-tabs', role: 'tablist', 'aria-label': 'Nhóm nhân vật' });
   container.before(tabs);
+  const turn = (delta) => {
+    page += delta;
+    render(...last);
+  };
+  const prev = el('button', { type: 'button', class: 'btn btn-ghost', onclick: () => turn(-1) }, '‹ Trước');
+  const next = el('button', { type: 'button', class: 'btn btn-ghost', onclick: () => turn(1) }, 'Sau ›');
+  const pageLabel = el('span', { class: 'picker-page' });
+  const pager = el('div', { class: 'picker-pager', role: 'group', 'aria-label': 'Trang nhân vật' }, prev, pageLabel, next);
+  container.after(pager);
+  let page = 0;
   const buttons = ANIMALS.map((animal) => {
     const canvas = el('canvas', { 'aria-hidden': 'true' });
     const button = el('button', { type: 'button', class: 'animal-option', 'aria-pressed': 'false', onclick: () => onPick(animal.id) }, canvas, el('span', {}, animal.name));
@@ -72,18 +84,29 @@ function createPicker(container, onPick) {
       const selected = findAnimal(selectedId);
       const own = selected && isAnimalAllowed(map, selectedId) ? groupOf(selected) : null;
       activeGroup = groups.find((g) => g.id === own)?.id ?? groups[0]?.id ?? null;
+      page = pageContaining(groups.find((g) => g.id === activeGroup)?.animals ?? [], PICKER_PAGE_SIZE, (a) => a.id === selectedId);
     }
     const key = groups.map((g) => g.id).join();
     if (key !== tabsKey) { // rebuild only when the set changes, so a focused tab keeps focus
       tabsKey = key;
       tabs.replaceChildren(...groups.map((g) => el('button', {
         type: 'button', role: 'tab', class: 'picker-tab', 'data-group': g.id,
-        onclick: () => { activeGroup = g.id; render(...last); },
+        onclick: () => {
+          activeGroup = g.id;
+          page = pageContaining(g.animals, PICKER_PAGE_SIZE, (a) => a.id === last[0]);
+          render(...last);
+        },
       }, `${g.icon} ${g.name} `, el('small', {}, String(g.animals.length)))));
     }
     tabs.hidden = groups.length < 2;
     for (const tab of tabs.children) tab.setAttribute('aria-selected', String(tab.dataset.group === activeGroup));
-    const shown = new Set(groups.find((g) => g.id === activeGroup)?.animals.map((a) => a.id));
+    const view = paginate(groups.find((g) => g.id === activeGroup)?.animals ?? [], PICKER_PAGE_SIZE, page);
+    page = view.page;
+    pager.hidden = view.pages < 2;
+    pageLabel.textContent = `Trang ${view.page + 1}/${view.pages}`;
+    prev.disabled = view.page === 0;
+    next.disabled = view.page === view.pages - 1;
+    const shown = new Set(view.items.map((a) => a.id));
     buttons.forEach(({ animal, button, canvas }) => {
       button.hidden = !shown.has(animal.id);
       button.setAttribute('aria-pressed', String(animal.id === selectedId));
@@ -102,7 +125,9 @@ function createPicker(container, onPick) {
 
 const joinFace = () => ({ initials: initialsOf($('name-input').value || '?'), color: PREVIEW_COLOR });
 
+let joinPickedByUser = false;
 const joinPicker = createPicker($('join-animals'), (id) => {
+  joinPickedByUser = true;
   joinAnimal = id;
   joinPicker.update(joinAnimal, joinFace(), currentMap());
 });
@@ -160,6 +185,9 @@ function renderJoin(entering) {
   const map = currentMap();
   if (!entering && joinPickerMap === map.id) return;
   joinPickerMap = map.id;
+  // Themed event maps (Tết) start newcomers on their own cast, until they pick something themselves.
+  const own = characterGroups(map).find((g) => g.id === map.id);
+  if (own && !joinPickedByUser && groupOf(findAnimal(joinAnimal)) !== map.id) joinAnimal = own.animals[Math.floor(Math.random() * own.animals.length)].id;
   joinAnimal = animalForMap(map, joinAnimal); // e.g. Dinh Độc Lập: vehicles only
   joinPicker.update(joinAnimal, joinFace(), map);
 }

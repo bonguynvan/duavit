@@ -1,5 +1,5 @@
 // "Đua nhanh": paste names, race, done. Runs entirely in the browser (no login, no server).
-import { MAPS, RULES, allowedAnimals, findAnimal, findMap } from '/shared/catalog.js';
+import { MAPS, RULES, allowedAnimals, characterGroups, findAnimal, findMap } from '/shared/catalog.js';
 import { newSeed, sha256Hex } from '/shared/fair.js';
 import { parseNames } from '/shared/names.js';
 import { rankRacers } from '/shared/race.js';
@@ -90,7 +90,8 @@ function renderCharacters() {
   if (settings.character !== 'random' && !options.some((a) => a.id === settings.character)) settings.character = 'random';
   $('character').replaceChildren(
     el('option', { value: 'random' }, 'Ngẫu nhiên (mỗi người một kiểu)'),
-    ...options.map((a) => el('option', { value: a.id }, `Tất cả là ${a.name}`)),
+    ...characterGroups(findMap(settings.mapId)).map((g) => el('optgroup', { label: `${g.icon} ${g.name}` },
+      ...g.animals.map((a) => el('option', { value: a.id }, `Tất cả là ${a.name}`)))),
   );
   $('character').value = settings.character;
 }

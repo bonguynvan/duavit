@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { ANIMALS, FACE_COLORS, MAPS, REACTIONS, RULES, allowedAnimals, animalForMap, findAnimal, findItem, findMap, initialsOf, maxRaceMsFor, trackLengthFor } from '../../shared/catalog.js';
+import { ANIMALS, FACE_COLORS, MAPS, REACTIONS, RULES, allowedAnimals, animalForMap, findAnimal, findItem, findMap, initialsOf, isEverydayPick, maxRaceMsFor, trackLengthFor } from '../../shared/catalog.js';
 import { rankRacers } from '../../shared/race.js';
 import { newSeed } from '../../shared/fair.js';
 import { SIM_STEP_MS, createSimulation, stepSimulation } from '../../shared/simulate.js';
@@ -115,8 +115,8 @@ export class Room {
       const names = allowedAnimals(map).map((a) => a.name.toLowerCase());
       return { error: `Map ${map.name} chỉ cho chọn ${names.slice(0, -1).join(', ')} hoặc ${names.at(-1)}` };
     }
-    const restricted = Boolean(map.allowedAnimals);
-    const player = this.#update(id, restricted ? { animal: animalId } : { animal: animalId, homeAnimal: animalId });
+    // A themed pick (Ông Lân on the Tết map) never replaces the character other maps give back.
+    const player = this.#update(id, isEverydayPick(map, animalId) ? { animal: animalId, homeAnimal: animalId } : { animal: animalId });
     return player ? { player } : { error: 'Không tìm thấy người chơi' };
   }
 

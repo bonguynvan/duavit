@@ -160,8 +160,7 @@ ANIMALS.push(
 );
 MAPS.push({
   id: 'tet', name: 'Tết đến xuân về', trackLength: 680,
-  // Tết cast plus a few friends from other maps: the horse, the dragon, the flower bike, Anh Hai Lúa.
-  allowedAnimals: ['lan', 'ongDia', 'banhChung', 'liXi', 'chauMai', 'ongDo', 'aoDai', 'deCon', 'horse', 'dragon', 'flowerBike', 'nongDan'],
+  allCharacters: true, // Tết event: every character from every map may join (new ones too)
   cheers: ['Chúc mừng năm mới!', 'An khang thịnh vượng', 'Vạn sự như ý', 'Xuân về rộn ràng!'],
   // Cream-gold track with red lines: the red Tết cast (lân, lì xì, áo dài) must stand out against it.
   palette: { skyTop: '#8fd3ff', skyBottom: '#fff1c9', ground: '#c94f3d', laneA: '#f2d9a6', laneB: '#ead09a', line: '#d62828' },
@@ -217,7 +216,9 @@ export const maxRaceMsFor = (trackLength) => Math.max(RULES.maxRaceMs, (trackLen
 
 /** Animals a map allows (most maps: all of them). */
 export const allowedAnimals = (map) =>
-  map?.allowedAnimals
+  map?.allCharacters
+    ? ANIMALS
+    : map?.allowedAnimals
     ? ANIMALS.filter((a) => map.allowedAnimals.includes(a.id))
     : ANIMALS.filter((a) => !a.maps); // map-exclusive characters stay on their own map
 export const isAnimalAllowed = (map, animalId) => allowedAnimals(map).some((a) => a.id === animalId);
@@ -240,13 +241,20 @@ export const CHARACTER_GROUPS = [
 ];
 export const groupOf = (animal) => animal.group ?? animal.maps?.[0] ?? 'animals';
 
-/** The picker's tabs for a map: only groups with characters the map allows, each with those characters. */
+/**
+ * The picker's tabs for a map: only groups with characters the map allows, each with those characters.
+ * The map's own group (e.g. 'tet') comes first.
+ */
 export function characterGroups(map) {
   const allowed = allowedAnimals(map);
   return CHARACTER_GROUPS
     .map((group) => ({ ...group, animals: allowed.filter((a) => groupOf(a) === group.id) }))
-    .filter((group) => group.animals.length > 0);
+    .filter((group) => group.animals.length > 0)
+    .sort((a, b) => (b.id === map?.id) - (a.id === map?.id));
 }
+
+/** May a player's pick on this map become their usual character (what other maps give back)? */
+export const isEverydayPick = (map, animalId) => !map?.allowedAnimals && !findAnimal(animalId)?.maps;
 
 /** Stand-in when someone's animal isn't allowed on the map: stable per player (seed), so it doesn't flicker. */
 export function animalForMap(map, animalId, seed = 0) {

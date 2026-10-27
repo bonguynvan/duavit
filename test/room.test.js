@@ -362,6 +362,17 @@ test('abort cancels the race and returns to the lobby without results', () => {
 
 const SAIGON_CAST = findMap('saigon').allowedAnimals;
 
+test('on the Tết map any character may be picked; a themed pick does not replace the usual one', () => {
+  const room = new Room({ rng: seededRng(5) });
+  const a = room.join('An', 'cat').player;
+  assert.ok(room.setMap('tet').ok);
+  assert.equal(room.players.get(a.id).animal, 'cat', 'everyday characters stay');
+  assert.ok(room.setAnimal(a.id, 'robot').player, 'a character from another map');
+  assert.ok(room.setAnimal(a.id, 'lan').player);
+  assert.ok(room.setMap('meadow').ok);
+  assert.equal(room.players.get(a.id).animal, 'cat', 'back to the usual pick');
+});
+
 test('vehicle-only map: everyone rides a tank or helicopter, and gets their own animal back afterwards', () => {
   const room = new Room({ rng: seededRng(4) });
   const a = room.join('An', 'turtle').player;

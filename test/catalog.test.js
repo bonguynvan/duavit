@@ -74,6 +74,13 @@ test('map-exclusive characters and allowed lists point at real entries', () => {
   }
 });
 
+test('the Tết map lets everyone race with any character, its own tab first', () => {
+  const tet = findMap('tet');
+  assert.equal(allowedAnimals(tet).length, ANIMALS.length);
+  assert.equal(characterGroups(tet)[0].id, 'tet');
+  assert.equal(characterGroups(tet).reduce((n, g) => n + g.animals.length, 0), ANIMALS.length);
+});
+
 test('every character belongs to a known group, and the picker shows the groups a map allows', () => {
   const groupIds = new Set(CHARACTER_GROUPS.map((g) => g.id));
   for (const animal of ANIMALS) assert.ok(groupIds.has(groupOf(animal)), `group of "${animal.id}"`);
