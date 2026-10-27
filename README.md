@@ -20,7 +20,7 @@ Dùng để: chọn ngẫu nhiên một người, chia đội, xếp thứ tự 
 - **Phòng chơi** (`/r/MÃ`): host tạo phòng miễn phí (không cần tài khoản), người chơi quét QR bằng điện thoại, nhập tên, chọn nhân vật. Có chat, thả emoji, ném gạch (chỉ để vui).
 - **Màn hình OBS** (`/r/MÃ/live`) cho người livestream.
 - **Kiểm chứng** (`/kiem-chung`) và trang giải thích thuật toán (`/cong-bang`).
-- Nhiều map: Đồng cỏ, Sa mạc, Băng tuyết, Bãi biển, Nông trại, Đền Hùng, Công trường, Ba Đình, Phố siêu anh hùng, Vòng quanh thế giới, Chợ đêm, Dinh Độc Lập (map đặc biệt, host tự bật).
+- Nhiều map: Đồng cỏ, Sa mạc, Băng tuyết, Bãi biển, Nông trại, Đền Hùng, Công trường, Ba Đình, Phố siêu anh hùng, Vòng quanh thế giới, Chợ đêm, Tết đến xuân về, Dinh Độc Lập (map đặc biệt, host tự bật).
 - Hơn 30 nhân vật vẽ hoàn toàn bằng code (canvas), không dùng ảnh.
 
 Mọi phụ kiện, cú ném, cú ngã, emoji đều **chỉ là hiệu ứng hình ảnh**: không nhân vật nào mạnh hơn, host không can thiệp được tốc độ.

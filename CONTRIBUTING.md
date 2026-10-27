@@ -97,6 +97,7 @@ MAPS.push({
 | `palette` | đủ 6 màu: `skyTop`, `skyBottom`, `ground`, `laneA`, `laneB`, `line` |
 | `cheers` | câu cổ vũ chạy trên băng rôn |
 | `allowedAnimals` | danh sách `id` nhân vật được chọn trên map |
+| `allCharacters: true` | cho chọn **mọi** nhân vật của mọi map (map sự kiện như Tết); tab nhóm của chính map đứng đầu |
 | `finish` | kiểu vạch đích đặc biệt: `palace-gate`, `temple-drum`, `ribbon`, `flag-raise` (bỏ trống = vạch caro) |
 | `special: true` | ẩn mặc định, host phải bật "map đặc biệt" (dành cho chủ đề nhạy cảm/lễ kỷ niệm) |
 

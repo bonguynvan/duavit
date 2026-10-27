@@ -47,6 +47,35 @@ export function starFlag(ctx, x, top, fw, fh, bands) {
   ctx.fill();
 }
 
+/** Party flag: red with the yellow hammer and sickle, hanging from a pole at (x, top). */
+export function partyFlag(ctx, x, top, fw, fh) {
+  ctx.fillStyle = '#da251d';
+  ctx.fillRect(x, top, fw, fh);
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(x, top, fw, fh);
+  const cx = x + fw / 2;
+  const cy = top + fh / 2;
+  const r = fh * 0.3;
+  ctx.strokeStyle = '#ffde00';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = Math.max(1, fh * 0.09);
+  // Sickle: blade from the lower left, over the top, round to the right; short handle down-left.
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI * 0.75, Math.PI * 2.2);
+  ctx.moveTo(cx + Math.cos(Math.PI * 0.75) * r, cy + Math.sin(Math.PI * 0.75) * r);
+  ctx.lineTo(cx - r * 1.05, cy + r * 1.05);
+  // Hammer: handle from the lower right up to the head at the upper left.
+  ctx.moveTo(cx + r * 0.75, cy + r * 0.75);
+  ctx.lineTo(cx - r * 0.4, cy - r * 0.4);
+  ctx.stroke();
+  ctx.lineWidth = Math.max(1.5, fh * 0.15);
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.78, cy - r * 0.05);
+  ctx.lineTo(cx - r * 0.05, cy - r * 0.78);
+  ctx.stroke();
+}
+
 export const ellipse = (ctx, x, y, rx, ry, fill, rot = 0) => shape(ctx, fill, () => ctx.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2));
 export const circle = (ctx, x, y, r, fill) => ellipse(ctx, x, y, r, r, fill);
 

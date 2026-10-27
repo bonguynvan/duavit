@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { ANIMALS, FACE_COLORS, MAPS, REACTIONS, RULES, allowedAnimals, animalForMap, findAnimal, findItem, findMap, initialsOf, maxRaceMsFor, trackLengthFor } from '../../shared/catalog.js';
+import { ANIMALS, FACE_COLORS, MAPS, REACTIONS, RULES, allowedAnimals, animalForMap, findAnimal, findItem, findMap, initialsOf, isAnimalAllowed as isAnimalAllowedHere, isEverydayPick, maxRaceMsFor, trackLengthFor, withCast } from '../../shared/catalog.js';
 import { rankRacers } from '../../shared/race.js';
 import { newSeed } from '../../shared/fair.js';
 import { SIM_STEP_MS, createSimulation, stepSimulation } from '../../shared/simulate.js';
@@ -41,6 +41,7 @@ export class Room {
     this.title = '';
     this.durationSec = null; // null = the map's default length
     this.allowSpecialMaps = false; // 30/4-themed maps stay hidden unless the host opts in
+    this.allCharacters = false; // host switch: every character of every map may race on this room's maps
     /** name -> lastRacedAt of players who left, so leave+rejoin can't jump the queue */
     this.recentRacers = new Map();
     this.lastTickAt = null;
@@ -92,7 +93,7 @@ export class Room {
     if (humans >= RULES.maxPlayers) return { error: 'Phòng đã đầy' };
     const lastRacedAt = this.recentRacers.get(name.toLowerCase()) ?? null;
     // homeAnimal = their own pick; animal = what they ride on the current map (vehicle-only maps swap it).
-    const animal = animalForMap(findMap(this.mapId), animalId, this.joinSeq);
+    const animal = animalForMap(this.#map(), animalId, this.joinSeq);
     return { player: this.#addPlayer({ name, animal, homeAnimal: animalId, spectator: Boolean(spectator), lastRacedAt }) };
   }
 
@@ -110,13 +111,14 @@ export class Room {
   setAnimal(id, animalId) {
     if (!findAnimal(animalId)) return { error: 'Nhân vật không hợp lệ' };
     if (this.#isRacing(id)) return { error: 'Đang đua, đổi sau nhé' };
-    const map = findMap(this.mapId);
+    const map = this.#map();
     if (animalForMap(map, animalId) !== animalId) {
       const names = allowedAnimals(map).map((a) => a.name.toLowerCase());
       return { error: `Map ${map.name} chỉ cho chọn ${names.slice(0, -1).join(', ')} hoặc ${names.at(-1)}` };
     }
-    const restricted = Boolean(map.allowedAnimals);
-    const player = this.#update(id, restricted ? { animal: animalId } : { animal: animalId, homeAnimal: animalId });
+    // A themed pick (Ông Lân on the Tết map) never replaces the character other maps give back.
+    // `chosen` marks a themed pick the player made themselves (vs. a stand-in the map handed out).
+    const player = this.#update(id, isEverydayPick(map, animalId) ? { animal: animalId, homeAnimal: animalId, chosen: false } : { animal: animalId, chosen: true });
     return player ? { player } : { error: 'Không tìm thấy người chơi' };
   }
 
@@ -203,7 +205,7 @@ export class Room {
     if (!findAnimal(animalId)) return { error: 'Nhân vật không hợp lệ' };
     const humans = [...this.players.values()].filter((p) => !p.isBot).length;
     if (humans >= RULES.maxPlayers) return { error: 'Phòng đã đầy' };
-    const animal = animalForMap(findMap(this.mapId), animalId, this.joinSeq);
+    const animal = animalForMap(this.#map(), animalId, this.joinSeq);
     return { player: this.#addPlayer({ name, animal, homeAnimal: animalId, isManual: true }) };
   }
 
@@ -211,7 +213,7 @@ export class Room {
     const bots = [...this.players.values()].filter((p) => p.isBot).length;
     if (bots >= RULES.maxBots) return { error: `Tối đa ${RULES.maxBots} bot` };
     const name = `Bot ${BOT_NAMES[this.botCursor % BOT_NAMES.length]}`;
-    const options = allowedAnimals(findMap(this.mapId));
+    const options = allowedAnimals(this.#map());
     const animal = options[Math.floor(this.rng() * options.length)].id;
     this.botCursor += 1;
     return { player: this.#addPlayer({ name, animal, homeAnimal: animal, isBot: true }) };
@@ -244,18 +246,38 @@ export class Room {
     return { ok: true };
   }
 
+  /** The current map with this room's character rule applied. */
+  #map(mapId = this.mapId) {
+    return withCast(findMap(mapId), this.allCharacters);
+  }
+
+  /** Host switch: the map's own characters, or every character. Turning it off sends strays back. */
+  setAllCharacters(on) {
+    if (this.#raceInProgress()) return { error: 'Đang đua, đổi sau nhé' };
+    this.allCharacters = Boolean(on);
+    this.#applyCast();
+    return { ok: true };
+  }
+
   setMap(mapId) {
     if (!findMap(mapId)) return { error: 'Map không hợp lệ' };
     if (findMap(mapId).special && !this.allowSpecialMaps) return { error: 'Bật "map đặc biệt" trong cài đặt phòng trước' };
     if (this.#raceInProgress()) return { error: 'Đang đua, không đổi map được' };
     this.mapId = mapId;
-    // Vehicle-only maps swap everyone onto an allowed ride; other maps give back their own pick.
-    const map = findMap(mapId);
-    for (const p of this.players.values()) {
-      const animal = animalForMap(map, p.homeAnimal ?? p.animal, p.joinSeq);
-      if (animal !== p.animal) this.#update(p.id, { animal });
-    }
+    this.#applyCast();
     return { ok: true };
+  }
+
+  /** Vehicle-only maps swap everyone onto an allowed ride; other maps give back their own pick. */
+  #applyCast() {
+    const map = this.#map();
+    for (const p of this.players.values()) {
+      // A map-exclusive character the player chose (e.g. Ông Lân) stays while the cast still allows it;
+      // everything else goes back to their usual character, or the map's stand-in.
+      const keep = p.chosen && findAnimal(p.animal)?.maps && isAnimalAllowedHere(map, p.animal);
+      const animal = animalForMap(map, keep ? p.animal : p.homeAnimal ?? p.animal, p.joinSeq);
+      if (animal !== p.animal) this.#update(p.id, { animal, chosen: keep && animal === p.animal });
+    }
   }
 
   start(now) {
@@ -445,6 +467,6 @@ export class Room {
         finishedAt: r.finishedAt,
       })),
     };
-    return { phase: this.phase, mapId: this.mapId, serverNow: now, title: this.title, durationSec: this.durationSec, allowSpecialMaps: this.allowSpecialMaps, raceSlots: RULES.raceSlots, players, race, results: this.results };
+    return { phase: this.phase, mapId: this.mapId, serverNow: now, title: this.title, durationSec: this.durationSec, allowSpecialMaps: this.allowSpecialMaps, allCharacters: this.allCharacters, raceSlots: RULES.raceSlots, players, race, results: this.results };
   }
 }

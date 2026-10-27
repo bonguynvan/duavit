@@ -1,4 +1,4 @@
-import { MAPS, RULES, allowedAnimals, findAnimal, findMap, initialsOf, trackLengthFor } from '/shared/catalog.js';
+import { MAPS, RULES, allowedAnimals, findAnimal, findMap, initialsOf, trackLengthFor, withCast } from '/shared/catalog.js';
 import { paintAnimalCard, paintMapCard } from './draw.js';
 import { RaceView, itemIcons } from './raceView.js';
 import { RaceRecorder, slugify } from './recorder.js';
@@ -56,6 +56,20 @@ const durationButtons = [null, ...RULES.durationChoices].map((seconds) => {
   $('duration').append(button);
   return { seconds, button };
 });
+
+// Character rule: the map's own cast or every character (maps like Tết are always open).
+document.querySelectorAll('#cast [data-all]').forEach((button) => {
+  button.addEventListener('click', () => act('host:allCharacters', { on: button.dataset.all === 'true' }));
+});
+function renderCast() {
+  const open = Boolean(findMap(state.mapId)?.allCharacters);
+  document.querySelectorAll('#cast [data-all]').forEach((button) => {
+    const all = button.dataset.all === 'true';
+    button.setAttribute('aria-checked', String(all === (open || Boolean(state.allCharacters))));
+    button.disabled = open;
+    button.title = open ? 'Map này đã cho chọn mọi nhân vật' : '';
+  });
+}
 
 function renderDuration() {
   const current = state.durationSec ?? null;
@@ -122,6 +136,7 @@ function renderLobby() {
   });
   $('special-maps').checked = Boolean(state.allowSpecialMaps);
   renderDuration();
+  renderCast();
   const racers = state.players.filter((p) => !p.spectator);
   const queued = racers.filter((p) => p.queuePos !== null).length;
   $('player-count').textContent = String(racers.length);
@@ -419,7 +434,7 @@ let addPersonAnimal = null;
 let addPersonMap = null;
 
 function renderAddPersonPicker(force = false) {
-  const map = findMap(state?.mapId) ?? MAPS[0];
+  const map = withCast(findMap(state?.mapId) ?? MAPS[0], state?.allCharacters);
   const options = allowedAnimals(map);
   if (!options.some((a) => a.id === addPersonAnimal)) addPersonAnimal = options[0].id;
   if (!force && addPersonMap === map.id) return;

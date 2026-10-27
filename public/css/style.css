@@ -176,6 +176,14 @@ input[type='text']:focus { outline: none; border-color: var(--tomato); box-shado
 
 /* Character picker tabs: one per character group the map allows (player.js createPicker) */
 .picker-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Many groups (the Tết map allows every character): one swipeable row on phones. */
+@media (max-width: 640px) {
+  .picker-tabs { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 4px; }
+  .picker-tab { flex: none; scroll-snap-align: start; }
+}
+.picker-pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+.picker-pager .btn { padding: 6px 12px; font-size: 0.95rem; }
+.picker-page { font-weight: 800; color: var(--ink-soft); min-width: 7ch; text-align: center; }
 .picker-tab {
   font: 800 0.95rem var(--font-display); color: var(--ink); background: var(--paper); cursor: pointer;
   border: 2px solid var(--ink); border-radius: 999px; padding: 5px 14px;

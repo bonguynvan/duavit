@@ -147,6 +147,25 @@ MAPS.push(
   },
 );
 
+// ---------------- Tết ----------------
+ANIMALS.push(
+  { id: 'lan', name: 'Ông Lân', color: '#d62828', maps: ['tet'] },
+  { id: 'ongDia', name: 'Ông Địa', color: '#e9a23b', maps: ['tet'] },
+  { id: 'banhChung', name: 'Bánh chưng', color: '#3f8f3a', maps: ['tet'] },
+  { id: 'liXi', name: 'Bao lì xì', color: '#d62828', maps: ['tet'] },
+  { id: 'chauMai', name: 'Chậu mai', color: '#f4f8fc', maps: ['tet'] },
+  { id: 'ongDo', name: 'Ông đồ', color: '#7a4a2a', maps: ['tet'] },
+  { id: 'aoDai', name: 'Cô Ba áo dài', color: '#d62828', maps: ['tet'] },
+  { id: 'deCon', name: 'Dê con', color: '#f4f1ea', maps: ['tet'] },
+);
+MAPS.push({
+  id: 'tet', name: 'Tết đến xuân về', trackLength: 680,
+  allCharacters: true, // Tết event: every character from every map may join (new ones too)
+  cheers: ['Chúc mừng năm mới!', 'An khang thịnh vượng', 'Vạn sự như ý', 'Xuân về rộn ràng!'],
+  // Cream-gold track with red lines: the red Tết cast (lân, lì xì, áo dài) must stand out against it.
+  palette: { skyTop: '#8fd3ff', skyBottom: '#fff1c9', ground: '#c94f3d', laneA: '#f2d9a6', laneB: '#ead09a', line: '#d62828' },
+});
+
 export const REACTIONS = ['👏', '😂', '🔥', '😱', '❤️', '🐢', '🚀', '🍀'];
 
 export const FACE_COLORS = ['#ff5a36', '#18a999', '#5b6cff', '#ff9f1c', '#c840e9', '#e63973', '#2d9cdb', '#7ac74f', '#8d6e63', '#ef476f'];
@@ -197,7 +216,9 @@ export const maxRaceMsFor = (trackLength) => Math.max(RULES.maxRaceMs, (trackLen
 
 /** Animals a map allows (most maps: all of them). */
 export const allowedAnimals = (map) =>
-  map?.allowedAnimals
+  map?.allCharacters
+    ? ANIMALS
+    : map?.allowedAnimals
     ? ANIMALS.filter((a) => map.allowedAnimals.includes(a.id))
     : ANIMALS.filter((a) => !a.maps); // map-exclusive characters stay on their own map
 export const isAnimalAllowed = (map, animalId) => allowedAnimals(map).some((a) => a.id === animalId);
@@ -216,16 +237,33 @@ export const CHARACTER_GROUPS = [
   { id: 'sieuanhhung', name: 'Siêu anh hùng', icon: '🦸' },
   { id: 'vongquanh', name: 'Thế giới', icon: '🌍' },
   { id: 'chodem', name: 'Chợ đêm', icon: '🏮' },
+  { id: 'tet', name: 'Tết', icon: '🧧' },
 ];
 export const groupOf = (animal) => animal.group ?? animal.maps?.[0] ?? 'animals';
 
-/** The picker's tabs for a map: only groups with characters the map allows, each with those characters. */
+/**
+ * The picker's tabs for a map: only groups with characters the map allows, each with those characters.
+ * The map's own group (e.g. 'tet') comes first.
+ */
 export function characterGroups(map) {
   const allowed = allowedAnimals(map);
   return CHARACTER_GROUPS
     .map((group) => ({ ...group, animals: allowed.filter((a) => groupOf(a) === group.id) }))
-    .filter((group) => group.animals.length > 0);
+    .filter((group) => group.animals.length > 0)
+    .sort((a, b) => (b.id === map?.id) - (a.id === map?.id));
 }
+
+/**
+ * The map as a room / quick race plays it: with `allCharacters` the host opened it to every character
+ * of every map (maps like Tết are always open).
+ */
+export const withCast = (map, allCharacters) => (allCharacters && map && !map.allCharacters ? { ...map, allCharacters: true } : map);
+
+/**
+ * May a pick on `map` become the player's usual character (what ordinary maps give back)? Only an everyday
+ * character picked where everyday characters are on offer: not Ông Lân, not a tank on the vehicles-only map.
+ */
+export const isEverydayPick = (map, animalId) => (!map?.allowedAnimals || Boolean(map?.allCharacters)) && !findAnimal(animalId)?.maps;
 
 /** Stand-in when someone's animal isn't allowed on the map: stable per player (seed), so it doesn't flicker. */
 export function animalForMap(map, animalId, seed = 0) {

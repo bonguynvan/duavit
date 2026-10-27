@@ -1,5 +1,5 @@
 // "Đua nhanh": paste names, race, done. Runs entirely in the browser (no login, no server).
-import { MAPS, RULES, allowedAnimals, findAnimal, findMap } from '/shared/catalog.js';
+import { MAPS, RULES, allowedAnimals, characterGroups, findAnimal, findMap, withCast } from '/shared/catalog.js';
 import { newSeed, sha256Hex } from '/shared/fair.js';
 import { parseNames } from '/shared/names.js';
 import { rankRacers } from '/shared/race.js';
@@ -40,6 +40,7 @@ const settings = {
   character: saved.character ?? 'random',
   fun: saved.fun ?? true,
   record: saved.record ?? true,
+  allCharacters: saved.allCharacters ?? false,
 };
 const persist = () => {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); } catch { /* private mode */ }
@@ -85,12 +86,25 @@ function renderDurations() {
   }, formatDuration(seconds))));
 }
 
+const castMap = () => withCast(findMap(settings.mapId), settings.allCharacters);
+
+function renderCast() {
+  const open = Boolean(findMap(settings.mapId)?.allCharacters);
+  document.querySelectorAll('#cast [data-all]').forEach((button) => {
+    button.setAttribute('aria-checked', String((button.dataset.all === 'true') === (open || settings.allCharacters)));
+    button.disabled = open;
+    button.title = open ? 'Map này đã cho chọn mọi nhân vật' : '';
+  });
+}
+
 function renderCharacters() {
-  const options = allowedAnimals(findMap(settings.mapId));
+  renderCast();
+  const options = allowedAnimals(castMap());
   if (settings.character !== 'random' && !options.some((a) => a.id === settings.character)) settings.character = 'random';
   $('character').replaceChildren(
     el('option', { value: 'random' }, 'Ngẫu nhiên (mỗi người một kiểu)'),
-    ...options.map((a) => el('option', { value: a.id }, `Tất cả là ${a.name}`)),
+    ...characterGroups(castMap()).map((g) => el('optgroup', { label: `${g.icon} ${g.name}` },
+      ...g.animals.map((a) => el('option', { value: a.id }, `Tất cả là ${a.name}`)))),
   );
   $('character').value = settings.character;
 }
@@ -119,7 +133,7 @@ async function startRace() {
   const seed = newSeed();
   const seedHash = await sha256Hex(seed);
   stopRace(); // a double click may have started another race while we awaited: keep only this one
-  const race = prepareRace({ names, mapId: settings.mapId, durationSec: settings.durationSec, character: settings.character, seed, fun: settings.fun });
+  const race = prepareRace({ names, mapId: settings.mapId, durationSec: settings.durationSec, character: settings.character, seed, fun: settings.fun, allCharacters: settings.allCharacters });
   raceView.showNames = names.length <= MAX_LANES;
   const playback = new Playback(race, { title: settings.title });
   current = { race, playback, seed, seedHash, names, finished: false, boardAt: 0, video: null, nextThrowAt: playback.startsAt + FIRST_THROW_AFTER_MS };
@@ -238,6 +252,13 @@ $('title').value = settings.title;
 $('special-maps').checked = settings.special;
 $('fun-mode').checked = settings.fun;
 $('record-video').checked = settings.record;
+document.querySelectorAll('#cast [data-all]').forEach((button) => {
+  button.addEventListener('click', () => {
+    settings.allCharacters = button.dataset.all === 'true';
+    persist();
+    renderCharacters();
+  });
+});
 $('record-video').addEventListener('change', () => {
   settings.record = $('record-video').checked;
   persist();

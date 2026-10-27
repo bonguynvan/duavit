@@ -156,8 +156,47 @@ export const KERB_FLAG_EVERY_M = 4;
 export const PENNANTS = ['#ff5a36', '#ffd23f', '#18a999', '#5b6cff', '#c840e9'];
 export const VN_PENNANTS = ['#da251d', '#ffde00'];
 
-/** Festive mode per map: the Saigon map flies the national flag, others get colourful bunting. */
-export const flagStyle = (mapId) => (mapId === 'saigon' ? 'vn' : 'party');
+/** Festive mode per map: Saigon flies the national flag, Tết alternates national and Party flags, others get bunting. */
+export const flagStyle = (mapId) => (mapId === 'saigon' ? 'vn' : mapId === 'tet' ? 'tet' : 'party');
+
+/** A small pot of mai or peach blossoms standing on the kerb. */
+export function flowerPot(ctx, x, base, size, petal) {
+  ctx.fillStyle = '#c0392b';
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.5, base - size * 0.7);
+  ctx.lineTo(x + size * 0.5, base - size * 0.7);
+  ctx.lineTo(x + size * 0.35, base);
+  ctx.lineTo(x - size * 0.35, base);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  flowerBranch(ctx, { x, y: base - size * 0.7 }, size * 1.6, petal);
+}
+
+/** A branch of mai (yellow) or peach (pink) blossoms held up in a fan's hand. */
+export function flowerBranch(ctx, hand, h, petal) {
+  const len = h * 0.7;
+  ctx.strokeStyle = '#4a2c1a';
+  ctx.lineWidth = Math.max(1.2, h * 0.04);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(hand.x, hand.y);
+  ctx.quadraticCurveTo(hand.x + len * 0.15, hand.y - len * 0.5, hand.x - len * 0.05, hand.y - len);
+  ctx.moveTo(hand.x + len * 0.04, hand.y - len * 0.45);
+  ctx.lineTo(hand.x + len * 0.3, hand.y - len * 0.75);
+  ctx.stroke();
+  ctx.fillStyle = petal;
+  ctx.strokeStyle = 'rgba(29, 26, 47, 0.4)';
+  ctx.lineWidth = 1;
+  [[-0.05, -1], [0.06, -0.85], [-0.08, -0.7], [0.1, -0.6], [0.3, -0.75], [0.22, -0.68], [0, -0.5]].forEach(([dx, dy]) => {
+    ctx.beginPath();
+    ctx.arc(hand.x + dx * len, hand.y + dy * len, Math.max(1.5, h * 0.06), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  });
+}
 
 export function pennantString(ctx, a, b, sag, colors, offset) {
   const count = Math.max(3, Math.floor(Math.hypot(b.x - a.x, b.y - a.y) / 16));
