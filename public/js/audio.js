@@ -10,6 +10,7 @@ const MUSIC_VOLUME = 0.35;
 const MUSIC_PAUSED_VOLUME = 0.08;
 const TRACK_VOLUME = 0.7; // an mp3 soundtrack is mastered loud already
 const MUSIC_DIR = '/music';
+export const QUIET_AFTER_FINISH_MS = 5000; // music stops this long after a race ends
 
 const freq = (midi) => 440 * 2 ** ((midi - 69) / 12);
 
@@ -143,9 +144,13 @@ class SoundEngine {
     if (this.trackUrl !== url) {
       this.stopTrack();
       this.trackUrl = url;
+      const request = this.trackRequest;
       const exists = !brokenTracks.has(url) && (url.startsWith('blob:') || (await trackExists(url))); // a picked file is always there
-      if (!exists || this.trackUrl !== url) {
-        if (this.trackUrl === url) this.trackUrl = null;
+      // Stopped or replaced while we waited: the newer call owns the track. Going on would start a second,
+      // orphaned copy that nothing could stop (the "music plays twice" bug).
+      if (request !== this.trackRequest) return false;
+      if (!exists) {
+        this.trackUrl = null;
         return false;
       }
       if (!this.#ensureContext()) return false;
@@ -180,6 +185,7 @@ class SoundEngine {
   }
 
   stopTrack() {
+    this.trackRequest = (this.trackRequest ?? 0) + 1; // cancels a playTrack() still checking its file
     if (this.track) {
       this.track.pause();
       this.track.src = '';
@@ -342,6 +348,8 @@ export function createSoundDirector() {
   let gateDownFor = null;
   let countdownKey = null;
   let timers = [];
+  let quietTimer = null;
+  let quiet = false; // the race ended a while ago: let the podium rest in silence
   const clearTimers = () => {
     timers.forEach(clearTimeout);
     timers = [];
@@ -351,6 +359,22 @@ export function createSoundDirector() {
     const race = state.race;
     const paused = Boolean(race?.paused);
     const racing = state.phase === 'countdown' || state.phase === 'racing';
+    if (state.phase === 'finished' && lastPhase !== 'finished' && !quietTimer) {
+      quietTimer = setTimeout(() => {
+        quiet = true;
+        sound.stopTrack();
+        sound.setMusic('none');
+      }, QUIET_AFTER_FINISH_MS);
+    }
+    if (state.phase !== 'finished') {
+      clearTimeout(quietTimer);
+      quietTimer = null;
+      quiet = false;
+    }
+    if (quiet) {
+      lastPhase = state.phase;
+      return;
+    }
     sound.setMusic(state.phase === 'lobby' || state.phase === 'finished' ? 'lobby' : paused ? 'paused' : 'race');
     // Soundtrack (picked file, else public/music/<mapId>.mp3) plays from the countdown to the podium.
     if (race && state.phase !== 'lobby' && sound.enabled) {

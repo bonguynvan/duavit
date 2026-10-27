@@ -169,8 +169,21 @@ if (!recorder.supported) $('videos-empty').textContent = 'Trình duyệt này kh
 
 let recorderBroken = false;
 let recordedRaceKey = null;
+// Filming costs CPU/GPU on the host's machine: a per-device switch, on by default.
+const RECORD_KEY = 'peti.recordVideo';
+const readRecordSetting = () => {
+  try { return localStorage.getItem(RECORD_KEY) !== 'off'; } catch { return true; }
+};
+$('record-video').checked = readRecordSetting();
+$('record-video').addEventListener('change', () => {
+  try { localStorage.setItem(RECORD_KEY, $('record-video').checked ? 'on' : 'off'); } catch { /* private mode */ }
+});
 function syncRecording(inArena) {
   if (recorderBroken || !recorder.supported) return;
+  if (!$('record-video').checked && !recorder.recording) {
+    $('rec-dot').hidden = true;
+    return; // switched off: the next race is not filmed (one already being filmed finishes normally)
+  }
   try {
     if (!inArena) {
       recorder.stopNow();
