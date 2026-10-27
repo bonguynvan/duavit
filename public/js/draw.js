@@ -22,7 +22,7 @@ export const HEAD_TOP = {
   ...HOLIDAY_HEAD_TOP, ...SAIGON_HEAD_TOP, ...PEOPLE_HEAD_TOP, ...WORLD_HEAD_TOP, ...FOOD_HEAD_TOP,
 };
 export const EMOJI_FONT = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
-const ITEM_SIZE = 22;
+export const ITEM_SIZE = 22;
 
 /** Falls pivot over the front feet (forward) or the hind feet (backward), in animal units. */
 export const tiltPivot = (tilt) => (tilt > 0 ? 30 : -30);
@@ -33,16 +33,18 @@ export function headPoint(animalId, x, y, size) {
   return { x: x + (hx * size) / 100, y: y + (top * size) / 100 };
 }
 
-function drawItems(ctx, animalId, icons, phase) {
+/** Where each accessory floats above the head (animal units; text baseline 'bottom'). */
+export function itemLayout(animalId, count, phase) {
   const [hx, top] = HEAD_TOP[animalId] ?? HEAD_TOP.horse;
+  const startX = hx - ((count - 1) * ITEM_SIZE * 1.05) / 2;
+  return Array.from({ length: count }, (_, i) => ({ x: startX + i * ITEM_SIZE * 1.05, y: top - 2 + Math.sin(phase * 0.5 + i * 1.7) * 2.5 }));
+}
+
+function drawItems(ctx, animalId, icons, phase) {
   ctx.font = `${ITEM_SIZE}px ${EMOJI_FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  const startX = hx - ((icons.length - 1) * ITEM_SIZE * 1.05) / 2;
-  icons.forEach((icon, i) => {
-    const float = Math.sin(phase * 0.5 + i * 1.7) * 2.5;
-    ctx.fillText(icon, startX + i * ITEM_SIZE * 1.05, top - 2 + float);
-  });
+  itemLayout(animalId, icons.length, phase).forEach(({ x, y }, i) => ctx.fillText(icons[i], x, y));
 }
 
 /**

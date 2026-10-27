@@ -1,7 +1,9 @@
 import { MAPS, findItem, findMap } from '/shared/catalog.js';
 import { rankRacers } from '/shared/race.js';
 import { easeOut, BANNER_EVERY_M, BANNER_SPAN_M, FAN_EVERY_M, KERB_FLAG_EVERY_M, PENNANTS, POLE_EVERY_M, SHIRTS, SIGNS, VN_PENNANTS, animalOf, banner, checkered, fan, flagRaise, flagStyle, gate, hash, palaceGate, pennantString, pill, ribbon, roundedRect, sign, templeDrum } from './track-art.js';
-import { EMOJI_FONT, drawAnimal, drawFace, drawScenery, FONT, headPoint, INK, starFlag, tiltPivot } from './draw.js';
+import { EMOJI_FONT, drawFace, drawScenery, FONT, headPoint, INK, starFlag, tiltPivot } from './draw.js';
+import { SpriteCache } from './spriteCache.js';
+import { detailFor } from './detail.js';
 
 const SMOOTHING = 10; // how fast displayed positions chase server positions (1/s)
 const CAMERA_FOLLOW = 2.5; // how fast the camera chases its target (1/s)
@@ -44,6 +46,8 @@ function rotateAround(px, py, cx, cy, angle) {
 }
 const MAX_REACTIONS = 40;
 
+const IDLE_AFTER_FINISH_MS = 5000; // a finished race stops repainting: the last frame stays on screen
+
 export const itemIcons = (ids = []) => ids.map((id) => findItem(id)?.icon).filter(Boolean);
 
 export class RaceView {
@@ -71,6 +75,7 @@ export class RaceView {
     this.lastFrame = performance.now();
     this.running = false;
     this.effects = [];
+    this.sprites = new SpriteCache();
   }
 
   /** Visual-only throw animation from one racer to another. */
@@ -93,6 +98,7 @@ export class RaceView {
     if (state.race?.startsAt !== this.state?.race?.startsAt) {
       this.display.clear();
       this.camera = null;
+      this.sprites.clear(); // new racers, new looks
     }
     this.state = state;
   }
@@ -183,6 +189,7 @@ export class RaceView {
     const dt = Math.min(0.5, (t - this.lastFrame) / 1000);
     this.lastFrame = t;
     const { w, h } = this.#resize();
+    if (this.#resting(w, h)) return;
     const ctx = this.ctx;
     ctx.clearRect(0, 0, w, h);
     const race = this.state?.race;
@@ -231,43 +238,82 @@ export class RaceView {
       return { ...item, laneTop, groundY };
     });
     if (stacked) placed.sort((a, b) => a.groundY - b.groundY);
+    const detail = detailFor(race.racers.length);
+    const place = new Map(ranking.map((r, i) => [r.id, i]));
+    const shows = (id, limit) => id === me || (place.get(id) ?? Infinity) < limit;
+    this.sprites.beginFrame();
     placed.forEach(({ racer, pos, phase, running, laneTop, groundY }) => {
       const player = players.get(racer.id);
       const face = { initials: player?.initials ?? '?', color: player?.color ?? '#888' };
       const noseX = toX(pos);
       const x = noseX - size * 0.45;
+      // Off-camera racers cost nothing to draw; their heads still anchor throws and reactions.
+      const visible = x + size * 0.9 > labelW && x - size * 0.8 < w;
 
       if (racer.id === me) {
         ctx.fillStyle = 'rgba(255, 210, 63, 0.35)';
         ctx.fillRect(labelW, laneTop, viewW, laneH);
       }
-      if (running) this.#dust(ctx, x - size * 0.42, groundY, size, phase);
-      if (racer.event === 'burst' && running) this.#speedLines(ctx, x - size * 0.4, groundY - size * 0.35, size, t);
+      const effects = visible && shows(racer.id, detail.effects);
+      if (running && effects) this.#dust(ctx, x - size * 0.42, groundY, size, phase);
+      if (racer.event === 'burst' && running && effects) this.#speedLines(ctx, x - size * 0.4, groundY - size * 0.35, size, t);
       if (player) {
         const fall = this.#fallFor(racer.id);
         const stumble = racer.event === 'stumble' && running ? 0.16 + Math.sin(t / 70) * 0.07 : 0; // trip wobble
         const tilt = fall?.tilt ?? stumble;
         const legs = running && (!fall || fall.scrambling);
-        drawAnimal(ctx, animalOf(player.animal), { x, y: groundY, size, phase, moving: legs, face, items: itemIcons(player.items), tilt });
+        if (visible) {
+          const items = shows(racer.id, detail.items) ? itemIcons(player.items) : [];
+          this.sprites.draw(ctx, animalOf(player.animal), { x, y: groundY, size, phase, moving: legs, face, items, tilt });
+        }
         const head = headPoint(player.animal, x, groundY, size);
         const tilted = tilt === 0 ? head : rotateAround(head.x, head.y, x + (tiltPivot(tilt) * size) / 100, groundY, tilt);
         heads.set(racer.id, tilted);
         if (fall?.dizzy) this.#dizzyStars(ctx, tilted, size, t);
       }
-      if (racer.event === 'stumble' && running) pill(ctx, x, groundY - size * 0.95, 'ối!', '#fff', INK, Math.max(10, size * 0.16));
+      if (racer.event === 'stumble' && running && effects) pill(ctx, x, groundY - size * 0.95, 'ối!', '#fff', INK, Math.max(10, size * 0.16));
 
       const rank = finishRank.get(racer.id);
       if (rank && (!stacked || rank <= 3)) pill(ctx, x - size * 0.75, groundY - size * 0.45, `#${rank}`, MEDALS[rank - 1] ?? '#fff', INK, Math.max(11, size * 0.2));
       if (!stacked) this.#offscreen(ctx, { x, size, pos, cam, laneTop, laneH, labelW, w, face, isMe: racer.id === me });
     });
+    // Spare frame time (above all during the countdown) pre-paints the running poses still missing.
+    this.sprites.warm(this.#castOf(race, players), { size, scale: ctx.getTransform().a });
     this.#effects(ctx, heads, size);
     this.#kerbFlags(ctx, race, { h, cam, ppu, labelW, w, t });
     ctx.restore();
-    this.#reactions(ctx, heads, { w, h, labelW, size });
+    this.#reactions(ctx, heads, { w, h, labelW, size, max: detail.reactions });
 
     if (labelW > 0) this.#names(ctx, items, players, { trackTop, laneH, labelW, me });
     this.#countdown(ctx, w, h, race);
     if (this.drawResults && this.state.phase === 'finished' && this.state.results) this.#resultsBoard(ctx, w, h, this.state.results);
+  }
+
+  /**
+   * True once a finished race has been on screen for a while: skip the frame and keep the picture.
+   * A size change (fullscreen, rotation) still gets one fresh frame, since resizing clears the canvas.
+   */
+  #resting(w, h) {
+    if (this.state?.phase !== 'finished') {
+      this.finishedSeenAt = null;
+      this.restingSize = null;
+      return false;
+    }
+    this.finishedSeenAt ??= performance.now();
+    if (performance.now() - this.finishedSeenAt < IDLE_AFTER_FINISH_MS) return false;
+    const size = `${this.canvas.width}x${this.canvas.height}`;
+    if (this.restingSize === size) return true;
+    this.restingSize = size;
+    return false;
+  }
+
+  /** Distinct characters in this race (cached per race: 500 racers share a few dozen types). */
+  #castOf(race, players) {
+    if (this.cast?.startsAt !== race.startsAt) {
+      const ids = new Set(race.racers.map((r) => players.get(r.id)?.animal).filter(Boolean));
+      this.cast = { startsAt: race.startsAt, animals: [...ids].map(animalOf) };
+    }
+    return this.cast.animals;
   }
 
   #resultsBoard(ctx, w, h, results) {
@@ -375,9 +421,9 @@ export class RaceView {
     }
   }
 
-  #reactions(ctx, heads, { w, h, labelW, size }) {
+  #reactions(ctx, heads, { w, h, labelW, size, max }) {
     const now = performance.now();
-    this.reactions = (this.reactions ?? []).filter((r) => now - r.born < REACT_MS);
+    this.reactions = (this.reactions ?? []).filter((r) => now - r.born < REACT_MS).slice(-max);
     const emojiSize = Math.max(26, Math.min(48, size * 0.45));
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

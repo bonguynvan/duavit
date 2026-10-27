@@ -99,6 +99,7 @@ export function shade(hex, amount) {
 
 /** Round "face" badge: player's color + initials. */
 export function drawFace(ctx, x, y, r, face, ring = INK) {
+  if (face.capture) return face.capture(ctx, x, y, r, ring); // sprite cache: badge goes on later, per racer
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fillStyle = face.color;

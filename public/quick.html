@@ -47,6 +47,7 @@
         <select id="character"></select>
       </label>
       <label class="switch"><input type="checkbox" id="fun-mode"> 🎉 Phụ kiện &amp; ném vui <small class="switch-note">chỉ là hình ảnh, không ảnh hưởng kết quả</small></label>
+      <label class="switch"><input type="checkbox" id="record-video"> 🎬 Quay video cuộc đua <small class="switch-note">tốn thêm sức máy: tắt đi nếu máy yếu hoặc đông người chơi</small></label>
       <div class="music-picker">
         <span class="eyebrow">Nhạc nền</span>
         <div class="music-row">
@@ -67,6 +68,7 @@
       <ol class="live-board" id="live-board" aria-label="Bảng xếp hạng trực tiếp"></ol>
       <div class="race-controls" role="toolbar" aria-label="Điều khiển">
         <button class="btn" type="button" id="pause">⏸ Tạm dừng</button>
+        <button class="btn btn-primary" type="button" id="new-race" hidden>🏁 Đua mới</button>
         <button class="btn btn-ghost" type="button" id="fullscreen">⛶ Toàn màn hình</button>
         <button class="btn btn-ghost" type="button" id="sound" aria-label="Bật/tắt nhạc">🔊</button>
       </div>
@@ -84,7 +86,7 @@
       <ol class="full-results" id="full-results" start="4"></ol>
       <div class="results-actions">
         <button class="btn btn-primary" type="button" id="again">🔁 Đua lại (cùng danh sách)</button>
-        <button class="btn btn-ghost" type="button" id="edit">✎ Sửa danh sách</button>
+        <button class="btn btn-ghost" type="button" id="edit">🏁 Đua mới</button>
         <button class="btn btn-ghost" type="button" id="copy-results">📋 Sao chép kết quả</button>
         <button class="btn btn-ghost" type="button" id="download-csv">⬇ Kết quả CSV</button>
         <a class="btn btn-teal" id="download-video" hidden>🎬 Tải video</a>

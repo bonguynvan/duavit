@@ -6,7 +6,7 @@ import { rankRacers } from '/shared/race.js';
 import { paintAnimalCard, paintMapCard } from './draw.js';
 import { RaceView } from './raceView.js';
 import { RaceRecorder, slugify } from './recorder.js';
-import { createSoundDirector, sound, soundForEffect } from './audio.js';
+import { QUIET_AFTER_FINISH_MS, createSoundDirector, sound, soundForEffect } from './audio.js';
 import { el, formatTime, toast } from './ui.js';
 import { Playback, prepareRace } from './quick/playback.js';
 import { pickThrow } from './quick/fun.js';
@@ -39,6 +39,7 @@ const settings = {
   durationSec: saved.durationSec ?? 60,
   character: saved.character ?? 'random',
   fun: saved.fun ?? true,
+  record: saved.record ?? true,
 };
 const persist = () => {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); } catch { /* private mode */ }
@@ -128,6 +129,8 @@ async function startRace() {
   $('results').hidden = true;
   $('download-video').hidden = true;
   $('pause').textContent = '⏸ Tạm dừng';
+  $('pause').hidden = false;
+  $('new-race').hidden = true;
   showCommit(seedHash);
   raceView.start();
   current.timer = setInterval(tick, STATE_HZ_MS);
@@ -136,7 +139,7 @@ async function startRace() {
   requestAnimationFrame(() => {
     raceView.lockSize(false);
     raceView.lockSize(true);
-    recorder.start(playback.startsAt);
+    if (settings.record) recorder.start(playback.startsAt);
   });
 }
 
@@ -165,7 +168,14 @@ function tick() {
   if (state.phase === 'finished' && !current.finished) {
     current.finished = true;
     recorder.finish();
+    $('pause').hidden = true;
+    $('new-race').hidden = false;
     setTimeout(() => showResults(state), 1200);
+    // Once the music has stopped and the video is saved, nothing changes any more: stop ticking.
+    const race = current;
+    setTimeout(() => {
+      if (current === race) clearInterval(race.timer);
+    }, QUIET_AFTER_FINISH_MS + 500);
   }
 }
 
@@ -227,6 +237,11 @@ $('names').value = settings.names;
 $('title').value = settings.title;
 $('special-maps').checked = settings.special;
 $('fun-mode').checked = settings.fun;
+$('record-video').checked = settings.record;
+$('record-video').addEventListener('change', () => {
+  settings.record = $('record-video').checked;
+  persist();
+});
 renderNamesCount();
 renderMaps();
 renderDurations();
@@ -272,10 +287,13 @@ $('start').addEventListener('click', startRace);
 $('again').addEventListener('click', startRace);
 const backToSetup = () => {
   stopRace();
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   $('race').hidden = true;
   $('setup').hidden = false;
+  window.scrollTo({ top: 0 });
 };
 $('edit').addEventListener('click', backToSetup);
+$('new-race').addEventListener('click', backToSetup);
 $('pause').addEventListener('click', () => {
   if (!current || current.finished) return;
   if (current.playback.paused) current.playback.resume();
