@@ -1,7 +1,7 @@
 import { MAPS, findItem, findMap } from '/shared/catalog.js';
 import { rankRacers } from '/shared/race.js';
-import { easeOut, BANNER_EVERY_M, BANNER_SPAN_M, FAN_EVERY_M, KERB_FLAG_EVERY_M, PENNANTS, POLE_EVERY_M, SHIRTS, SIGNS, VN_PENNANTS, animalOf, banner, checkered, fan, flagRaise, flagStyle, gate, hash, palaceGate, pennantString, pill, ribbon, roundedRect, sign, templeDrum } from './track-art.js';
-import { EMOJI_FONT, drawFace, drawScenery, FONT, headPoint, INK, starFlag, tiltPivot } from './draw.js';
+import { easeOut, flowerBranch, flowerPot, BANNER_EVERY_M, BANNER_SPAN_M, FAN_EVERY_M, KERB_FLAG_EVERY_M, PENNANTS, POLE_EVERY_M, SHIRTS, SIGNS, VN_PENNANTS, animalOf, banner, checkered, fan, flagRaise, flagStyle, gate, hash, palaceGate, pennantString, pill, ribbon, roundedRect, sign, templeDrum } from './track-art.js';
+import { EMOJI_FONT, drawFace, drawScenery, FONT, headPoint, INK, partyFlag, starFlag, tiltPivot } from './draw.js';
 import { SpriteCache } from './spriteCache.js';
 import { detailFor } from './detail.js';
 
@@ -454,6 +454,7 @@ export class RaceView {
     const cheers = findMap(race.mapId)?.cheers ?? ['CHẠY ĐI CHỜ CHI! 🔥'];
     const bannerTexts = [`🏁 ${title}`, ...racerNames.map((n) => `Cố lên ${n}!`), ...cheers];
     const toX = (m) => labelW + (m - cam) * ppu;
+    const tet = flagStyle(race.mapId) === 'tet'; // Tết: half the crowd waves mai / peach branches
 
     ctx.save();
     ctx.beginPath();
@@ -470,7 +471,8 @@ export class RaceView {
       const seed = Math.abs(i * 7919) % 997;
       const member = audience.length > 0 && seed % 4 === 0 ? audience[seed % audience.length] : null;
       const hands = fan(ctx, toX(m), base, h * (0.85 + (seed % 5) * 0.06), seed, t, member && { initials: member.initials, color: member.color });
-      if (!member && seed % 5 === 1) sign(ctx, seed % 2 ? hands.left : hands.right, h, SIGNS[seed % SIGNS.length]);
+      if (tet && !member && seed % 2 === 0) flowerBranch(ctx, seed % 4 ? hands.right : hands.left, h, seed % 3 ? '#ffd23f' : '#f7a8c4');
+      else if (!member && seed % 5 === 1) sign(ctx, seed % 2 ? hands.left : hands.right, h, SIGNS[seed % SIGNS.length]);
     }
     // Long banners carried by two fans.
     const firstBanner = Math.floor(cam / BANNER_EVERY_M) - 1;
@@ -498,7 +500,7 @@ export class RaceView {
     for (let i = first; i <= last; i += 1) {
       const x = toX(i * POLE_EVERY_M + POLE_EVERY_M / 2);
       const top = { x, y: base - poleH };
-      if (prevTop) pennantString(ctx, prevTop, top, h * 0.22, style === 'vn' ? VN_PENNANTS : PENNANTS, Math.abs(i));
+      if (prevTop) pennantString(ctx, prevTop, top, h * 0.22, style === 'party' ? PENNANTS : VN_PENNANTS, Math.abs(i));
       prevTop = top;
       ctx.fillStyle = '#d8d8d8';
       ctx.strokeStyle = INK;
@@ -509,6 +511,7 @@ export class RaceView {
       const fw = h * 0.62 + flutter;
       const fh = h * 0.4;
       if (style === 'vn') starFlag(ctx, x + 1.5, top.y, fw, fh, ['#da251d']);
+      else if (style === 'tet') (Math.abs(i) % 2 ? partyFlag : starFlag)(ctx, x + 1.5, top.y, fw, fh, ['#da251d']);
       else {
         ctx.fillStyle = PENNANTS[Math.abs(i) % PENNANTS.length];
         ctx.beginPath();
@@ -542,6 +545,10 @@ export class RaceView {
       if (style === 'vn') {
         const bands = Math.abs(i) % 2 === 0 ? ['#da251d'] : ['#da251d', '#1e6fd9'];
         starFlag(ctx, x, base - size * 1.9, size * 1.35 + flutter, size * 0.9, bands);
+      } else if (style === 'tet') {
+        (Math.abs(i) % 2 ? partyFlag : starFlag)(ctx, x, base - size * 1.9, size * 1.35 + flutter, size * 0.9, ['#da251d']);
+        // A pot of mai or peach blossoms between every two flags.
+        flowerPot(ctx, x + (KERB_FLAG_EVERY_M * ppu) / 2, base, size, Math.abs(i) % 2 ? '#f7a8c4' : '#ffd23f');
       } else {
         ctx.fillStyle = PENNANTS[Math.abs(i) % PENNANTS.length];
         ctx.beginPath();

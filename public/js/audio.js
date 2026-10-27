@@ -397,7 +397,7 @@ export function createSoundDirector() {
     }
     if (state.phase === 'finished' && lastPhase === 'racing') sound.sfx('fanfare');
     // Special finish lines make their own noise when the first racer arrives.
-    const finishSound = { saigon: 'crash', denhung: 'drum', congtruong: 'siren', badinh: 'firework' }[race?.mapId];
+    const finishSound = { saigon: 'crash', denhung: 'drum', congtruong: 'siren', badinh: 'firework', tet: 'firework' }[race?.mapId];
     if (finishSound && race.racers.some((r) => r.finishedAt !== null) && gateDownFor !== race.startsAt) {
       gateDownFor = race.startsAt;
       if (state.phase === 'racing') sound.sfx(finishSound);

@@ -147,6 +147,26 @@ MAPS.push(
   },
 );
 
+// ---------------- Tết ----------------
+ANIMALS.push(
+  { id: 'lan', name: 'Ông Lân', color: '#d62828', maps: ['tet'] },
+  { id: 'ongDia', name: 'Ông Địa', color: '#e9a23b', maps: ['tet'] },
+  { id: 'banhChung', name: 'Bánh chưng', color: '#3f8f3a', maps: ['tet'] },
+  { id: 'liXi', name: 'Bao lì xì', color: '#d62828', maps: ['tet'] },
+  { id: 'chauMai', name: 'Chậu mai', color: '#f4f8fc', maps: ['tet'] },
+  { id: 'ongDo', name: 'Ông đồ', color: '#7a4a2a', maps: ['tet'] },
+  { id: 'aoDai', name: 'Cô Ba áo dài', color: '#d62828', maps: ['tet'] },
+  { id: 'deCon', name: 'Dê con', color: '#f4f1ea', maps: ['tet'] },
+);
+MAPS.push({
+  id: 'tet', name: 'Tết đến xuân về', trackLength: 680,
+  // Tết cast plus a few friends from other maps: the horse, the dragon, the flower bike, Anh Hai Lúa.
+  allowedAnimals: ['lan', 'ongDia', 'banhChung', 'liXi', 'chauMai', 'ongDo', 'aoDai', 'deCon', 'horse', 'dragon', 'flowerBike', 'nongDan'],
+  cheers: ['Chúc mừng năm mới!', 'An khang thịnh vượng', 'Vạn sự như ý', 'Xuân về rộn ràng!'],
+  // Cream-gold track with red lines: the red Tết cast (lân, lì xì, áo dài) must stand out against it.
+  palette: { skyTop: '#8fd3ff', skyBottom: '#fff1c9', ground: '#c94f3d', laneA: '#f2d9a6', laneB: '#ead09a', line: '#d62828' },
+});
+
 export const REACTIONS = ['👏', '😂', '🔥', '😱', '❤️', '🐢', '🚀', '🍀'];
 
 export const FACE_COLORS = ['#ff5a36', '#18a999', '#5b6cff', '#ff9f1c', '#c840e9', '#e63973', '#2d9cdb', '#7ac74f', '#8d6e63', '#ef476f'];
@@ -216,6 +236,7 @@ export const CHARACTER_GROUPS = [
   { id: 'sieuanhhung', name: 'Siêu anh hùng', icon: '🦸' },
   { id: 'vongquanh', name: 'Thế giới', icon: '🌍' },
   { id: 'chodem', name: 'Chợ đêm', icon: '🏮' },
+  { id: 'tet', name: 'Tết', icon: '🧧' },
 ];
 export const groupOf = (animal) => animal.group ?? animal.maps?.[0] ?? 'animals';
 
