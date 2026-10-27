@@ -6,6 +6,7 @@ import { rankRacers } from '/shared/race.js';
 import { paintAnimalCard, paintMapCard } from './draw.js';
 import { RaceView } from './raceView.js';
 import { RaceRecorder, slugify } from './recorder.js';
+import { track } from './analytics.js';
 import { QUIET_AFTER_FINISH_MS, createSoundDirector, sound, soundForEffect } from './audio.js';
 import { el, formatTime, toast } from './ui.js';
 import { Playback, prepareRace } from './quick/playback.js';
@@ -135,6 +136,7 @@ async function startRace() {
   stopRace(); // a double click may have started another race while we awaited: keep only this one
   const race = prepareRace({ names, mapId: settings.mapId, durationSec: settings.durationSec, character: settings.character, seed, fun: settings.fun, allCharacters: settings.allCharacters });
   raceView.showNames = names.length <= MAX_LANES;
+  track('quick_race_start', { map_id: settings.mapId, racers: names.length });
   const playback = new Playback(race, { title: settings.title });
   current = { race, playback, seed, seedHash, names, finished: false, boardAt: 0, video: null, nextThrowAt: playback.startsAt + FIRST_THROW_AFTER_MS };
 

@@ -25,6 +25,10 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
   `public/music/<mapId>.mp3`, which wins over the built-in chiptune. Always played from 0:00.
 - Maps flagged `special: true` (e.g. the 30/4 "Dinh Độc Lập" map) are **opt-in per room**
   (`allowSpecialMaps`, off by default) and hidden in quick race unless toggled.
+- Analytics: Google Analytics 4 whenever `GA4_ID` is set (`public/js/analytics.js`; no consent bar by the owner's
+  choice; visitors can opt out on the privacy page, stored as localStorage `peti.analytics=off`). CSP opens GA hosts only when `GA4_ID` is set. Page views send a cleaned
+  address (`shared/analyticsUrl.js`: no query/hash, `/r/:code`), never host keys, room codes, names or chat.
+  Events: `quick_race_start`, `room_create`, `race_start`. Not loaded on `/r/CODE/live` (OBS) or `/admin`.
 - Admin page `/admin` (role from `ADMIN_EMAILS`; non-admins get 404): stats, live rooms, users, ban.
 - Fairness explainer `/cong-bang`; link to it wherever a commitment hash shows.
 - Legal pages `/dieu-khoan` (`terms.html`) and `/quyen-rieng-tu` (`privacy.html`), linked from the

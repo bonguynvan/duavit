@@ -10,6 +10,7 @@ import { openDatabase } from './db.js';
 import { AuthStore } from './auth/store.js';
 import { isSameOrigin, registerAuth } from './auth/routes.js';
 import { clientIp, closeRoom, publicBaseUrl, registerSockets, roomLinks, sweepRooms, tickRooms } from './sockets.js';
+import { isGa4Id } from '../shared/analyticsUrl.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -17,30 +18,34 @@ const TICK_MS = 50;
 const SWEEP_MS = 60 * 1000;
 const CREATE_WINDOW_MS = 60 * 1000;
 
-const CSP = [
+// Google Analytics hosts, allowed only when a GA4_ID is configured.
+const GA_SCRIPT = 'https://www.googletagmanager.com';
+const GA_HOSTS = 'https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com';
+
+const cspFor = (analytics) => [
   "default-src 'self'",
-  "script-src 'self'",
+  `script-src 'self'${analytics ? ` ${GA_SCRIPT}` : ''}`,
   "style-src 'self' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data:",
+  `img-src 'self' data:${analytics ? ` ${GA_HOSTS}` : ''}`,
   "media-src 'self' blob:",
-  "connect-src 'self' ws: wss:",
+  `connect-src 'self' ws: wss:${analytics ? ` ${GA_HOSTS}` : ''}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
 ].join('; ');
 
-function securityHeaders(_req, res, next) {
+const securityHeaders = (csp) => (_req, res, next) => {
   res.set({
-    'Content-Security-Policy': CSP,
+    'Content-Security-Policy': csp,
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer', // keeps ?key=… host links out of Referer headers
     'X-Frame-Options': 'DENY',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
   });
   next();
-}
+};
 
 /** Reject cross-site WebSocket/polling requests (another site's page driving our sockets). */
 function sameOrigin(req, cb) {
@@ -77,7 +82,7 @@ function createLimiter(maxPerWindow) {
  *   port?: number, publicUrl?: string, trustProxy?: boolean,
  *   roomLimits?: object, maxSocketsPerIp?: number, createPerMinute?: number,
  *   createRoom?: () => import('./game/room.js').Room,
- *   db?: import('node:sqlite').DatabaseSync, requireLogin?: boolean,
+ *   db?: import('node:sqlite').DatabaseSync, requireLogin?: boolean, ga4Id?: string,
  *   auth?: { clientId?: string, clientSecret?: string, adminEmails?: string[], sessionDays?: number,
  *            secureCookies?: boolean, devLogin?: boolean, fetchImpl?: typeof fetch },
  * }} [opts]
@@ -92,8 +97,10 @@ export async function startServer({
   createRoom,
   db = openDatabase(':memory:'),
   requireLogin = false, // ROOMS_REQUIRE_LOGIN=1 brings back "sign in to create a room"
+  ga4Id = '', // Google Analytics 4 measurement id; empty (or malformed) = no analytics at all
   auth = {},
 } = {}) {
+  const analyticsId = isGa4Id(ga4Id) ? ga4Id : null;
   const rooms = new RoomManager({ ...roomLimits, createRoom });
   const store = new AuthStore(db, { sessionDays: auth.sessionDays, adminEmails: auth.adminEmails ?? [] });
   const baseUrl = (req) => publicBaseUrl(req.headers, { publicUrl, trustProxy });
@@ -103,7 +110,11 @@ export async function startServer({
 
   const app = express();
   app.disable('x-powered-by');
-  app.use(securityHeaders);
+  app.use(securityHeaders(cspFor(Boolean(analyticsId))));
+  // The browser learns the GA4 id from here (CSP allows no inline scripts). Loaded only after consent.
+  app.get('/analytics-config.js', (_req, res) => {
+    res.type('application/javascript').set('Cache-Control', 'no-cache').send(`export const GA4_ID = ${JSON.stringify(analyticsId)};\n`);
+  });
 
   // Static assets only (pages are served by the routes below, never by path).
   const noCache = (res) => res.set('Cache-Control', 'no-cache'); // revalidate (ETag) so updates land at once

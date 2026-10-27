@@ -37,3 +37,6 @@
   .legal-table td:first-child { font: 800 1rem var(--font-display); color: var(--ink); }
   .legal-table td[data-label]::before { content: attr(data-label) ': '; font-weight: 800; color: var(--ink); }
 }
+
+.analytics-settings { display: block; margin-top: 8px; padding: 6px 14px; font-size: 0.95rem; }
+.analytics-settings[hidden] { display: none; }

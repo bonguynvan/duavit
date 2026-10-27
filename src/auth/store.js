@@ -27,6 +27,9 @@ export class AuthStore {
                         ORDER BY last_login_at DESC LIMIT ?`),
       countUsers: db.prepare('SELECT COUNT(*) AS n FROM users'),
       countSessions: db.prepare('SELECT COUNT(*) AS n FROM sessions WHERE expires_at > ?'),
+      newLink: db.prepare('INSERT INTO login_links (token_hash, user_id, expires_at) VALUES (?, ?, ?)'),
+      takeLink: db.prepare('DELETE FROM login_links WHERE token_hash = ? RETURNING user_id, expires_at'),
+      purgeLinks: db.prepare('DELETE FROM login_links WHERE expires_at <= ?'),
     };
   }
 
@@ -53,6 +56,29 @@ export class AuthStore {
     }
     const { lastInsertRowid } = this.q.insert.run(sub, email, name, role, now, now);
     return this.getUser(Number(lastInsertRowid));
+  }
+
+  /** Admin account for a server-made sign-in link (no Google identity behind it). */
+  upsertLocalAdmin(email, now) {
+    const address = String(email).trim().toLowerCase();
+    return this.upsertGoogleUser({ sub: `local:${address}`, email: address, name: address.split('@')[0] }, now);
+  }
+
+  /** @returns {string} raw one-time token (only its hash is stored) */
+  createLoginLink(userId, now, ttlMs) {
+    this.q.purgeLinks.run(now);
+    const token = randomBytes(32).toString('hex');
+    this.q.newLink.run(hashToken(token), userId, now + ttlMs);
+    return token;
+  }
+
+  /** Use up a sign-in link: the user it was made for, or null (unknown, used, expired or banned). */
+  redeemLoginLink(token, now) {
+    if (typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token)) return null;
+    const link = this.q.takeLink.get(hashToken(token)); // deleted whatever happens next: single use
+    if (!link || link.expires_at <= now) return null;
+    const user = this.getUser(link.user_id);
+    return user && !user.banned ? user : null;
   }
 
   getUser(id) {

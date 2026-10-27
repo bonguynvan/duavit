@@ -8,6 +8,7 @@ import { mountChat, messageNode } from './chat.js';
 import { mountCommitBar } from './commitBar.js';
 import { mountMusicPicker } from './musicPicker.js';
 import { mapRequestCard } from './mapRequest.js';
+import { track } from './analytics.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
@@ -482,7 +483,11 @@ $('add-person-form').addEventListener('submit', async (event) => {
     $('add-person-name').focus(); // ready for the next name
   }
 });
-$('start').addEventListener('click', () => act('host:start'));
-$('rematch').addEventListener('click', () => act('host:start'));
+const startRace = () => {
+  track('race_start', { map_id: state?.mapId, racers: state?.players.filter((p) => !p.spectator).length ?? 0 });
+  act('host:start');
+};
+$('start').addEventListener('click', startRace);
+$('rematch').addEventListener('click', startRace);
 $('to-lobby').addEventListener('click', () => act('host:lobby'));
 requestAnimationFrame(tickTimer);
