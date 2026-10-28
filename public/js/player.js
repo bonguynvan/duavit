@@ -249,6 +249,45 @@ $('react-bar').append(...REACTIONS.map((emoji) => el('button', {
   },
 }, emoji)));
 
+// ---------- "Bấm để chạy": the big button (and Space on a keyboard) ----------
+const tapPad = $('tap-pad');
+const tapReady = () => !tapPad.hidden && !tapPad.disabled;
+function tap() {
+  if (!tapReady()) return;
+  socket.emit('race:tap'); // fire and forget: the server counts at most RULES.tapMaxRate a second
+  navigator.vibrate?.(8);
+  tapPad.classList.add('down');
+  setTimeout(() => tapPad.classList.remove('down'), 70);
+}
+tapPad.addEventListener('pointerdown', (event) => {
+  event.preventDefault(); // no double-tap zoom, no focus ring flicker
+  tap();
+});
+tapPad.addEventListener('contextmenu', (event) => event.preventDefault()); // long press on mobile
+document.addEventListener('keydown', (event) => {
+  if (event.code !== 'Space' || event.repeat || !tapReady() || event.target.closest?.('input, textarea, [contenteditable]')) return;
+  event.preventDefault();
+  tap();
+});
+
+function renderTapPad(player) {
+  const race = state.race;
+  const mine = race?.racers.find((r) => r.id === myId);
+  const show = race?.mode === 'tap' && player.inRace && Boolean(mine) && mine.finishedAt === null
+    && (state.phase === 'countdown' || state.phase === 'racing');
+  tapPad.hidden = !show;
+  $('view-race').classList.toggle('tapping', show);
+  if (!show) return;
+  const go = state.phase === 'racing' && !race.paused;
+  tapPad.disabled = !go;
+  $('tap-word').textContent = go ? 'BẤM!' : race.paused ? 'Tạm dừng' : 'Chuẩn bị…';
+  const rate = mine.rate ?? 0;
+  tapPad.classList.toggle('flat-out', go && rate >= RULES.tapFullRate);
+  $('tap-rate').textContent = go
+    ? (rate >= RULES.tapFullRate ? `🔥 Tốc lực tối đa · ${rate}/giây` : `⚡ ${rate}/giây · bấm ${RULES.tapFullRate}/giây để chạy hết tốc lực`)
+    : 'Bấm liên tục khi có hiệu lệnh để chạy';
+}
+
 function rankingRows() {
   const players = new Map(state.players.map((p) => [p.id, p]));
   if (state.results) {
@@ -271,6 +310,7 @@ function renderRace(entering) {
   rankingHadResults = Boolean(state.results);
   const player = me();
   renderThrowBar(player);
+  renderTapPad(player);
   const note = player.inRace ? '' : player.spectator ? '👀 Bạn đang xem với tư cách khán giả' : '⏳ Lượt này đã đủ người — bạn sẽ đua lượt sau';
   $('race-note').hidden = !note;
   $('race-note').textContent = note;
@@ -324,8 +364,22 @@ wideQuery.addEventListener('change', () => {
 });
 $('chat-close').addEventListener('click', () => toggleChat(false));
 
+/** Wording that depends on how the room races (tap to run, or random). */
+const MODE_TEXT = {
+  tap: { eyebrow: 'Đua bấm nút', step: 'Bấm liên tục để chạy', stepNote: 'Ai bấm nhanh về trước 💨', pick: '· chỉ để trang trí, nhân vật nào cũng chạy như nhau' },
+  random: { eyebrow: 'Đua ngẫu nhiên', step: 'Xem đua & ném gạch', stepNote: 'Vui thôi, không đổi kết quả 😉', pick: '· tốc độ ngẫu nhiên, như nhau cho mọi nhân vật' },
+};
+function renderModeText() {
+  const text = MODE_TEXT[state.mode] ?? MODE_TEXT.tap;
+  $('join-eyebrow').textContent = text.eyebrow;
+  $('step-race').textContent = text.step;
+  $('step-race-note').textContent = text.stepNote;
+  $('pick-note').textContent = text.pick;
+}
+
 function render() {
   if (!state) return;
+  renderModeText();
   $('map-chip').textContent = `🗺 ${currentMap().name}`;
   const player = me();
   if (player) seenSelf = true;

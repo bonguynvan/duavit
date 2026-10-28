@@ -53,13 +53,21 @@
       </div>
       <div class="maps" id="maps" role="radiogroup" aria-label="Map đua"></div>
       <div class="duration">
+        <span class="eyebrow">Cách đua</span>
+        <div class="duration-options" id="race-mode" role="radiogroup" aria-label="Cách đua">
+          <button type="button" role="radio" class="duration-option" data-mode="tap">👆 Bấm để chạy</button>
+          <button type="button" role="radio" class="duration-option" data-mode="random">🎲 Ngẫu nhiên</button>
+        </div>
+        <p class="mode-note" id="mode-note"></p>
+      </div>
+      <div class="duration">
         <span class="eyebrow">Nhân vật</span>
         <div class="duration-options" id="cast" role="radiogroup" aria-label="Nhân vật được chọn">
           <button type="button" role="radio" class="duration-option" data-all="false">Theo map</button>
           <button type="button" role="radio" class="duration-option" data-all="true">Tất cả nhân vật</button>
         </div>
       </div>
-      <div class="duration">
+      <div class="duration" id="duration-row">
         <span class="eyebrow">Thời lượng mỗi lượt</span>
         <div class="duration-options" id="duration" role="radiogroup" aria-label="Thời lượng cuộc đua"></div>
       </div>

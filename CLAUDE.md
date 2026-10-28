@@ -8,7 +8,7 @@ All UI text is **Vietnamese**; racers are called **"nhân vật"** (not "con v�
 Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
 
 ## Product model
-- **Đua nhanh** `/dua-nhanh` — free, no login, runs 100% in the browser (paste up to 500 names /
+- **Đua ngẫu nhiên** ("Ngẫu nhiên" on the home page; the URL stays `/dua-nhanh`) — free, no login, runs 100% in the browser (paste up to 500 names /
   CSV, pick map + duration, race, video, results CSV). Like viral "duck racing" pickers.
 - **Rooms** — creating (`POST /api/rooms`) and joining (`/r/CODE`) are free, no account; abuse is held back by
   per-IP limits. "Phòng của tôi" is per browser (`public/js/myRooms.js`, codes only; the host key stays in
@@ -17,7 +17,11 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
   per-IP limits count an IPv6 /64 as one client (`clientIp` in `src/sockets.js`). With rooms open to
   everyone, Google sign-in only admits `ADMIN_EMAILS` (for `/admin`); nobody else gets a user row.
   Host screen `/r/CODE/host`, OBS view `/r/CODE/live`, verify page `/kiem-chung`.
-- Races are **purely random** and **provably fair** (seed commit/reveal). Host never influences speed.
+- Rooms race in one of two modes (`room.mode`, host picks in the lobby):
+  - `tap` (default, "Bấm để chạy"): speed follows each phone's tap rate (`shared/tap.js`, counted over 1 s,
+    capped at `RULES.tapMaxRate`); bots tap at a random rate; host-typed names (`isManual`) don't race; no seed,
+    `race.fairness` is null.
+  - `random`: **purely random** and **provably fair** (seed commit/reveal). Host never influences speed.
   Cosmetic items, throws ("ném gạch"), falls, emoji reactions are **visual only** — never change results.
   Quick race "fun mode" (`public/js/quick/fun.js`) hands out random accessories and auto-throws with
   `Math.random` only — never the seed, never positions.
@@ -76,7 +80,7 @@ Production deploy (Docker + Caddy): `deploy/README.md`. Production refuses to st
   a full palette, and that everything draws headless — keep it passing when adding content.
 
 ## Invariants — do not break
-- **Determinism**: a race is fully defined by `(seed, entrant order, trackLength, maxMs)`.
+- **Determinism** (random mode; tap races follow the taps): a race is fully defined by `(seed, entrant order, trackLength, maxMs)`.
   Only `rngFromSeed(seed)` may drive race randomness; steps are fixed `SIM_STEP_MS`; the server
   steps on the race's own clock (`race.simTime`), never on wall-clock `dt`. `test/room.test.js`
   replays a room race from its published fairness data — keep it passing.

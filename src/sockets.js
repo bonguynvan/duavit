@@ -174,6 +174,10 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
         asCallback(cb)({ ok: true });
       });
     };
+    // Tapping to run: fire-and-forget (no ack), many a second; the room ignores taps beyond RULES.tapMaxRate.
+    socket.on('race:tap', () => {
+      if (socket.data.playerId) room.tap(socket.data.playerId, Date.now());
+    });
     effect('race:throw', ({ item }) => room.throwItem(socket.data.playerId, item, Date.now()));
     effect('race:react', ({ emoji }) => room.react(socket.data.playerId, emoji, Date.now()));
 
@@ -235,11 +239,12 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
 
     hostAction('host:map', ({ mapId }) => room.setMap(mapId));
     hostAction('host:duration', ({ seconds }) => room.setDuration(seconds ?? null));
+    hostAction('host:mode', ({ mode }) => room.setMode(String(mode)));
     hostAction('host:specialMaps', ({ allowed }) => room.setSpecialMaps(allowed === true));
     hostAction('host:allCharacters', ({ on }) => room.setAllCharacters(on === true));
     hostAction('host:start', () => {
       const result = room.start(Date.now());
-      if (!result.error) onRaceStart(room.race?.entrants.length ?? 0); // daily counter for the dashboard
+      if (!result.error) onRaceStart(room.race?.racers.length ?? 0); // daily counter for the dashboard
       return result;
     });
     hostAction('host:lobby', () => room.backToLobby());
@@ -290,7 +295,7 @@ export function tickRooms(io, rooms, now) {
     if (!changed && !entry.dirty) continue;
     entry.dirty = false;
     const snap = entry.room.snapshot(now);
-    const rosterKey = JSON.stringify([snap.players, snap.title, snap.mapId, snap.durationSec, snap.allowSpecialMaps, snap.allCharacters]);
+    const rosterKey = JSON.stringify([snap.players, snap.title, snap.mapId, snap.mode, snap.durationSec, snap.allowSpecialMaps, snap.allCharacters]);
     if (rosterKey !== entry.lastRosterKey || !snap.race) {
       entry.lastRosterKey = rosterKey;
       io.to(entry.code).emit('state', snap);

@@ -3,11 +3,15 @@ import { ANIMALS, FACE_COLORS, MAPS, REACTIONS, RULES, allowedAnimals, animalFor
 import { rankRacers } from '../../shared/race.js';
 import { newSeed } from '../../shared/fair.js';
 import { SIM_STEP_MS, createSimulation, stepSimulation } from '../../shared/simulate.js';
+import { addTap, createTapRacer, shiftTapRacer, stepTapRacer, tapMaxRaceMs, tapRate, tapTrackLength } from '../../shared/tap.js';
 import { sanitizeText } from '../text.js';
 
 const BOT_NAMES = ['Bông', 'Mít', 'Su Su', 'Bắp', 'Tôm', 'Kem', 'Na', 'Cốm', 'Xoài', 'Mochi'];
 
 export const PHASES = Object.freeze({ LOBBY: 'lobby', COUNTDOWN: 'countdown', RACING: 'racing', FINISHED: 'finished' });
+
+/** How a room races: players tap to run (default), or the provably fair random race. */
+export const RACE_MODES = Object.freeze(['tap', 'random']);
 
 /** Returns a cleaned name or null when invalid. */
 const RESERVED_NAME = /^\W*(host|admin|mc)\W*$/iu;
@@ -23,10 +27,10 @@ const newToken = () => randomBytes(16).toString('hex');
 export class Room {
   /** @param {{ rng?: () => number }} [opts] */
   /**
-   * @param {{ rng?: () => number, seedSource?: () => string }} [opts]
+   * @param {{ rng?: () => number, seedSource?: () => string, mode?: string }} [opts]
    *   rng: lobby randomness (bots, stand-in characters); seedSource: one secret seed per race.
    */
-  constructor({ rng = Math.random, seedSource = newSeed } = {}) {
+  constructor({ rng = Math.random, seedSource = newSeed, mode = 'tap' } = {}) {
     this.rng = rng;
     this.seedSource = seedSource;
     this.phase = PHASES.LOBBY;
@@ -42,6 +46,7 @@ export class Room {
     this.durationSec = null; // null = the map's default length
     this.allowSpecialMaps = false; // 30/4-themed maps stay hidden unless the host opts in
     this.allCharacters = false; // host switch: every character of every map may race on this room's maps
+    this.mode = RACE_MODES.includes(mode) ? mode : 'tap'; // 'tap': players tap to run; 'random': seeded, provably fair
     /** name -> lastRacedAt of players who left, so leave+rejoin can't jump the queue */
     this.recentRacers = new Map();
     this.lastTickAt = null;
@@ -171,12 +176,20 @@ export class Room {
     return { fx: { type: 'react', emoji, from: id, at: now } };
   }
 
-  /** Connected players in the order they get a race slot: humans first, longest-waiting first. */
+  /**
+   * Connected players in the order they get a race slot: humans first, longest-waiting first.
+   * Tap races need a phone to tap on: names the host typed in only race in random mode.
+   */
   #queue() {
     const waitKey = (p) => (p.lastRacedAt === null ? -Infinity : p.lastRacedAt);
     return [...this.players.values()]
-      .filter((p) => p.connected && !p.spectator)
+      .filter((p) => this.#canRace(p))
       .sort((a, b) => Number(a.isBot) - Number(b.isBot) || waitKey(a) - waitKey(b) || a.joinSeq - b.joinSeq);
+  }
+
+  /** May race in this room's mode: connected, not watching, and (tap races) holding a phone to tap on. */
+  #canRace(p) {
+    return Boolean(p) && p.connected && !p.spectator && !(this.mode === 'tap' && p.isManual);
   }
 
   /** Removes a player; if they are mid-race their lane is dropped too (no ghost racers). */
@@ -238,6 +251,25 @@ export class Room {
     return { ok: true };
   }
 
+  setMode(mode) {
+    if (!RACE_MODES.includes(mode)) return { error: 'Chế độ không hợp lệ' };
+    if (this.#raceInProgress()) return { error: 'Đang đua, đổi chế độ sau nhé' };
+    this.mode = mode;
+    return { ok: true };
+  }
+
+  /** A tap from a racer's phone (tap mode). Returns true when it counted. */
+  tap(id, now) {
+    if (this.phase !== PHASES.RACING || this.race?.mode !== 'tap' || this.race.paused) return false;
+    const index = this.race.racers.findIndex((r) => r.id === id);
+    if (index < 0) return false;
+    const before = this.race.racers[index];
+    const after = addTap(before, now);
+    if (after === before) return false;
+    this.race = { ...this.race, racers: this.race.racers.map((r, i) => (i === index ? after : r)) };
+    return true;
+  }
+
   /** Host opt-in for special (30/4) maps; turning it off moves the room back to a regular map. */
   setSpecialMaps(allowed) {
     if (this.#raceInProgress()) return { error: 'Đang đua, đổi sau nhé' };
@@ -290,6 +322,10 @@ export class Room {
   }
 
   #launch(ids, map, now) {
+    if (this.mode === 'tap') {
+      this.#launchTap(ids, map, now);
+      return;
+    }
     const trackLength = trackLengthFor(map, this.durationSec);
     const maxMs = maxRaceMsFor(trackLength);
     const startsAt = now + RULES.countdownMs;
@@ -298,6 +334,7 @@ export class Room {
     const seed = this.seedSource();
     const sim = createSimulation({ seed, ids, trackLength, startsAt });
     this.race = {
+      mode: 'random',
       mapId: map.id,
       trackLength,
       startsAt,
@@ -312,6 +349,30 @@ export class Room {
       rng: sim.rng,
       simTime: sim.simTime,
       racers: sim.racers,
+    };
+    this.results = null;
+    this.phase = PHASES.COUNTDOWN;
+    this.lastTickAt = now;
+  }
+
+  /** A tap race: no seed, speed comes from the phones (bots tap at their own random rate). */
+  #launchTap(ids, map, now) {
+    const trackLength = tapTrackLength();
+    const maxMs = tapMaxRaceMs();
+    const startsAt = now + RULES.countdownMs;
+    const botRate = (id) => (this.players.get(id)?.isBot ? RULES.botTapMin + this.rng() * (RULES.botTapMax - RULES.botTapMin) : null);
+    this.race = {
+      mode: 'tap',
+      mapId: map.id,
+      trackLength,
+      startsAt,
+      endsAt: startsAt + maxMs,
+      maxMs,
+      paused: false,
+      pausedAt: null,
+      entrants: ids.map((id) => this.players.get(id)?.name ?? '???'),
+      simTime: startsAt,
+      racers: ids.map((id) => createTapRacer(id, startsAt, botRate(id))),
     };
     this.results = null;
     this.phase = PHASES.COUNTDOWN;
@@ -338,7 +399,9 @@ export class Room {
       startsAt: this.race.startsAt + shift,
       endsAt: this.race.endsAt + shift,
       simTime: this.race.simTime + shift,
-      racers: this.race.racers.map((r) => ({ ...r, nextChangeAt: r.nextChangeAt + shift, finishedAt: later(r.finishedAt) })),
+      racers: this.race.racers.map((r) => (this.race.mode === 'tap'
+        ? shiftTapRacer(r, shift)
+        : { ...r, nextChangeAt: r.nextChangeAt + shift, finishedAt: later(r.finishedAt) })),
     };
     this.lastTickAt = now;
     return { ok: true };
@@ -347,7 +410,8 @@ export class Room {
   /** Run the current (or just finished) race again from the start line with the same racers. */
   restartRace(now) {
     if (!this.race) return { error: 'Chưa có cuộc đua nào để bắt đầu lại' };
-    const ids = this.race.racers.map((r) => r.id).filter((id) => this.players.get(id)?.connected);
+    // The host may have switched mode since: only racers who can race in the current mode go again.
+    const ids = this.race.racers.map((r) => r.id).filter((id) => this.#canRace(this.players.get(id)));
     if (ids.length < 2) return { error: 'Cần ít nhất 2 tay đua còn kết nối' };
     this.#launch(ids, findMap(this.race.mapId) ?? findMap(this.mapId), now);
     return { ok: true };
@@ -385,7 +449,8 @@ export class Room {
     // Fixed 50 ms steps on the race's own clock: identical to what the verifier replays,
     // no matter how irregular the server's timer is.
     let sim = { rng: this.race.rng, trackLength: this.race.trackLength, simTime: this.race.simTime, racers: this.race.racers };
-    while (sim.simTime + SIM_STEP_MS <= now && sim.racers.some((r) => r.finishedAt === null)) sim = stepSimulation(sim);
+    const step = this.race.mode === 'tap' ? stepTap : stepSimulation;
+    while (sim.simTime + SIM_STEP_MS <= now && sim.racers.some((r) => r.finishedAt === null)) sim = step(sim);
     this.race = { ...this.race, simTime: sim.simTime, racers: sim.racers };
     const { racers } = this.race;
     const done = racers.length === 0 || racers.every((r) => r.finishedAt !== null);
@@ -444,14 +509,17 @@ export class Room {
       spectator: p.spectator,
       queuePos: queuePos.get(p.id) ?? null, // 1..raceSlots = in the next race
     }));
+    const tapMode = this.race?.mode === 'tap';
     const race = this.race && {
+      mode: this.race.mode,
       mapId: this.race.mapId,
       trackLength: this.race.trackLength,
       startsAt: this.race.startsAt,
       paused: Boolean(this.race.paused),
       pausedAt: this.race.pausedAt ?? null,
       // Commit before / reveal after: the seed is only published once the race is over.
-      fairness: {
+      // Tap races have nothing to prove: the players decide them.
+      fairness: tapMode ? null : {
         seedHash: this.race.seedHash,
         seed: this.phase === PHASES.FINISHED ? this.race.seed : null,
         entrants: this.race.entrants,
@@ -465,8 +533,15 @@ export class Room {
         speed: Math.round(r.speed * 100) / 100,
         event: r.event,
         finishedAt: r.finishedAt,
+        ...(tapMode ? { rate: Math.round(tapRate(r, this.race.simTime) * 10) / 10 } : {}),
       })),
     };
-    return { phase: this.phase, mapId: this.mapId, serverNow: now, title: this.title, durationSec: this.durationSec, allowSpecialMaps: this.allowSpecialMaps, allCharacters: this.allCharacters, raceSlots: RULES.raceSlots, players, race, results: this.results };
+    return { phase: this.phase, mode: this.mode, mapId: this.mapId, serverNow: now, title: this.title, durationSec: this.durationSec, allowSpecialMaps: this.allowSpecialMaps, allCharacters: this.allCharacters, raceSlots: RULES.raceSlots, players, race, results: this.results };
   }
+}
+
+/** One fixed step of a tap race (same shape as stepSimulation). */
+function stepTap(sim) {
+  const simTime = sim.simTime + SIM_STEP_MS;
+  return { ...sim, simTime, racers: sim.racers.map((r) => stepTapRacer(r, SIM_STEP_MS / 1000, sim.trackLength, simTime)) };
 }

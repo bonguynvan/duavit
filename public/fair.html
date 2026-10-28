@@ -27,7 +27,7 @@
       <p class="lede">Mỗi cuộc đua được quyết định bởi một <strong>seed ngẫu nhiên</strong>. Mã băm SHA-256 của seed được công bố <strong>trước</strong> khi đua, seed được công bố <strong>sau</strong> khi đua. Ai cũng có thể chạy lại và ra đúng kết quả đó. Cách làm này gọi là <em>provably fair</em>.</p>
       <div class="fair-cta">
         <a class="btn btn-primary" href="/kiem-chung">Kiểm chứng một cuộc đua →</a>
-        <a class="btn btn-ghost" href="/dua-nhanh">Thử đua nhanh</a>
+        <a class="btn btn-ghost" href="/dua-nhanh">Thử đua ngẫu nhiên</a>
       </div>
     </section>
 
@@ -35,7 +35,7 @@
       <li class="card">
         <span class="step-no">1</span>
         <h2>Tạo seed bí mật</h2>
-        <p>Trước mỗi lượt, máy tạo 32 byte ngẫu nhiên bằng <code>crypto.getRandomValues</code> (bộ sinh số ngẫu nhiên an toàn của hệ điều hành), viết thành 64 ký tự hex. Phòng đua: máy chủ tạo. Đua nhanh: chính trình duyệt của bạn tạo.</p>
+        <p>Trước mỗi lượt, máy tạo 32 byte ngẫu nhiên bằng <code>crypto.getRandomValues</code> (bộ sinh số ngẫu nhiên an toàn của hệ điều hành), viết thành 64 ký tự hex. Phòng đua (chế độ Ngẫu nhiên): máy chủ tạo. Trang Đua ngẫu nhiên: chính trình duyệt của bạn tạo.</p>
       </li>
       <li class="card">
         <span class="step-no">2</span>

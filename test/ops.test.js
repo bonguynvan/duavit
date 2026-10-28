@@ -73,6 +73,7 @@ test('overview lists live rooms (no secrets) and counts rooms and races per day'
   await new Promise((r) => host.on('connect', r));
   const ask = (event, data) => host.timeout(2000).emitWithAck(event, data);
   assert.ok((await ask('host:auth', { key: server.rooms.get(code).hostKey })).ok);
+  assert.ok((await ask('host:mode', { mode: 'random' })).ok);
   assert.ok((await ask('host:addPlayer', { name: 'An', animal: 'cat' })).ok);
   assert.ok((await ask('host:addPlayer', { name: 'Bình', animal: 'dog' })).ok);
   assert.ok((await ask('host:start', {})).ok);
