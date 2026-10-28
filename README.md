@@ -3,7 +3,8 @@
 [![test](https://github.com/bonguynvan/duavit/actions/workflows/test.yml/badge.svg)](https://github.com/bonguynvan/duavit/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
-Game đua nhân vật **ngẫu nhiên** cho livestream, sự kiện, lớp học và tiệc tùng: dán danh sách tên, bấm đua, cả phòng cùng xem ai về nhất.
+Game đua nhân vật cho livestream, sự kiện, lớp học và tiệc tùng: cả phòng bấm điện thoại để chạy, hoặc dán danh sách tên
+để đua **ngẫu nhiên** công bằng, cả phòng cùng xem ai về nhất.
 Kết quả được chọn bằng **thuật toán công bằng, kiểm chứng được (provably fair)**: mã cam kết SHA-256 được công bố trước khi đua, ai cũng chạy lại và kiểm tra được.
 
 **▶ Chơi miễn phí: [duavit.peti.vn](https://duavit.peti.vn)**
@@ -16,8 +17,11 @@ Dùng để: chọn ngẫu nhiên một người, chia đội, xếp thứ tự 
 
 ## Tính năng
 
-- **Đua nhanh** (`/dua-nhanh`): không cần đăng nhập, chạy 100% trên trình duyệt. Dán tới 500 tên hoặc file CSV, chọn map và thời lượng, quay video, xuất kết quả CSV.
+- **Đua ngẫu nhiên** (`/dua-nhanh`): không cần đăng nhập, chạy 100% trên trình duyệt. Dán tới 500 tên hoặc file CSV, chọn map và thời lượng, quay video, xuất kết quả CSV.
 - **Phòng chơi** (`/r/MÃ`): host tạo phòng miễn phí (không cần tài khoản), người chơi quét QR bằng điện thoại, nhập tên, chọn nhân vật. Có chat, thả emoji, ném gạch (chỉ để vui).
+  Hai cách đua, host chọn trong sảnh:
+  - **Bấm để chạy** (mặc định): ai bấm điện thoại nhanh hơn chạy nhanh hơn (tối đa 10 lần/giây được tính, ~20 giây/lượt).
+  - **Ngẫu nhiên**: tốc độ ngẫu nhiên kiểm chứng được (provably fair); tên do host tự thêm chỉ đua ở chế độ này.
 - **Màn hình OBS** (`/r/MÃ/live`) cho người livestream.
 - **Kiểm chứng** (`/kiem-chung`) và trang giải thích thuật toán (`/cong-bang`).
 - Nhiều map: Đồng cỏ, Sa mạc, Băng tuyết, Bãi biển, Nông trại, Đền Hùng, Công trường, Ba Đình, Phố siêu anh hùng, Vòng quanh thế giới, Chợ đêm, Tết đến xuân về, Dinh Độc Lập (map đặc biệt, host tự bật).

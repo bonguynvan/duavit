@@ -232,6 +232,8 @@ test('join, resume, kick and a full race over sockets', { timeout: 90000 }, asyn
   assert.ok((await ask(phone2, 'player:resume', { token: 'bad' })).error);
 
   assert.ok((await ask(host, 'host:map', { mapId: 'beach' })).ok);
+  assert.ok((await ask(host, 'host:mode', { mode: 'nope' })).error);
+  assert.ok((await ask(host, 'host:mode', { mode: 'random' })).ok, 'host-added names only race in random mode');
   // Other tests share this room; keep just our racer + one host-added rival.
   for (const p of [...room.players.values()]) if (p.id !== joined.playerId) room.remove(p.id);
   assert.ok((await ask(host, 'host:start')).error, 'needs two racers');
@@ -388,4 +390,25 @@ test('one socket cannot churn join/leave to force full snapshots forever', async
   assert.ok(results.slice(0, 10).every((r) => r.ok), 'normal use is untouched');
   assert.match(results[10].error, /nhiều quá/);
   socket.disconnect();
+});
+
+test('a tap race over sockets: the phone that taps runs, the start counts racers', async () => {
+  const { body } = await createRoom();
+  const room = { code: body.code, hostKey: new URL(body.hostUrl).searchParams.get('key') };
+  const host = await hostOf(room);
+  const tapper = await client(room.code);
+  const idle = await client(room.code);
+  const a = await ask(tapper, 'player:join', { name: 'Nhanh', animal: 'duck' });
+  await ask(idle, 'player:join', { name: 'Lười', animal: 'cat' });
+  const racing = nextState(tapper, (s) => s.phase === 'racing');
+  assert.ok((await ask(host, 'host:start')).ok, 'starts in the default tap mode');
+  const live = await racing;
+  assert.equal(live.race.mode, 'tap');
+  assert.equal(live.race.fairness, null);
+  const timer = setInterval(() => tapper.emit('race:tap'), 100);
+  await new Promise((r) => setTimeout(r, 1500));
+  clearInterval(timer);
+  const race = server.rooms.get(room.code).room.race;
+  const [mine, theirs] = [a.playerId, race.racers.find((r) => r.id !== a.playerId).id].map((id) => race.racers.find((r) => r.id === id));
+  assert.ok(mine.pos > 5 && theirs.pos === 0, 'only the tapping phone moves');
 });

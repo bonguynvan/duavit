@@ -158,6 +158,7 @@ body { overflow-x: hidden; }
 
 .duration { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
 .duration-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.mode-note { flex-basis: 100%; margin: 0; color: var(--ink-soft); font-weight: 700; font-size: 0.92rem; }
 .duration-options button {
   font: 800 0.95rem var(--font-body); color: var(--ink); background: #fff; cursor: pointer;
   border: 2px solid var(--ink); border-radius: 999px; padding: 6px 14px;

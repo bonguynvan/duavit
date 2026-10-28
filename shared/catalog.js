@@ -190,6 +190,15 @@ export const RULES = {
   maxRaceMs: 240000,
   // Host-picked race length (seconds of average running time). null = use the map's own track length.
   durationChoices: [30, 60, 90, 120, 180],
+  // "Bấm để chạy" rooms: speed follows how fast a player taps (see shared/tap.js).
+  tapFullRate: 8, // taps a second for top speed (a quick thumb manages this)
+  tapMaxRate: 10, // taps a second the server counts at most (auto-clickers gain nothing)
+  tapWindowMs: 1000, // taps are counted over this window
+  tapSpeedFactor: 2.5, // top speed = baseSpeed x this
+  tapAccel: 4, // how fast speed follows the tapping (1/s)
+  tapRaceSec: 20, // a flat-out tapper crosses the line in about this long (mashing longer hurts)
+  botTapMin: 5, // bots tap between these rates
+  botTapMax: 8.5,
   reactCooldownMs: 500,
   maxPlayers: 300, // lobby is effectively unlimited; this only guards against spam
   raceSlots: 20, // racers per round; everyone else waits for the next one

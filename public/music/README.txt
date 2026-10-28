@@ -13,6 +13,6 @@ Map nào có file thì phát file đó (lặp lại) từ lúc đếm ngược t
 không có file thì dùng nhạc 8-bit có sẵn. Không cần khởi động lại server.
 Chỉ dùng nhạc bạn có quyền sử dụng (nguồn miễn phí / bản quyền cho phép).
 
-Người dùng cũng có thể tự chọn nhạc từ máy (mục "Nhạc nền" ở Đua nhanh và màn hình host):
+Người dùng cũng có thể tự chọn nhạc từ máy (mục "Nhạc nền" ở Đua ngẫu nhiên và màn hình host):
 file chỉ phát trên trình duyệt của họ, không tải lên máy chủ, và được ưu tiên hơn file ở đây.
 Gợi ý nguồn nhạc dùng được: Pixabay Music, OpenGameArt (CC0), Incompetech (CC BY, ghi tên tác giả).

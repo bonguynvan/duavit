@@ -14,7 +14,7 @@ const runUntilFinished = (room, start = 0) => {
 };
 
 const twoPlayers = () => {
-  const room = new Room({ rng: seededRng(3) });
+  const room = new Room({ mode: 'random', rng: seededRng(3) });
   const a = room.join('An', 'turtle').player;
   const b = room.join('Bình', 'rabbit').player;
   return { room, a, b };
@@ -43,7 +43,7 @@ test('randomForm stays within the configured spread', () => {
 });
 
 test('join validates name, animal and capacity', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   assert.ok(room.join('', 'cat').error);
   assert.ok(room.join('An', 'unicorn').error);
   for (let i = 0; i < RULES.maxPlayers; i += 1) assert.ok(room.join(`P${i}`, 'cat').player);
@@ -67,7 +67,7 @@ test('resume restores a disconnected player by token', () => {
 });
 
 test('start needs at least two connected players', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   room.join('Solo', 'cat');
   assert.ok(room.start(0).error);
   assert.ok(room.addBot().player);
@@ -143,7 +143,7 @@ test('disconnected lobby players are dropped after the grace period, racers are 
 });
 
 test('bots are capped', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   for (let i = 0; i < RULES.maxBots; i += 1) assert.ok(room.addBot().player.isBot);
   assert.ok(room.addBot().error);
 });
@@ -167,13 +167,13 @@ test('if every racer leaves during the countdown the room returns to the lobby',
 });
 
 test('reserved names cannot impersonate the host', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   for (const name of ['Host', '📢 Host', ' admin ', 'MC!', '📢 Minh']) assert.ok(room.join(name, 'cat').error, name);
   assert.ok(room.join('Hoàng Host', 'cat').player);
 });
 
 test('leaving and rejoining does not jump the rotation queue', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   const people = Array.from({ length: RULES.raceSlots + 3 }, (_, i) => room.join(`P${i}`, 'cat').player);
   room.start(0);
   runUntilFinished(room);
@@ -185,20 +185,20 @@ test('leaving and rejoining does not jump the rotation queue', () => {
 });
 
 test('bots cannot be turned into spectators', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   const bot = room.addBot().player;
   assert.ok(room.setSpectator(bot.id, true).error);
 });
 
 test('bots do not take seats from human players', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   for (let i = 0; i < RULES.maxBots; i += 1) room.addBot();
   for (let i = 0; i < RULES.maxPlayers; i += 1) assert.ok(room.join(`P${i}`, 'cat').player);
   assert.ok(room.join('Late', 'cat').error);
 });
 
 test('only raceSlots racers per round; the rest rotate in next round', () => {
-  const room = new Room({ rng: seededRng(5) });
+  const room = new Room({ mode: 'random', rng: seededRng(5) });
   const people = Array.from({ length: RULES.raceSlots + 5 }, (_, i) => room.join(`P${i}`, 'cat').player);
   room.start(0);
   const first = new Set(room.race.racers.map((r) => r.id));
@@ -216,7 +216,7 @@ test('only raceSlots racers per round; the rest rotate in next round', () => {
 });
 
 test('humans take race slots before bots', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   for (let i = 0; i < RULES.maxBots; i += 1) room.addBot();
   for (let i = 0; i < RULES.raceSlots; i += 1) room.join(`P${i}`, 'dog');
   room.start(0);
@@ -269,7 +269,7 @@ test('throwItem is visual only: targets the racer ahead, respects ownership and 
 });
 
 test('setTitle sanitizes, allows clearing, rejects over-long titles', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   assert.ok(room.setTitle('  Giải đua   Tất niên 2026 ').ok);
   assert.equal(room.snapshot(0).title, 'Giải đua Tất niên 2026');
   assert.ok(room.setTitle('x'.repeat(RULES.titleMaxLength + 1)).error);
@@ -290,7 +290,7 @@ test('react: anyone in the room can float an allowed emoji during a race, with a
 });
 
 test('default tracks make a race last roughly a minute and a half', () => {
-  const room = new Room({ rng: seededRng(9) });
+  const room = new Room({ mode: 'random', rng: seededRng(9) });
   room.join('A', 'cat');
   room.join('B', 'dog');
   room.setMap('meadow');
@@ -363,7 +363,7 @@ test('abort cancels the race and returns to the lobby without results', () => {
 const SAIGON_CAST = findMap('saigon').allowedAnimals;
 
 test('the host can open any map to every character, and close it again', () => {
-  const room = new Room({ rng: seededRng(6) });
+  const room = new Room({ mode: 'random', rng: seededRng(6) });
   const a = room.join('An', 'cat').player;
   room.join('Bình', 'dog');
   assert.ok(room.setMap('denhung').ok);
@@ -384,7 +384,7 @@ test('the host can open any map to every character, and close it again', () => {
 });
 
 test('on the Tết map any character may be picked; a themed pick does not replace the usual one', () => {
-  const room = new Room({ rng: seededRng(5) });
+  const room = new Room({ mode: 'random', rng: seededRng(5) });
   const a = room.join('An', 'cat').player;
   assert.ok(room.setMap('tet').ok);
   assert.equal(room.players.get(a.id).animal, 'cat', 'everyday characters stay');
@@ -395,7 +395,7 @@ test('on the Tết map any character may be picked; a themed pick does not repla
 });
 
 test('vehicle-only map: everyone rides a tank or helicopter, and gets their own animal back afterwards', () => {
-  const room = new Room({ rng: seededRng(4) });
+  const room = new Room({ mode: 'random', rng: seededRng(4) });
   const a = room.join('An', 'turtle').player;
   const b = room.join('Bình', 'tank').player;
   room.setSpecialMaps(true);
@@ -415,7 +415,7 @@ test('vehicle-only map: everyone rides a tank or helicopter, and gets their own 
 });
 
 test('map-exclusive characters only appear on their own map', () => {
-  const room = new Room({ rng: seededRng(8) });
+  const room = new Room({ mode: 'random', rng: seededRng(8) });
   const a = room.join('An', 'dragon').player;
   assert.notEqual(a.animal, 'dragon', 'no dragons on the meadow');
   assert.ok(room.setAnimal(a.id, 'excavator').error);
@@ -430,7 +430,7 @@ test('map-exclusive characters only appear on their own map', () => {
 });
 
 test('host adds racers by name: they count as real players and follow map rules', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   const lan = room.addManual('  Chị Lan  ', 'cat').player;
   assert.equal(lan.name, 'Chị Lan');
   assert.equal(lan.isManual, true);
@@ -453,7 +453,7 @@ test('host adds racers by name: they count as real players and follow map rules'
 });
 
 test('host-picked duration sets the track length; races take about that long', () => {
-  const room = new Room({ rng: seededRng(11) });
+  const room = new Room({ mode: 'random', rng: seededRng(11) });
   room.join('A', 'cat');
   room.join('B', 'dog');
   assert.ok(room.setDuration(45).error, 'only the offered choices');
@@ -483,7 +483,7 @@ test('provably fair: hash before, seed after, and the published data replays the
   const { simulateRace } = await import('../shared/simulate.js');
   const { rankRacers } = await import('../shared/race.js');
   const seed = 'c0ffee'.padEnd(64, '7');
-  const room = new Room({ seedSource: () => seed });
+  const room = new Room({ mode: 'random', seedSource: () => seed });
   ['An', 'Bình', 'Chi', 'Dũng', 'Em'].forEach((n) => room.join(n, 'cat'));
   room.start(0);
   const during = room.snapshot(0).race.fairness;
@@ -508,7 +508,7 @@ test('provably fair: hash before, seed after, and the published data replays the
 });
 
 test('removing a racer mid-race is flagged in the fairness data', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   const a = room.join('An', 'cat').player;
   room.join('Bình', 'dog');
   room.join('Chi', 'pig');
@@ -518,7 +518,7 @@ test('removing a racer mid-race is flagged in the fairness data', () => {
 });
 
 test('clearing the title does not touch other room settings', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   room.setDuration(120);
   room.setTitle('Cúp');
   room.setTitle('');
@@ -527,7 +527,7 @@ test('clearing the title does not touch other room settings', () => {
 });
 
 test('special (30/4) maps are opt-in per room', () => {
-  const room = new Room();
+  const room = new Room({ mode: 'random' });
   assert.match(room.setMap('saigon').error, /map đặc biệt/);
   assert.ok(room.setSpecialMaps(true).ok);
   assert.ok(room.setMap('saigon').ok);

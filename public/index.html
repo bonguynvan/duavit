@@ -39,7 +39,7 @@
       <ol class="steps">
         <li><span class="step-no">1</span><strong>Nhập tên</strong><small>Mặt nhân vật là chữ cái đầu tên bạn</small></li>
         <li><span class="step-no">2</span><strong>Chọn thú &amp; phụ kiện</strong><small>20 nhân vật (có cả xe tăng, trực thăng, Dinh mini!), đồ miễn phí</small></li>
-        <li><span class="step-no">3</span><strong>Xem đua &amp; ném gạch</strong><small>Vui thôi, không đổi kết quả 😉</small></li>
+        <li><span class="step-no">3</span><strong id="step-race">Bấm liên tục để chạy</strong><small id="step-race-note">Ai bấm nhanh về trước 💨</small></li>
       </ol>
       <p class="host-link">Muốn tổ chức một cuộc đua? <a href="/">Tạo phòng của riêng bạn →</a></p>
     </section>
@@ -47,7 +47,7 @@
     <section id="view-join" class="stack" hidden>
       <button class="back-link" type="button" id="back-welcome">← Quay lại</button>
       <div class="hero">
-        <p class="eyebrow">Đua ngẫu nhiên</p>
+        <p class="eyebrow" id="join-eyebrow">Đua bấm nút</p>
         <h1>Nhập tên, chọn <br>nhân vật của bạn!</h1>
       </div>
       <form id="join-form" class="card stack" autocomplete="off">
@@ -60,7 +60,7 @@
           <label><input type="radio" name="role" value="watch"><span>👀 Chỉ xem (khán giả)</span></label>
         </fieldset>
         <div class="stack-sm">
-          <span class="field-label">Chọn nhân vật <small>· tốc độ ngẫu nhiên, như nhau cho mọi nhân vật</small></span>
+          <span class="field-label">Chọn nhân vật <small id="pick-note">· chỉ để trang trí, nhân vật nào cũng chạy như nhau</small></span>
           <div class="animal-grid" id="join-animals" role="group" aria-label="Chọn nhân vật"></div>
         </div>
         <button class="btn btn-primary btn-big" type="submit" id="join-btn">Vào hàng chờ →</button>
@@ -102,6 +102,7 @@
     <section id="view-race" class="stack" hidden>
       <p class="race-note" id="race-note" hidden></p>
       <div class="race-frame"><canvas id="race-canvas" aria-label="Đường đua"></canvas></div>
+      <button class="tap-pad" id="tap-pad" type="button" hidden><span class="tap-word" id="tap-word">BẤM!</span><small id="tap-rate"></small></button>
       <div class="throw-bar" id="throw-bar" hidden></div>
       <div class="react-bar" id="react-bar" role="group" aria-label="Thả emoji"></div>
       <div class="card result-card" id="result-card" hidden>

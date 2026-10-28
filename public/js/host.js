@@ -10,6 +10,7 @@ import { mountMusicPicker } from './musicPicker.js';
 import { mapRequestCard } from './mapRequest.js';
 import { track } from './analytics.js';
 import { showStatus } from './statusBanner.js';
+import { tapTrackLength } from '/shared/tap.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
@@ -59,6 +60,21 @@ const durationButtons = [null, ...RULES.durationChoices].map((seconds) => {
   return { seconds, button };
 });
 
+// How the room races: players tap to run, or the provably fair random race.
+const MODE_NOTES = {
+  tap: `Mỗi người bấm liên tục trên điện thoại để chạy, ai bấm nhanh hơn về trước (~${RULES.tapRaceSec} giây/lượt). Tên host tự thêm chỉ đua ở chế độ Ngẫu nhiên.`,
+  random: 'Tốc độ ngẫu nhiên, kiểm chứng được (provably fair). Hợp để chọn ngẫu nhiên, chia đội, xếp thứ tự.',
+};
+document.querySelectorAll('#race-mode [data-mode]').forEach((button) => {
+  button.addEventListener('click', () => act('host:mode', { mode: button.dataset.mode }));
+});
+function renderMode() {
+  const mode = state.mode ?? 'tap';
+  document.querySelectorAll('#race-mode [data-mode]').forEach((button) => button.setAttribute('aria-checked', String(button.dataset.mode === mode)));
+  $('mode-note').textContent = MODE_NOTES[mode] ?? '';
+  $('duration-row').hidden = mode === 'tap'; // a tap race has its own length: mashing longer hurts
+}
+
 // Character rule: the map's own cast or every character (maps like Tết are always open).
 document.querySelectorAll('#cast [data-all]').forEach((button) => {
   button.addEventListener('click', () => act('host:allCharacters', { on: button.dataset.all === 'true' }));
@@ -86,7 +102,7 @@ function renderDuration() {
   // Map cards show the length the next race will actually use.
   mapButtons.forEach(({ map: m, button }) => {
     const length = button.querySelector('small');
-    if (length) length.textContent = `${trackLengthFor(m, current)}m`;
+    if (length) length.textContent = `${state.mode === 'random' ? trackLengthFor(m, current) : tapTrackLength()}m`;
   });
 }
 
@@ -137,6 +153,7 @@ function renderLobby() {
     button.hidden = Boolean(map.special && !state.allowSpecialMaps); // 30/4 maps are opt-in
   });
   $('special-maps').checked = Boolean(state.allowSpecialMaps);
+  renderMode();
   renderDuration();
   renderCast();
   const racers = state.players.filter((p) => !p.spectator);
