@@ -16,8 +16,16 @@ const MAX_SMALL = 3000; // face badges + accessory glyphs: tiny, so a plain entr
 const STYLE_KEYS = ['fillStyle', 'strokeStyle', 'lineWidth', 'lineCap', 'lineJoin', 'font', 'textAlign', 'textBaseline', 'globalAlpha'];
 const DRAW_CALLS = new Set(['fill', 'stroke', 'fillRect', 'strokeRect', 'fillText', 'strokeText', 'drawImage']);
 
+// Some browsers have OffscreenCanvas without a 2D context (e.g. Safari 16.0-16.3): use a plain canvas there.
+const OFFSCREEN_2D = (() => {
+  try {
+    return typeof OffscreenCanvas !== 'undefined' && Boolean(new OffscreenCanvas(1, 1).getContext('2d'));
+  } catch {
+    return false;
+  }
+})();
 const defaultCanvas = (w, h) =>
-  typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h });
+  OFFSCREEN_2D ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h });
 // ImageBitmaps blit about twice as fast as canvases (measured: 500 sprites 6 ms vs 12 ms per frame).
 const toBitmap = (canvas) => (canvas.transferToImageBitmap ? canvas.transferToImageBitmap() : canvas);
 
