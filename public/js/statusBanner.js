@@ -7,6 +7,9 @@ const MAINTENANCE_TEXT = '🛠️ Đang bảo trì: tạm thời chưa tạo đ�
 
 let current = { maintenance: false, announcement: null };
 let banner = null;
+// Full-screen layouts (the host race view) start below the banner: --status-h is its height.
+const setHeight = () => document.documentElement.style.setProperty('--status-h', `${banner?.offsetHeight ?? 0}px`);
+const sizeWatch = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(setHeight) : null;
 const listeners = [];
 
 /** Show (or clear) the banner for a status { maintenance, announcement }. */
@@ -14,15 +17,18 @@ export function showStatus(status) {
   current = { maintenance: Boolean(status?.maintenance), announcement: status?.announcement ?? null };
   const lines = [current.announcement && `📢 ${current.announcement}`, current.maintenance && MAINTENANCE_TEXT].filter(Boolean);
   if (lines.length === 0) {
+    if (banner) sizeWatch?.unobserve(banner);
     banner?.remove();
     banner = null;
   } else {
     if (!banner) {
       banner = el('div', { class: 'site-status', role: 'status', 'aria-live': 'polite' });
       document.body.prepend(banner);
+      sizeWatch?.observe(banner);
     }
     banner.replaceChildren(...lines.map((text) => el('p', {}, text)));
   }
+  setHeight();
   listeners.forEach((fn) => fn(current));
 }
 

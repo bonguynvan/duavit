@@ -412,3 +412,17 @@ test('a tap race over sockets: the phone that taps runs, the start counts racers
   const [mine, theirs] = [a.playerId, race.racers.find((r) => r.id !== a.playerId).id].map((id) => race.racers.find((r) => r.id === id));
   assert.ok(mine.pos > 5 && theirs.pos === 0, 'only the tapping phone moves');
 });
+
+test('the host can close the room for good; a phone cannot', async () => {
+  const { body } = await createRoom();
+  const room = { code: body.code, hostKey: new URL(body.hostUrl).searchParams.get('key') };
+  const phone = await client(room.code);
+  assert.ok((await ask(phone, 'player:join', { name: 'An', animal: 'duck' })).ok);
+  assert.ok((await ask(phone, 'host:close')).error, 'phones are not hosts');
+  assert.ok(server.rooms.get(room.code), 'still open');
+  const host = await hostOf(room);
+  const told = new Promise((resolve) => phone.once('room:closed', resolve));
+  assert.ok((await ask(host, 'host:close')).ok);
+  await told;
+  assert.ok(!server.rooms.get(room.code), 'gone');
+});

@@ -237,6 +237,13 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
     };
     const notifyPlayer = (playerId, fn) => socketsIn(io, code).filter((s) => s.data.playerId === playerId).forEach(fn);
 
+    // The host closes the room for good: everyone (phones, OBS) is told and disconnected.
+    socket.on('host:close', (data, cb) => {
+      const reply = asCallback(typeof data === 'function' ? data : cb);
+      if (!socket.data.isHost) return reply({ error: 'Chỉ host mới làm được' });
+      reply({ ok: true }); // before closing: the ack must reach the host first
+      closeRoom(io, rooms, code);
+    });
     hostAction('host:map', ({ mapId }) => room.setMap(mapId));
     hostAction('host:duration', ({ seconds }) => room.setDuration(seconds ?? null));
     hostAction('host:mode', ({ mode }) => room.setMode(String(mode)));

@@ -61,7 +61,7 @@ body { overflow-x: hidden; }
 .start-btn { font-size: 2rem; padding: 18px 48px; }
 
 /* ---------- arena ---------- */
-.arena { position: fixed; inset: 0; background: var(--ink); display: flex; flex-direction: column; }
+.arena { position: fixed; inset: var(--status-h, 0px) 0 0 0; /* starts under the announcement banner */ background: var(--ink); display: flex; flex-direction: column; }
 #race-canvas { width: 100%; height: 100%; display: block; }
 .arena #race-canvas { flex: 1; min-height: 0; height: auto; }
 /* The commitment strip sits under the race, never on it; overlays move up while it shows. */

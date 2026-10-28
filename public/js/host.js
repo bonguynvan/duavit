@@ -385,6 +385,20 @@ $('download-proof').addEventListener('click', () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 $('copy-host').addEventListener('click', () => copy(`${location.origin}${location.pathname}?key=${hostKey}`, 'link host (giữ bí mật!)'));
+// Close the room for good: a second click within a few seconds confirms (no browser dialog).
+const CLOSE_CONFIRM_MS = 4000;
+let closeArmedUntil = 0;
+$('close-room').addEventListener('click', () => {
+  if (Date.now() > closeArmedUntil) {
+    closeArmedUntil = Date.now() + CLOSE_CONFIRM_MS;
+    $('close-room').textContent = '🚪 Bấm lần nữa để đóng';
+    setTimeout(() => {
+      if (Date.now() >= closeArmedUntil) $('close-room').textContent = '🚪 Đóng phòng';
+    }, CLOSE_CONFIRM_MS);
+    return;
+  }
+  act('host:close');
+});
 
 socket.on('fx', (fx) => {
   raceView.addEffect(fx);
