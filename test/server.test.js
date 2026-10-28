@@ -117,7 +117,7 @@ test('room creation is rate-limited per IP and capped per IP', async () => {
     assert.equal((await createRoom(base)).res.status, 201);
     const capped = await createRoom(base);
     assert.equal(capped.res.status, 429);
-    assert.match(capped.body.error, /tối đa 2 phòng/);
+  assert.match(capped.body.error, /đang mở 2 phòng.*Phòng của tôi/, "says where to find the open rooms");
     const rated = await createRoom(base);
     assert.equal(rated.res.status, 429, 'fourth attempt within a minute is rate-limited');
   } finally {

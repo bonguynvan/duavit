@@ -9,7 +9,7 @@ const CODE_PATTERN = new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`);
 
 export const ROOM_DEFAULTS = Object.freeze({
   maxRooms: 500,
-  maxRoomsPerIp: 3,
+  maxRoomsPerIp: 10, // per network address: a whole office on one Wi-Fi shares it
   maxRoomsPerUser: 3,
   idleMs: 30 * 60 * 1000, // empty rooms are closed after this long
   unclaimedMs: 10 * 60 * 1000, // rooms whose host never opened the host screen (anyone can create rooms)
@@ -60,7 +60,11 @@ export class RoomManager {
     const live = [...this.rooms.values()];
     const { maxRoomsPerIp, maxRoomsPerUser } = this.limits;
     if (live.filter((e) => e.ownerIp === ip).length >= maxRoomsPerIp) {
-      return { error: `Mỗi thiết bị mở tối đa ${maxRoomsPerIp} phòng cùng lúc`, status: 429 };
+      return {
+        error: `Mạng của bạn đang mở ${maxRoomsPerIp} phòng (tối đa). Mở lại phòng cũ ở mục "Phòng của tôi" và đóng bớt, `
+          + 'hoặc chờ: phòng không còn ai kết nối tự đóng sau 30 phút.',
+        status: 429,
+      };
     }
     if (ownerId && live.filter((e) => e.ownerId === ownerId).length >= maxRoomsPerUser) {
       return { error: `Mỗi tài khoản mở tối đa ${maxRoomsPerUser} phòng cùng lúc`, status: 429 };
