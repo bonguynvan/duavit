@@ -367,6 +367,7 @@ test('terms and privacy pages are public and linked from every public page', asy
     const html = await (await fetch(`${url}${path}`)).text();
     assert.match(html, /href="\/dieu-khoan"/, `${path} links the terms`);
     assert.match(html, /href="\/quyen-rieng-tu"/, `${path} links the privacy policy`);
+    assert.match(html, /href="https:\/\/peti\.vn"/, `${path} links back to peti.vn`);
   }
 });
 
