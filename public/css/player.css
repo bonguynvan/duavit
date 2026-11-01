@@ -287,3 +287,15 @@ main { container-type: inline-size; }
   #view-race:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
   #view-race .race-note, #view-race .race-frame, #view-race .throw-bar, #view-race .react-bar { grid-column: 1 / -1; }
 }
+
+/* Boat races: pick your team in the lobby. */
+.team-card h3 { margin: 0 0 4px; }
+.team-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; }
+.team-option {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px; font: 800 1rem var(--font-body); color: var(--ink);
+  background: #fff; border: 2px solid var(--ink); border-radius: 12px; box-shadow: var(--shadow-sm); cursor: pointer;
+  transition: transform 150ms var(--ease), box-shadow 150ms var(--ease);
+}
+.team-option[aria-checked='true'] { background: var(--sun); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.team-option:focus-visible { outline: 3px solid var(--tomato); outline-offset: 2px; }
+.team-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink); flex: none; }

@@ -4,14 +4,16 @@ import { rankRacers } from '../../shared/race.js';
 import { newSeed } from '../../shared/fair.js';
 import { SIM_STEP_MS, createSimulation, stepSimulation } from '../../shared/simulate.js';
 import { addTap, createTapRacer, shiftTapRacer, stepTapRacer, tapMaxRaceMs, tapRate, tapTrackLength } from '../../shared/tap.js';
+import { BOAT_TEAM_COLORS, MAX_TEAMS, MIN_TEAMS, addBoatTap, balanceTeams, boatRate, createBoat, shiftBoat, stepBoat, teamId, teamName } from '../../shared/boat.js';
 import { sanitizeText } from '../text.js';
 
 const BOT_NAMES = ['Bông', 'Mít', 'Su Su', 'Bắp', 'Tôm', 'Kem', 'Na', 'Cốm', 'Xoài', 'Mochi'];
 
 export const PHASES = Object.freeze({ LOBBY: 'lobby', COUNTDOWN: 'countdown', RACING: 'racing', FINISHED: 'finished' });
 
-/** How a room races: players tap to run (default), or the provably fair random race. */
-export const RACE_MODES = Object.freeze(['tap', 'random']);
+/** How a room races: players tap to run (default), the provably fair random race, or teams rowing boats. */
+export const RACE_MODES = Object.freeze(['tap', 'random', 'boat']);
+const BOAT_MAP = 'song';
 
 /** Returns a cleaned name or null when invalid. */
 const RESERVED_NAME = /^\W*(host|admin|mc)\W*$/iu;
@@ -46,7 +48,9 @@ export class Room {
     this.durationSec = null; // null = the map's default length
     this.allowSpecialMaps = false; // 30/4-themed maps stay hidden unless the host opts in
     this.allCharacters = false; // host switch: every character of every map may race on this room's maps
-    this.mode = RACE_MODES.includes(mode) ? mode : 'tap'; // 'tap': players tap to run; 'random': seeded, provably fair
+    this.mode = RACE_MODES.includes(mode) ? mode : 'tap'; // 'tap': players tap to run; 'random': seeded, provably fair; 'boat': teams row
+    this.teamCount = MIN_TEAMS; // boat races: how many teams the players are spread over
+    if (this.mode === 'boat' && findMap(BOAT_MAP)) this.mapId = BOAT_MAP; // boats start on the river
     /** name -> lastRacedAt of players who left, so leave+rejoin can't jump the queue */
     this.recentRacers = new Map();
     this.lastTickAt = null;
@@ -76,10 +80,18 @@ export class Room {
       lastThrowAt: -Infinity,
       lastReactAt: -Infinity,
       spectator: false, // watches + chats, never takes a race slot
+      team: this.#smallestTeam(), // boat races: the team they row for
       ...fields,
     };
     this.players.set(player.id, player);
     return player;
+  }
+
+  /** The team with the fewest rowers (lowest number on a tie); spectators and host-typed names don't count. */
+  #smallestTeam() {
+    const sizes = Array.from({ length: this.teamCount }, () => 0);
+    for (const p of this.players.values()) if (this.#canRace(p) && p.team >= 1 && p.team <= this.teamCount) sizes[p.team - 1] += 1;
+    return sizes.indexOf(Math.min(...sizes)) + 1;
   }
 
   #update(id, fields) {
@@ -189,14 +201,21 @@ export class Room {
 
   /** May race in this room's mode: connected, not watching, and (tap races) holding a phone to tap on. */
   #canRace(p) {
-    return Boolean(p) && p.connected && !p.spectator && !(this.mode === 'tap' && p.isManual);
+    return Boolean(p) && p.connected && !p.spectator && !(this.mode !== 'random' && p.isManual);
   }
 
   /** Removes a player; if they are mid-race their lane is dropped too (no ghost racers). */
   remove(id) {
     const player = this.players.get(id);
     if (player && !player.isBot && player.lastRacedAt !== null) this.recentRacers.set(player.name.toLowerCase(), player.lastRacedAt);
-    if (this.#raceInProgress()) {
+    if (this.#raceInProgress() && this.race.mode === 'boat') {
+      const racers = this.race.racers.map((b) => ({ ...b, members: b.members.filter((m) => m.id !== id) })).filter((b) => b.members.length > 0);
+      this.race = { ...this.race, racers, teams: this.race.teams.map((t) => ({ ...t, members: t.members.filter((m) => m !== id) })).filter((t) => t.members.length > 0) };
+      if (this.phase === PHASES.COUNTDOWN && racers.length === 0) {
+        this.phase = PHASES.LOBBY;
+        this.race = null;
+      }
+    } else if (this.#raceInProgress()) {
       const racers = this.race.racers.filter((r) => r.id !== id);
       this.race = { ...this.race, racers, modified: this.race.modified || racers.length !== this.race.racers.length };
       if (this.phase === PHASES.COUNTDOWN && this.race.racers.length === 0) {
@@ -254,19 +273,65 @@ export class Room {
   setMode(mode) {
     if (!RACE_MODES.includes(mode)) return { error: 'Chế độ không hợp lệ' };
     if (this.#raceInProgress()) return { error: 'Đang đua, đổi chế độ sau nhé' };
+    if (mode === 'boat' && this.mode !== 'boat' && findMap(BOAT_MAP)) this.setMap(BOAT_MAP); // boats start on the river
     this.mode = mode;
     return { ok: true };
   }
 
+  /** Boat races: spread everyone evenly over 2..6 teams, in the order they joined. */
+  setTeamCount(count) {
+    if (this.#raceInProgress()) return { error: 'Đang đua, đổi số đội sau nhé' };
+    const n = Math.floor(Number(count));
+    if (!(n >= MIN_TEAMS && n <= MAX_TEAMS)) return { error: `Số đội từ ${MIN_TEAMS} đến ${MAX_TEAMS}` };
+    this.teamCount = n;
+    const everyone = [...this.players.values()].sort((a, b) => a.joinSeq - b.joinSeq);
+    for (const [id, team] of balanceTeams(everyone.filter((p) => this.#canRace(p)).map((p) => p.id), n)) this.#update(id, { team });
+    for (const [id, team] of balanceTeams(everyone.filter((p) => !this.#canRace(p)).map((p) => p.id), n)) this.#update(id, { team });
+    return { ok: true };
+  }
+
+  /** Boat races: random, even teams for everyone who can row (spectators keep theirs). */
+  shuffleTeams() {
+    if (this.#raceInProgress()) return { error: 'Đang đua, chia lại đội sau nhé' };
+    const rowers = [...this.players.values()].filter((p) => this.#canRace(p)).map((p) => p.id);
+    for (let i = rowers.length - 1; i > 0; i -= 1) { // Fisher-Yates
+      const j = Math.floor(this.rng() * (i + 1));
+      [rowers[i], rowers[j]] = [rowers[j], rowers[i]];
+    }
+    for (const [id, team] of balanceTeams(rowers, this.teamCount)) this.#update(id, { team });
+    return { ok: true };
+  }
+
+  /** A player (or the host) moves someone to another team between races. */
+  setTeam(id, team) {
+    if (this.#isRacing(id)) return { error: 'Đang đua, đổi đội sau nhé' };
+    const n = Math.floor(Number(team));
+    if (!(n >= 1 && n <= this.teamCount)) return { error: 'Đội không hợp lệ' };
+    const player = this.#update(id, { team: n });
+    return player ? { player } : { error: 'Không tìm thấy người chơi' };
+  }
+
   /** A tap from a racer's phone (tap mode). Returns true when it counted. */
   tap(id, now) {
-    if (this.phase !== PHASES.RACING || this.race?.mode !== 'tap' || this.race.paused) return false;
+    if (this.phase !== PHASES.RACING || this.race.paused) return false;
+    if (this.race.mode === 'boat') return this.#rowTap(id, now);
+    if (this.race.mode !== 'tap') return false;
     const index = this.race.racers.findIndex((r) => r.id === id);
     if (index < 0) return false;
     const before = this.race.racers[index];
     const after = addTap(before, now);
     if (after === before) return false;
     this.race = { ...this.race, racers: this.race.racers.map((r, i) => (i === index ? after : r)) };
+    return true;
+  }
+
+  #rowTap(id, now) {
+    const index = this.race.racers.findIndex((b) => b.members.some((m) => m.id === id));
+    if (index < 0) return false;
+    const before = this.race.racers[index];
+    const after = addBoatTap(before, id, now);
+    if (after === before) return false;
+    this.race = { ...this.race, racers: this.race.racers.map((b, i) => (i === index ? after : b)) };
     return true;
   }
 
@@ -314,6 +379,7 @@ export class Room {
 
   start(now) {
     if (this.#raceInProgress()) return { error: 'Cuộc đua đang diễn ra' };
+    if (this.mode === 'boat') return this.#startBoats(this.#queue().map((p) => p.id), now);
     const entrants = this.#queue().slice(0, RULES.raceSlots);
     if (entrants.length < 2) return { error: 'Cần ít nhất 2 người (có thể thêm bot)' };
     entrants.forEach((p) => this.#update(p.id, { lastRacedAt: now }));
@@ -321,7 +387,49 @@ export class Room {
     return { ok: true };
   }
 
+  #startBoats(ids, now) {
+    const teams = new Set(ids.map((id) => this.players.get(id).team));
+    if (teams.size < 2) return { error: 'Cần ít nhất 2 đội có người chèo (có thể thêm bot)' };
+    ids.forEach((id) => this.#update(id, { lastRacedAt: now }));
+    this.#launch(ids, findMap(this.mapId), now);
+    return { ok: true };
+  }
+
+  /** A boat race: one boat per team that has rowers; bots row at their own random rate. */
+  #launchBoats(ids, map, now) {
+    const trackLength = tapTrackLength();
+    const maxMs = tapMaxRaceMs();
+    const startsAt = now + RULES.countdownMs;
+    const botRate = (id) => (this.players.get(id)?.isBot ? RULES.botTapMin + this.rng() * (RULES.botTapMax - RULES.botTapMin) : null);
+    const numbers = [...new Set(ids.map((id) => this.players.get(id).team))].sort((a, b) => a - b);
+    const teams = numbers.map((n) => ({
+      id: teamId(n), number: n, name: teamName(n), color: BOAT_TEAM_COLORS[(n - 1) % BOAT_TEAM_COLORS.length],
+      members: ids.filter((id) => this.players.get(id).team === n),
+    }));
+    this.race = {
+      mode: 'boat',
+      mapId: map.id,
+      trackLength,
+      startsAt,
+      endsAt: startsAt + maxMs,
+      maxMs,
+      paused: false,
+      pausedAt: null,
+      teams,
+      entrants: teams.map((t) => t.name),
+      simTime: startsAt,
+      racers: teams.map((t) => createBoat(t.id, t.members.map((id) => ({ id, botRate: botRate(id) })), startsAt)),
+    };
+    this.results = null;
+    this.phase = PHASES.COUNTDOWN;
+    this.lastTickAt = now;
+  }
+
   #launch(ids, map, now) {
+    if (this.mode === 'boat') {
+      this.#launchBoats(ids, map, now);
+      return;
+    }
     if (this.mode === 'tap') {
       this.#launchTap(ids, map, now);
       return;
@@ -399,7 +507,7 @@ export class Room {
       startsAt: this.race.startsAt + shift,
       endsAt: this.race.endsAt + shift,
       simTime: this.race.simTime + shift,
-      racers: this.race.racers.map((r) => (this.race.mode === 'tap'
+      racers: this.race.racers.map((r) => (this.race.mode === 'boat' ? shiftBoat(r, shift) : this.race.mode === 'tap'
         ? shiftTapRacer(r, shift)
         : { ...r, nextChangeAt: r.nextChangeAt + shift, finishedAt: later(r.finishedAt) })),
     };
@@ -411,7 +519,9 @@ export class Room {
   restartRace(now) {
     if (!this.race) return { error: 'Chưa có cuộc đua nào để bắt đầu lại' };
     // The host may have switched mode since: only racers who can race in the current mode go again.
-    const ids = this.race.racers.map((r) => r.id).filter((id) => this.#canRace(this.players.get(id)));
+    const raced = this.race.mode === 'boat' ? this.race.racers.flatMap((b) => b.members.map((m) => m.id)) : this.race.racers.map((r) => r.id);
+    const ids = raced.filter((id) => this.#canRace(this.players.get(id)));
+    if (this.mode === 'boat') return this.#startBoats(this.#queue().map((p) => p.id), now);
     if (ids.length < 2) return { error: 'Cần ít nhất 2 tay đua còn kết nối' };
     this.#launch(ids, findMap(this.race.mapId) ?? findMap(this.mapId), now);
     return { ok: true };
@@ -449,7 +559,7 @@ export class Room {
     // Fixed 50 ms steps on the race's own clock: identical to what the verifier replays,
     // no matter how irregular the server's timer is.
     let sim = { rng: this.race.rng, trackLength: this.race.trackLength, simTime: this.race.simTime, racers: this.race.racers };
-    const step = this.race.mode === 'tap' ? stepTap : stepSimulation;
+    const step = this.race.mode === 'boat' ? stepBoats : this.race.mode === 'tap' ? stepTap : stepSimulation;
     while (sim.simTime + SIM_STEP_MS <= now && sim.racers.some((r) => r.finishedAt === null)) sim = step(sim);
     this.race = { ...this.race, simTime: sim.simTime, racers: sim.racers };
     const { racers } = this.race;
@@ -460,6 +570,19 @@ export class Room {
 
   #finish() {
     const startsAt = this.race.startsAt;
+    if (this.race.mode === 'boat') {
+      const teams = new Map(this.race.teams.map((t) => [t.id, t]));
+      this.results = rankRacers(this.race.racers).map((b, i) => {
+        const team = teams.get(b.id);
+        return {
+          id: b.id, rank: i + 1, name: team.name, animal: 'thuyen', color: team.color, team: team.number,
+          members: b.members.map((m) => this.players.get(m.id)?.name ?? '???'),
+          timeMs: b.finishedAt === null ? null : Math.round(b.finishedAt - startsAt),
+        };
+      });
+      this.phase = PHASES.FINISHED;
+      return;
+    }
     this.results = rankRacers(this.race.racers).map((r, i) => {
       const p = this.players.get(r.id);
       return {
@@ -488,13 +611,19 @@ export class Room {
   }
 
   #isRacing(id) {
-    return this.#raceInProgress() && this.race.racers.some((r) => r.id === id);
+    return this.#raceInProgress() && this.#racingIds().has(id);
+  }
+
+  /** Players in the current race (a boat race's racers are teams: its players are the rowers). */
+  #racingIds() {
+    if (!this.race) return new Set();
+    return new Set(this.race.mode === 'boat' ? this.race.racers.flatMap((b) => b.members.map((m) => m.id)) : this.race.racers.map((r) => r.id));
   }
 
   /** Public state sent to every client. Never includes tokens. */
   snapshot(now) {
-    const racingIds = new Set(this.race?.racers.map((r) => r.id) ?? []);
-    const queuePos = new Map(this.#queue().map((p, i) => [p.id, i + 1]));
+    const racingIds = this.#racingIds();
+    const queuePos = new Map(this.#queue().map((p, i) => [p.id, i + 1])); // boat races: everyone in the queue rows
     const players = [...this.players.values()].map((p) => ({
       id: p.id,
       name: p.name,
@@ -508,7 +637,9 @@ export class Room {
       items: p.items,
       spectator: p.spectator,
       queuePos: queuePos.get(p.id) ?? null, // 1..raceSlots = in the next race
+      team: p.team,
     }));
+    const boatMode = this.race?.mode === 'boat';
     const tapMode = this.race?.mode === 'tap';
     const race = this.race && {
       mode: this.race.mode,
@@ -519,7 +650,7 @@ export class Room {
       pausedAt: this.race.pausedAt ?? null,
       // Commit before / reveal after: the seed is only published once the race is over.
       // Tap races have nothing to prove: the players decide them.
-      fairness: tapMode ? null : {
+      fairness: tapMode || boatMode ? null : {
         seedHash: this.race.seedHash,
         seed: this.phase === PHASES.FINISHED ? this.race.seed : null,
         entrants: this.race.entrants,
@@ -534,10 +665,19 @@ export class Room {
         event: r.event,
         finishedAt: r.finishedAt,
         ...(tapMode ? { rate: Math.round(tapRate(r, this.race.simTime) * 10) / 10 } : {}),
+        ...(boatMode ? { rate: Math.round(boatRate(r, this.race.simTime) * 10) / 10, crew: r.members.length } : {}),
       })),
+      // boat races: the teams are the racers (drawn as boats in the team colour); who rows where is players[].team
+      ...(boatMode ? { teams: this.race.teams.map((t) => ({ id: t.id, number: t.number, name: t.name, color: t.color, animal: 'thuyen', initials: String(t.number) })) } : {}),
     };
-    return { phase: this.phase, mode: this.mode, mapId: this.mapId, serverNow: now, title: this.title, durationSec: this.durationSec, allowSpecialMaps: this.allowSpecialMaps, allCharacters: this.allCharacters, raceSlots: RULES.raceSlots, players, race, results: this.results };
+    return { phase: this.phase, mode: this.mode, mapId: this.mapId, serverNow: now, title: this.title, durationSec: this.durationSec, allowSpecialMaps: this.allowSpecialMaps, allCharacters: this.allCharacters, teamCount: this.teamCount, raceSlots: this.mode === 'boat' ? RULES.maxPlayers : RULES.raceSlots, players, race, results: this.results };
   }
+}
+
+/** One fixed step of a boat race (same shape as stepSimulation). */
+function stepBoats(sim) {
+  const simTime = sim.simTime + SIM_STEP_MS;
+  return { ...sim, simTime, racers: sim.racers.map((b) => stepBoat(b, SIM_STEP_MS / 1000, sim.trackLength, simTime)) };
 }
 
 /** One fixed step of a tap race (same shape as stepSimulation). */

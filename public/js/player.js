@@ -11,6 +11,7 @@ import { createRoomPanel } from './roomPanel.js';
 import { createSoundDirector, sound, soundForEffect } from './audio.js';
 import { pageContaining, paginate } from './paging.js';
 import { showStatus } from './statusBanner.js';
+import { BOAT_TEAM_COLORS, teamName } from '/shared/boat.js';
 
 
 const PREVIEW_COLOR = '#ff5a36';
@@ -36,8 +37,8 @@ let joinAnimal = STARTERS[Math.floor(Math.random() * STARTERS.length)].id;
 const PHONE_VIEW_METRES = 45;
 const PICKER_PAGE_SIZE = 8; // two rows of four on a phone
 const raceView = new RaceView($('race-canvas'), {
-  highlightId: () => myId,
-  focusId: () => (me()?.inRace ? myId : null), // spectators/waiters follow the leader
+  highlightId: () => myRacerId(),
+  focusId: () => (me()?.inRace ? myRacerId() : null), // spectators/waiters follow the leader
   showNames: false,
   viewUnits: PHONE_VIEW_METRES,
 });
@@ -52,6 +53,8 @@ function forget() {
 const currentMap = () => withCast(findMap(state?.mapId) ?? MAPS[0], state?.allCharacters);
 const castKey = () => `${state?.mapId}|${Boolean(currentMap().allCharacters)}`;
 const me = () => state?.players.find((p) => p.id === myId) ?? null;
+/** The racer that is "me": my own runner, or in a boat race the boat of my team. */
+const myRacerId = () => (state?.race?.mode === 'boat' ? (me()?.inRace ? state.race.teams?.find((t) => t.number === me().team)?.id ?? null : null) : myId);
 
 /**
  * Character picker: one tab per character group the map allows (tabs only when there are several),
@@ -197,7 +200,7 @@ function renderJoin(entering) {
 
 let lobbySignature = '';
 function renderLobby(player, entering) {
-  const signature = [castKey(), player.animal, player.items.join(), player.spectator, player.queuePos, ...state.players.map((p) => `${p.id}:${p.connected}:${p.name}:${p.spectator}`)].join('|');
+  const signature = [castKey(), player.animal, player.items.join(), player.spectator, player.queuePos, state.mode, state.teamCount, ...state.players.map((p) => `${p.id}:${p.connected}:${p.name}:${p.spectator}:${p.team}`)].join('|');
   if (!entering && signature === lobbySignature) return; // race frames arrive at 20 Hz; skip identical repaints
   lobbySignature = signature;
   const face = { initials: player.initials, color: player.color };
@@ -207,12 +210,33 @@ function renderLobby(player, entering) {
   shop.update(player.items);
   $('lobby-status').textContent = queueText(player);
   $('role-btn').textContent = player.spectator ? '🏁 Tham gia đua' : '👀 Chuyển sang khán giả';
+  renderTeamPick(player);
 
+}
+
+/** Boat races: one button per team (colour, name, how many rowers); mine is checked. */
+function renderTeamPick(player) {
+  const boat = state.mode === 'boat';
+  $('team-card').hidden = !boat;
+  if (!boat) return;
+  const rowers = (n) => state.players.filter((p) => p.team === n && !p.spectator && p.connected).length;
+  $('team-pick').replaceChildren(...Array.from({ length: state.teamCount }, (_, i) => {
+    const n = i + 1;
+    const button = el('button', { type: 'button', role: 'radio', class: 'team-option', 'aria-checked': String(player.team === n) },
+      el('span', { class: 'team-dot', style: { background: BOAT_TEAM_COLORS[i] } }), `${teamName(n)} · ${rowers(n)}`);
+    button.addEventListener('click', async () => {
+      if (player.team === n) return;
+      const reply = await request('player:team', { team: n });
+      if (reply?.error) toast(reply.error);
+    });
+    return button;
+  }));
 }
 
 function queueText(player) {
   if (player.spectator) return 'Bạn đang là khán giả 👀 — xem và chat thoải mái';
   if (player.queuePos === null) return 'Đang kết nối lại…';
+  if (state.mode === 'boat') return `✅ Bạn chèo cho ${teamName(player.team)} ở lượt tới`;
   if (player.queuePos <= state.raceSlots) return `✅ Bạn sẽ đua ở lượt tới (${state.raceSlots} người mỗi lượt)`;
   return `Bạn đang ở vị trí #${player.queuePos} trong hàng chờ — mỗi lượt ${state.raceSlots} người`;
 }
@@ -252,8 +276,12 @@ $('react-bar').append(...REACTIONS.map((emoji) => el('button', {
 // ---------- "Bấm để chạy": the big button (and Space on a keyboard) ----------
 const tapPad = $('tap-pad');
 const tapReady = () => !tapPad.hidden && !tapPad.disabled;
+const myStrokes = []; // boat races: my own taps over the last second, for the "Bạn x/giây" line
 function tap() {
   if (!tapReady()) return;
+  const t = performance.now();
+  myStrokes.push(t);
+  while (myStrokes.length && t - myStrokes[0] > RULES.tapWindowMs) myStrokes.shift();
   socket.emit('race:tap'); // fire and forget: the server counts at most RULES.tapMaxRate a second
   navigator.vibrate?.(8);
   tapPad.classList.add('down');
@@ -272,16 +300,24 @@ document.addEventListener('keydown', (event) => {
 
 function renderTapPad(player) {
   const race = state.race;
-  const mine = race?.racers.find((r) => r.id === myId);
-  const show = race?.mode === 'tap' && player.inRace && Boolean(mine) && mine.finishedAt === null
+  const rowing = race?.mode === 'boat';
+  const mine = race?.racers.find((r) => r.id === myRacerId());
+  const show = (race?.mode === 'tap' || rowing) && player.inRace && Boolean(mine) && mine.finishedAt === null
     && (state.phase === 'countdown' || state.phase === 'racing');
   tapPad.hidden = !show;
   $('view-race').classList.toggle('tapping', show);
   if (!show) return;
   const go = state.phase === 'racing' && !race.paused;
   tapPad.disabled = !go;
-  $('tap-word').textContent = go ? 'BẤM!' : race.paused ? 'Tạm dừng' : 'Chuẩn bị…';
+  $('tap-word').textContent = go ? (rowing ? 'CHÈO!' : 'BẤM!') : race.paused ? 'Tạm dừng' : 'Chuẩn bị…';
   const rate = mine.rate ?? 0;
+  if (rowing) { // my strokes and the whole crew's
+    const now = performance.now();
+    const own = Math.min(RULES.tapMaxRate, myStrokes.filter((t) => now - t <= RULES.tapWindowMs).length);
+    tapPad.classList.toggle('flat-out', go && rate >= RULES.tapFullRate);
+    $('tap-rate').textContent = go ? `🚣 Bạn ${own}/giây · cả đội ${rate}/giây` : 'Chèo đều tay khi có hiệu lệnh: cả đội cùng chèo thì thuyền mới nhanh';
+    return;
+  }
   tapPad.classList.toggle('flat-out', go && rate >= RULES.tapFullRate);
   $('tap-rate').textContent = go
     ? (rate >= RULES.tapFullRate ? `🔥 Tốc lực tối đa · ${rate}/giây` : `⚡ ${rate}/giây · bấm ${RULES.tapFullRate}/giây để chạy hết tốc lực`)
@@ -289,7 +325,7 @@ function renderTapPad(player) {
 }
 
 function rankingRows() {
-  const players = new Map(state.players.map((p) => [p.id, p]));
+  const players = new Map([...state.players, ...(state.race?.teams ?? [])].map((p) => [p.id, p]));
   if (state.results) {
     return state.results.map((r) => ({ id: r.id, rank: r.rank, name: r.name, meta: formatTime(r.timeMs) }));
   }
@@ -311,21 +347,21 @@ function renderRace(entering) {
   const player = me();
   renderThrowBar(player);
   renderTapPad(player);
-  const note = player.inRace ? '' : player.spectator ? '👀 Bạn đang xem với tư cách khán giả' : '⏳ Lượt này đã đủ người — bạn sẽ đua lượt sau';
+  const note = player.inRace ? '' : player.spectator ? '👀 Bạn đang xem với tư cách khán giả' : state.mode === 'boat' ? '⏳ Lượt này đã xuất phát — bạn chèo từ lượt sau' : '⏳ Lượt này đã đủ người — bạn sẽ đua lượt sau';
   $('race-note').hidden = !note;
   $('race-note').textContent = note;
-  const mine = state.results?.find((r) => r.id === myId);
+  const mine = state.results?.find((r) => r.id === myRacerId());
   $('result-card').hidden = !mine;
   if (mine) {
     $('result-rank').textContent = `#${mine.rank}`;
-    $('result-time').textContent = `${formatTime(mine.timeMs)} · ${state.results.length} người đua`;
+    $('result-time').textContent = mine.members ? `${mine.name} · ${formatTime(mine.timeMs)} · ${state.results.length} đội` : `${formatTime(mine.timeMs)} · ${state.results.length} người đua`;
   }
   $('ranking-title').textContent = state.results ? 'Kết quả chung cuộc' : 'Bảng xếp hạng trực tiếp';
   if (!force && now - lastRankingPaint < RANKING_REFRESH_MS) return;
   lastRankingPaint = now;
   $('ranking').replaceChildren(
     ...rankingRows().map((row) =>
-      el('li', { class: row.id === myId ? 'me' : '' },
+      el('li', { class: row.id === myRacerId() ? 'me' : '' },
         el('span', { class: 'pos' }, String(row.rank)),
         el('span', {}, row.name),
         el('span', { class: 'meta' }, row.meta))),
@@ -366,6 +402,7 @@ $('chat-close').addEventListener('click', () => toggleChat(false));
 
 /** Wording that depends on how the room races (tap to run, or random). */
 const MODE_TEXT = {
+  boat: { eyebrow: 'Đua thuyền', step: 'Chèo cùng đội', stepNote: 'Cả đội chèo đều thì thuyền mới nhanh 🚣', pick: '· chỉ để trang trí, lúc đua cả đội đi chung một thuyền' },
   tap: { eyebrow: 'Đua bấm nút', step: 'Bấm liên tục để chạy', stepNote: 'Ai bấm nhanh về trước 💨', pick: '· chỉ để trang trí, nhân vật nào cũng chạy như nhau' },
   random: { eyebrow: 'Đua ngẫu nhiên', step: 'Xem đua & ném gạch', stepNote: 'Vui thôi, không đổi kết quả 😉', pick: '· tốc độ ngẫu nhiên, như nhau cho mọi nhân vật' },
 };

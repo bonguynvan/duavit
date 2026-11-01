@@ -54,6 +54,8 @@ export const ANIMALS = [
   { id: 'traSua', name: 'Trà sữa full topping', color: '#c8a27c', maps: ['chodem'] },
   { id: 'pho', name: 'Phở tái nạm', color: '#f7f3ea', maps: ['chodem'] },
   { id: 'saurieng', name: 'Sầu riêng thơm lừng', color: '#9bbf3a', maps: ['chodem'] },
+  // The boat of a team in boat races (and a pick of its own on the river map).
+  { id: 'thuyen', name: 'Thuyền rồng', color: '#e63946', maps: ['song'] },
 ];
 
 export const MAPS = [
@@ -76,6 +78,11 @@ export const MAPS = [
   {
     id: 'farm', name: 'Nông trại', trackLength: 680,
     palette: { skyTop: '#8fd3ff', skyBottom: '#fff1c9', ground: '#86c25a', laneA: '#9b6b43', laneB: '#8e613b', line: '#ffe9b8' },
+  },
+  {
+    // The river: boat races start here. Lanes of water, rope lines with buoys.
+    id: 'song', name: 'Sông nước', trackLength: 640,
+    palette: { skyTop: '#7ec8f2', skyBottom: '#e3f6ff', ground: '#7bbf58', laneA: '#4aa3d8', laneB: '#3f96cc', line: '#fff6e5' },
   },
 ];
 
@@ -247,6 +254,7 @@ export const CHARACTER_GROUPS = [
   { id: 'vongquanh', name: 'Thế giới', icon: '🌍' },
   { id: 'chodem', name: 'Chợ đêm', icon: '🏮' },
   { id: 'tet', name: 'Tết', icon: '🧧' },
+  { id: 'song', name: 'Sông nước', icon: '🚣' },
 ];
 export const groupOf = (animal) => animal.group ?? animal.maps?.[0] ?? 'animals';
 

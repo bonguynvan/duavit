@@ -196,7 +196,8 @@ export class RaceView {
     if (!race || w === 0 || race.racers.length === 0) return;
 
     const map = findMap(race.mapId) ?? MAPS[0];
-    const players = new Map(this.state.players.map((p) => [p.id, p]));
+    // boat races: the racers are teams, drawn as boats in the team colour (spectators still sit in the crowd)
+    const players = new Map([...this.state.players, ...(race.teams ?? [])].map((p) => [p.id, p]));
     const items = this.#advance(race, dt);
     const cam = this.#moveCamera(race, items, dt);
 

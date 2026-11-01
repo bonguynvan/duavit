@@ -165,6 +165,7 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
     playerAction('player:animal', ({ animal }) => room.setAnimal(socket.data.playerId, animal));
     playerAction('player:spectator', ({ spectator }) => room.setSpectator(socket.data.playerId, spectator === true));
     playerAction('player:items', ({ items }) => room.setItems(socket.data.playerId, items));
+    playerAction('player:team', ({ team }) => room.setTeam(socket.data.playerId, team)); // boat races
 
     const effect = (event, action) => {
       socket.on(event, (data, cb) => {
@@ -249,9 +250,14 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
     hostAction('host:mode', ({ mode }) => room.setMode(String(mode)));
     hostAction('host:specialMaps', ({ allowed }) => room.setSpecialMaps(allowed === true));
     hostAction('host:allCharacters', ({ on }) => room.setAllCharacters(on === true));
+    hostAction('host:teamCount', ({ count }) => room.setTeamCount(count)); // boat races
+    hostAction('host:shuffleTeams', () => room.shuffleTeams());
+    hostAction('host:team', ({ id, team }) => room.setTeam(String(id), team));
     hostAction('host:start', () => {
       const result = room.start(Date.now());
-      if (!result.error) onRaceStart(room.race?.racers.length ?? 0); // daily counter for the dashboard
+      // daily counter for the dashboard: racers (in a boat race, the rowers)
+      const racers = room.race?.mode === 'boat' ? room.race.racers.reduce((n, b) => n + b.members.length, 0) : room.race?.racers.length ?? 0;
+      if (!result.error) onRaceStart(racers);
       return result;
     });
     hostAction('host:lobby', () => room.backToLobby());
@@ -302,7 +308,7 @@ export function tickRooms(io, rooms, now) {
     if (!changed && !entry.dirty) continue;
     entry.dirty = false;
     const snap = entry.room.snapshot(now);
-    const rosterKey = JSON.stringify([snap.players, snap.title, snap.mapId, snap.mode, snap.durationSec, snap.allowSpecialMaps, snap.allCharacters]);
+    const rosterKey = JSON.stringify([snap.players, snap.title, snap.mapId, snap.mode, snap.durationSec, snap.allowSpecialMaps, snap.allCharacters, snap.teamCount]);
     if (rosterKey !== entry.lastRosterKey || !snap.race) {
       entry.lastRosterKey = rosterKey;
       io.to(entry.code).emit('state', snap);

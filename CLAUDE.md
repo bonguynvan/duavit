@@ -17,11 +17,17 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
   per-IP limits count an IPv6 /64 as one client (`clientIp` in `src/sockets.js`). With rooms open to
   everyone, Google sign-in only admits `ADMIN_EMAILS` (for `/admin`); nobody else gets a user row.
   Host screen `/r/CODE/host`, OBS view `/r/CODE/live`, verify page `/kiem-chung`.
-- Rooms race in one of two modes (`room.mode`, host picks in the lobby):
+- Rooms race in one of three modes (`room.mode`, host picks in the lobby):
   - `tap` (default, "Bấm để chạy"): speed follows each phone's tap rate (`shared/tap.js`, counted over 1 s,
     capped at `RULES.tapMaxRate`); bots tap at a random rate; host-typed names (`isManual`) don't race; no seed,
     `race.fairness` is null.
   - `random`: **purely random** and **provably fair** (seed commit/reveal). Host never influences speed.
+  - `boat` ("Đua thuyền", team building): players are spread over 2-6 teams (`player.team`; new players join the
+    smallest, host changes the count / reshuffles / moves people, players switch themselves between races). Each
+    team rows one boat (`shared/boat.js`): speed follows the **average** tap rate of all its members, so an idle
+    rower slows the boat and a big team gains nothing. Everyone who can row races (no slot limit); host-typed names
+    don't row. Racers are teams (`race.teams`, ids `team-N`, painter `thuyen`); results list each crew. Starts on the
+    river map `song`. No seed, `race.fairness` is null.
   Cosmetic items, throws ("ném gạch"), falls, emoji reactions are **visual only** — never change results.
   Quick race "fun mode" (`public/js/quick/fun.js`) hands out random accessories and auto-throws with
   `Math.random` only — never the seed, never positions.

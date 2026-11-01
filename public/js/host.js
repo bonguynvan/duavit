@@ -11,6 +11,7 @@ import { mapRequestCard } from './mapRequest.js';
 import { track } from './analytics.js';
 import { showStatus } from './statusBanner.js';
 import { tapTrackLength } from '/shared/tap.js';
+import { BOAT_TEAM_COLORS, MAX_TEAMS, MIN_TEAMS, teamName } from '/shared/boat.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
@@ -64,6 +65,7 @@ const durationButtons = [null, ...RULES.durationChoices].map((seconds) => {
 const MODE_NOTES = {
   tap: `Mỗi người bấm liên tục trên điện thoại để chạy, ai bấm nhanh hơn về trước (~${RULES.tapRaceSec} giây/lượt). Tên host tự thêm chỉ đua ở chế độ Ngẫu nhiên.`,
   random: 'Tốc độ ngẫu nhiên, kiểm chứng được (provably fair). Hợp để chọn ngẫu nhiên, chia đội, xếp thứ tự.',
+  boat: 'Mọi người chia đội, mỗi đội một thuyền. Thuyền chạy theo nhịp bấm trung bình của cả đội, ai ngừng chèo là cả thuyền chậm lại. Tên host tự thêm không chèo được.',
 };
 document.querySelectorAll('#race-mode [data-mode]').forEach((button) => {
   button.addEventListener('click', () => act('host:mode', { mode: button.dataset.mode }));
@@ -72,8 +74,30 @@ function renderMode() {
   const mode = state.mode ?? 'tap';
   document.querySelectorAll('#race-mode [data-mode]').forEach((button) => button.setAttribute('aria-checked', String(button.dataset.mode === mode)));
   $('mode-note').textContent = MODE_NOTES[mode] ?? '';
-  $('duration-row').hidden = mode === 'tap'; // a tap race has its own length: mashing longer hurts
+  $('duration-row').hidden = mode !== 'random'; // tap and boat races have their own length: mashing longer hurts
+  $('team-row').hidden = mode !== 'boat';
+  teamCountButtons.forEach(({ n, button }) => button.setAttribute('aria-checked', String(n === state.teamCount)));
 }
+
+// Boat races: how many teams, and a random reshuffle.
+const teamCountButtons = Array.from({ length: MAX_TEAMS - MIN_TEAMS + 1 }, (_, i) => {
+  const n = MIN_TEAMS + i;
+  const button = el('button', { type: 'button', role: 'radio', class: 'duration-option', 'aria-checked': 'false', onclick: () => act('host:teamCount', { count: n }) }, `${n} đội`);
+  $('team-count').append(button);
+  return { n, button };
+});
+$('shuffle-teams').addEventListener('click', () => act('host:shuffleTeams'));
+
+/** Boat races: a team tag on each racer card; tapping it moves the racer to the next team. */
+function teamTag(p) {
+  if (state.mode !== 'boat') return null;
+  const next = (p.team % state.teamCount) + 1;
+  return el('button', { type: 'button', class: 'team-tag', title: `Chuyển sang ${teamName(next)}`, 'aria-label': `${p.name}: ${teamName(p.team)}, chuyển sang ${teamName(next)}`,
+    style: { background: BOAT_TEAM_COLORS[(p.team - 1) % BOAT_TEAM_COLORS.length] }, onclick: () => act('host:team', { id: p.id, team: next }) }, teamName(p.team));
+}
+
+/** Boat races need two teams with someone who can row. */
+const rowingTeams = () => new Set(state.players.filter((p) => !p.spectator && !p.isManual && p.connected).map((p) => p.team)).size;
 
 // Character rule: the map's own cast or every character (maps like Tết are always open).
 document.querySelectorAll('#cast [data-all]').forEach((button) => {
@@ -121,7 +145,7 @@ function queueBadge(p) {
 }
 
 function renderRoster() {
-  const signature = state.players.map((p) => `${p.id}:${p.name}:${p.animal}:${p.connected}:${p.items.join()}:${p.spectator}:${p.queuePos}`).join('|');
+  const signature = [state.mode, state.teamCount, ...state.players.map((p) => `${p.id}:${p.name}:${p.animal}:${p.connected}:${p.items.join()}:${p.spectator}:${p.queuePos}:${p.team}`)].join('|');
   if (signature === rosterSignature) return;
   rosterSignature = signature;
   const racers = state.players.filter((p) => !p.spectator).sort(byQueue);
@@ -132,6 +156,7 @@ function renderRoster() {
       queueBadge(p),
       el('strong', {}, p.name),
       el('small', {}, `${findAnimal(p.animal).name}${p.isBot ? ' · bot' : ''}${p.isManual ? ' · host thêm' : ''}${p.connected ? '' : ' · mất kết nối'}`),
+      teamTag(p),
       p.isBot || p.isManual ? null : el('button', { type: 'button', class: 'move', title: 'Chuyển sang khán giả', 'aria-label': `Chuyển ${p.name} sang khán giả`, onclick: () => act('host:spectator', { id: p.id, spectator: true }) }, '👀'),
       el('button', { type: 'button', class: 'kick', 'aria-label': `Mời ${p.name} ra`, onclick: () => act('host:kick', { id: p.id }) }, '✕'));
     return { item, canvas, p };
@@ -159,20 +184,23 @@ function renderLobby() {
   const racers = state.players.filter((p) => !p.spectator);
   const queued = racers.filter((p) => p.queuePos !== null).length;
   $('player-count').textContent = String(racers.length);
-  $('roster-sub').textContent = `Mỗi lượt ${state.raceSlots} người${queued > state.raceSlots ? ` · ${queued - state.raceSlots} người chờ lượt sau` : ''}`;
+  $('roster-sub').textContent = state.mode === 'boat'
+    ? `${state.teamCount} đội · ai cũng chèo, không cần chờ lượt`
+    : `Mỗi lượt ${state.raceSlots} người${queued > state.raceSlots ? ` · ${queued - state.raceSlots} người chờ lượt sau` : ''}`;
   $('roster-empty').hidden = state.players.length > 0;
   if (document.activeElement !== $('title-input')) $('title-input').value = state.title ?? '';
   renderRoster();
   if (!$('add-person-form').hidden) renderAddPersonPicker(); // follows map changes (vehicle-only maps)
-  $('start').disabled = queued < 2;
+  $('start').disabled = state.mode === 'boat' ? rowingTeams() < 2 : queued < 2;
 }
 
 function podiumEntry(result) {
   const canvas = el('canvas', { 'aria-hidden': 'true' });
   const player = state.players.find((p) => p.id === result.id);
-  const face = { initials: player?.initials ?? result.name.slice(0, 1), color: result.color };
+  const face = { initials: result.team ? String(result.team) : player?.initials ?? result.name.slice(0, 1), color: result.color };
   requestAnimationFrame(() => paintAnimalCard(canvas, findAnimal(result.animal), face, itemIcons(player?.items)));
-  return el('li', {}, canvas, el('strong', {}, result.name), el('small', {}, formatTime(result.timeMs)), el('div', { class: 'step' }, String(result.rank)));
+  const crew = result.members ? el('small', { class: 'crew' }, result.members.join(', ')) : null; // boat races: who rowed
+  return el('li', {}, canvas, el('strong', {}, result.name), el('small', {}, formatTime(result.timeMs)), crew, el('div', { class: 'step' }, String(result.rank)));
 }
 
 // ---------- video: every race is filmed from the countdown to the results ----------
