@@ -14,6 +14,7 @@ import { pickThrow } from './quick/fun.js';
 import { mountCommitBar } from './commitBar.js';
 import { mountMusicPicker } from './musicPicker.js';
 import { mapRequestCard } from './mapRequest.js';
+import { splitTeams } from '/shared/teams.js';
 
 const $ = (id) => document.getElementById(id);
 const showCommit = mountCommitBar($('commit-bar'));
@@ -228,10 +229,23 @@ function showResults(state) {
     return el('li', {}, canvas, el('strong', {}, r.name), el('small', {}, formatTime(r.timeMs)), el('div', { class: 'step' }, String(r.rank)));
   }));
   $('full-results').replaceChildren(...results.slice(3).map((r) => el('li', {}, `${r.name} `, el('small', {}, formatTime(r.timeMs)))));
+  renderTeams(results);
   $('proof-hash').textContent = current.seedHash;
   $('proof-seed').textContent = current.seed;
   $('results').hidden = false;
   $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/** The team split (only on the page that asks for it): 1st to team 1, 2nd to team 2… round and round. */
+function renderTeams(results) {
+  const input = $('teams');
+  if (!input) return;
+  const count = Math.max(2, Math.min(20, Math.round(Number(input.value)) || 2, results.length));
+  const teams = splitTeams(results.map((r) => r.name), count);
+  current.teamOf = new Map(results.map((r, i) => [r.id, (i % teams.length) + 1])); // for the copied text and the CSV
+  $('team-split').replaceChildren(el('h3', {}, `Chia ${count} đội`), ...teams.map((names, k) => el('section', { class: 'team' },
+    el('strong', {}, `Đội ${k + 1} (${names.length})`), el('ol', {}, ...names.map((name) => el('li', {}, name))))));
+  $('team-split').hidden = false;
 }
 
 function download(filename, text, type) {
@@ -243,7 +257,8 @@ function download(filename, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-const resultLines = () => current.race.results.map((r) => `${r.rank}. ${r.name} — ${formatTime(r.timeMs)}`);
+const teamOf = (r) => current.teamOf?.get(r.id) ?? null;
+const resultLines = () => current.race.results.map((r) => `${r.rank}. ${r.name} — ${formatTime(r.timeMs)}${teamOf(r) ? ` · Đội ${teamOf(r)}` : ''}`);
 const csvCell = (v) => {
   const text = String(v);
   const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text; // CSV formula injection
@@ -352,7 +367,9 @@ $('copy-results').addEventListener('click', async () => {
   }
 });
 $('download-csv').addEventListener('click', () => {
-  const rows = [['Hạng', 'Tên', 'Thời gian (giây)'], ...current.race.results.map((r) => [r.rank, r.name, r.timeMs === null ? '' : (r.timeMs / 1000).toFixed(2)])];
+  const teams = Boolean(current.teamOf);
+  const rows = [['Hạng', 'Tên', 'Thời gian (giây)', ...(teams ? ['Đội'] : [])],
+    ...current.race.results.map((r) => [r.rank, r.name, r.timeMs === null ? '' : (r.timeMs / 1000).toFixed(2), ...(teams ? [teamOf(r)] : [])])];
   // BOM so Excel opens Vietnamese text correctly.
   download(`${slugify(settings.title || 'ket-qua-dua')}.csv`, `\ufeff${rows.map((row) => row.map(csvCell).join(',')).join('\r\n')}`, 'text/csv');
 });

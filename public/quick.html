@@ -4,8 +4,7 @@
   <meta charset="utf-8">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Đua ngẫu nhiên · Đua Vịt Peti</title>
-  <meta name="description" content="Dán danh sách tên, bấm đua: đua ngẫu nhiên (random) với thuật toán công bằng kiểm chứng được, có quay video.">
+  <!--seo:head-->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@500;700;800&display=swap">
   <link rel="stylesheet" href="/css/style.css">
@@ -22,6 +21,7 @@
   </header>
 
   <main id="setup" class="quick-setup">
+    <!--seo:intro-->
     <section class="card names-card">
       <h2>1. Danh sách người chơi</h2>
       <textarea id="names" rows="12" spellcheck="false" placeholder="Mỗi dòng một tên, ví dụ:&#10;Minh Anh&#10;Thu Trang&#10;Hoàng Nam"></textarea>
@@ -38,6 +38,7 @@
       <label class="field">Tên cuộc đua
         <input id="title" type="text" maxlength="60" placeholder="VD: Random thứ tự thuyết trình">
       </label>
+      <!--seo:teams-->
       <div class="option-row">
         <span class="eyebrow">Map</span>
         <label class="switch"><input type="checkbox" id="special-maps"> Hiện map đặc biệt (30/4)</label>
@@ -91,6 +92,7 @@
       <h2 id="results-title">🏆 Chúc mừng!</h2>
       <ol class="podium" id="podium"></ol>
       <ol class="full-results" id="full-results" start="4"></ol>
+      <div class="team-split" id="team-split" hidden></div>
       <div class="results-actions">
         <button class="btn btn-primary" type="button" id="again">🔁 Đua lại (cùng danh sách)</button>
         <button class="btn btn-ghost" type="button" id="edit">🏁 Đua mới</button>
@@ -112,6 +114,7 @@
       </details>
     </div>
   </section>
+  <!--seo:body-->
   <footer class="site-foot">
     <a href="https://peti.vn">Peti.vn</a>
     <a href="/cong-bang">Thuật toán công bằng</a>

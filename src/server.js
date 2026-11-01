@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import express from 'express';
@@ -14,6 +15,7 @@ import { isGa4Id } from '../shared/analyticsUrl.js';
 import { DailyStats } from './stats.js';
 import { Settings } from './settings.js';
 import { registerOps } from './ops.js';
+import { TOOL_PAGES, findPage, renderPage, renderTool, robotsTxt, sitemapXml } from './landing.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -141,6 +143,7 @@ export async function startServer({
     // Canonical uppercase code in the address bar.
     const code = normalizeCode(req.params.code);
     if (req.params.code !== code) return res.redirect(301, req.originalUrl.replace(req.params.code, code));
+    res.set('X-Robots-Tag', 'noindex');
     return page(file)(req, res);
   };
 
@@ -156,12 +159,26 @@ export async function startServer({
     adminsOnly: !requireLogin,
   });
 
-  app.get('/', page('home.html'));
-  app.get('/dua-nhanh', page('quick.html')); // free quick race: runs entirely in the browser
-  app.get('/kiem-chung', page('verify.html')); // re-run any race from its published seed
-  app.get('/cong-bang', page('fair.html')); // how the provably fair algorithm works
-  app.get('/dieu-khoan', page('terms.html'));
-  app.get('/quyen-rieng-tu', page('privacy.html'));
+  // Public pages get their title, description, canonical and share tags from landing.js (filled per request,
+  // so the canonical follows PUBLIC_URL or the host the page was asked for).
+  const templates = new Map();
+  const template = (file) => {
+    if (!templates.has(file)) templates.set(file, readFileSync(path.join(PUBLIC, file), 'utf8'));
+    return templates.get(file);
+  };
+  const html = (res, body) => res.set({ 'Cache-Control': 'no-cache', 'Content-Type': 'text/html; charset=utf-8' }).send(body);
+  const seoPage = (file, at) => (req, res) => html(res, renderPage(template(file), baseUrl(req), findPage(at)));
+  app.get('/', seoPage('home.html', '/'));
+  app.get('/kiem-chung', seoPage('verify.html', '/kiem-chung')); // re-run any race from its published seed
+  app.get('/cong-bang', seoPage('fair.html', '/cong-bang')); // how the provably fair algorithm works
+  app.get('/dieu-khoan', seoPage('terms.html', '/dieu-khoan'));
+  app.get('/quyen-rieng-tu', seoPage('privacy.html', '/quyen-rieng-tu'));
+  // the free quick race (runs entirely in the browser), under one address per everyday use
+  for (const tool of TOOL_PAGES) app.get(tool.path, (req, res) => html(res, renderTool(template('quick.html'), baseUrl(req), tool)));
+  const listCache = publicUrl ? 'public, max-age=3600' : 'no-cache'; // without PUBLIC_URL the addresses follow the Host header
+  app.get('/robots.txt', (req, res) => res.type('text/plain').set('Cache-Control', listCache).send(robotsTxt(baseUrl(req))));
+  app.get('/sitemap.xml', (req, res) => res.type('application/xml').set('Cache-Control', listCache).send(sitemapXml(baseUrl(req))));
+  app.get('/og.png', (_req, res) => res.set('Cache-Control', 'public, max-age=86400').sendFile(path.join(PUBLIC, 'og.png')));
   app.get('/healthz', (_req, res) => res.json({ ok: true }));
   app.get('/r/:code', roomPage('index.html'));
   app.get('/r/:code/host', roomPage('host.html'));

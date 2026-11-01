@@ -72,3 +72,27 @@ body { padding: 0 0 48px; overflow-x: hidden; }
 }
 .options-card .switch { flex-wrap: wrap; }
 .switch-note { flex-basis: 100%; padding-left: 24px; color: var(--ink-soft); font-weight: 600; font-size: 0.8rem; }
+
+/* One address per everyday use (src/landing.js): a short intro over the tool, the how-to under it. */
+.seo-intro { grid-column: 1 / -1; max-width: 760px; }
+.seo-intro h1 { margin: 0 0 6px; font: 800 clamp(1.8rem, 1.3rem + 2vw, 2.6rem)/1.1 var(--font-display); }
+.seo-intro p { margin: 0; font-weight: 600; color: var(--ink-soft); line-height: 1.55; }
+.seo-body {
+  max-width: 1200px; margin: 36px auto 0; padding: 0 16px 8px;
+  display: grid; gap: 28px 40px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+.seo-body h2 { margin: 0 0 8px; font: 800 1.3rem var(--font-display); }
+.seo-body p { margin: 0 0 10px; line-height: 1.6; }
+.seo-body ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.seo-body nav a {
+  display: inline-block; padding: 6px 12px; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper);
+  color: var(--ink); font-weight: 700; text-decoration: none; box-shadow: var(--shadow-sm);
+  transition: transform 150ms var(--ease), box-shadow 150ms var(--ease);
+}
+.seo-body nav a:hover, .seo-body nav a:focus-visible { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+
+/* The team split under the results (only on /chia-doi-ngau-nhien). */
+.team-split { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); margin-top: 16px; }
+.team-split h3 { grid-column: 1 / -1; margin: 0; font: 800 1.2rem var(--font-display); }
+.team { background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 10px 12px; }
+.team ol { margin: 6px 0 0; padding-left: 22px; }

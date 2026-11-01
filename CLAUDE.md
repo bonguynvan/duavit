@@ -69,7 +69,10 @@ Production deploy (Docker + Caddy): `deploy/README.md`. Production refuses to st
   `sockets.js` (all Socket.IO events, per-room channels, tick/sweep), `rooms/roomManager.js`,
   `game/room.js` (one room's state machine: lobby→countdown→racing→finished, queue/slots,
   spectators, items, pause/restart), `chat.js`, `text.js` (sanitizer), `db.js` (node:sqlite +
-  migrations), `auth/` (google.js, store.js, routes.js, cookies.js), `tools/backup.js` (`VACUUM INTO`).
+  migrations), `auth/` (google.js, store.js, routes.js, cookies.js), `tools/backup.js` (`VACUUM INTO`),
+  `landing.js` (SEO: the quick race under one address per use, e.g. `/goi-hoc-sinh-len-bang`, `/chia-doi-ngau-nhien`;
+  title/description/canonical/OG/JSON-LD of every public page filled into `<!--seo:...-->` markers per request;
+  robots.txt, sitemap.xml). Add a use by adding an entry to `TOOL_PAGES`; `test/landing.test.js` checks every page.
 - `public/` — vanilla ES modules, no build step. Pages: `home.html`, `index.html` (player),
   `host.html`, `live.html`, `quick.html`, `verify.html`, `fair.html` (`/cong-bang`), `admin.html`, `missing.html`.
   Rendering: `raceView.js` (canvas race, camera, minimap, effects), `track-art.js` (crowd, banners,
@@ -122,7 +125,8 @@ Production deploy (Docker + Caddy): `deploy/README.md`. Production refuses to st
 Never use "may rủi", "may mắn", "cầu may", "giải thưởng", "tiền thưởng", "trúng thưởng", "cược",
 "bốc thăm quà"… anywhere user-facing (UI, meta tags, docs, link hub). Say **"ngẫu nhiên" / "random"**,
 "thuật toán công bằng", "kiểm chứng được (provably fair)". Use cases to suggest: chọn ngẫu nhiên,
-chia đội, xếp thứ tự. The only exception is the prohibition clause of `/dieu-khoan`, which must name
+chia đội, xếp thứ tự. SEO targets "random tên" / "chọn tên ngẫu nhiên", never prize or giveaway searches;
+`test/landing.test.js` fails on banned words in any page or the landing copy. The only exception is the prohibition clause of `/dieu-khoan`, which must name
 "đánh bạc" / "cá cược" explicitly to forbid them.
 
 ## Content boundaries
