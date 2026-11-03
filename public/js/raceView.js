@@ -1,3 +1,4 @@
+import { createTugDisplay, drawTug } from './tugView.js';
 import { MAPS, findItem, findMap } from '/shared/catalog.js';
 import { rankRacers } from '/shared/race.js';
 import { easeOut, flowerBranch, flowerPot, BANNER_EVERY_M, BANNER_SPAN_M, FAN_EVERY_M, KERB_FLAG_EVERY_M, PENNANTS, POLE_EVERY_M, SHIRTS, SIGNS, VN_PENNANTS, animalOf, banner, checkered, fan, flagRaise, flagStyle, gate, hash, palaceGate, pennantString, pill, ribbon, roundedRect, sign, templeDrum } from './track-art.js';
@@ -194,6 +195,13 @@ export class RaceView {
     ctx.clearRect(0, 0, w, h);
     const race = this.state?.race;
     if (!race || w === 0 || race.racers.length === 0) return;
+    if (race.mode === 'tug') { // a tug of war has its own scene (tugView.js), with the same countdown and results
+      this.tug ??= createTugDisplay();
+      drawTug(ctx, w, h, this.state, this.tug, { dt, t, clockOffset: this.clockOffset });
+      this.#countdown(ctx, w, h, race);
+      if (this.drawResults && this.state.phase === 'finished' && this.state.results) this.#resultsBoard(ctx, w, h, this.state.results);
+      return;
+    }
 
     const map = findMap(race.mapId) ?? MAPS[0];
     // boat races: the racers are teams, drawn as boats in the team colour (spectators still sit in the crowd)
@@ -347,7 +355,7 @@ export class RaceView {
       ctx.font = `700 ${rowH * 0.45}px ${FONT}`;
       ctx.fillText(r.name, x + rowH * 1.7, ry, boxW - rowH * 4.2);
       ctx.textAlign = 'right';
-      ctx.fillText(r.timeMs === null ? '—' : `${(r.timeMs / 1000).toFixed(2)}s`, x + boxW - rowH * 0.5, ry);
+      ctx.fillText(r.draw ? 'Hòa' : r.timeMs === null ? '—' : `${(r.timeMs / 1000).toFixed(2)}s`, x + boxW - rowH * 0.5, ry);
     });
     ctx.restore();
   }
@@ -764,7 +772,7 @@ export class RaceView {
     const serverNow = Date.now() + this.clockOffset;
     const left = race.startsAt - serverNow;
     if (left < -GO_FLASH_MS || this.state.phase === 'finished') return;
-    const text = left > 0 ? String(Math.ceil(left / 1000)) : 'CHẠY!';
+    const text = left > 0 ? String(Math.ceil(left / 1000)) : { tug: 'KÉO!', boat: 'CHÈO!' }[race.mode] ?? 'CHẠY!';
     const size = Math.min(w, h) * (left > 0 ? 0.32 : 0.2);
     ctx.save();
     if (left > 0) {

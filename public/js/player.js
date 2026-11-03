@@ -54,7 +54,9 @@ const currentMap = () => withCast(findMap(state?.mapId) ?? MAPS[0], state?.allCh
 const castKey = () => `${state?.mapId}|${Boolean(currentMap().allCharacters)}`;
 const me = () => state?.players.find((p) => p.id === myId) ?? null;
 /** The racer that is "me": my own runner, or in a boat race the boat of my team. */
-const myRacerId = () => (state?.race?.mode === 'boat' ? (me()?.inRace ? state.race.teams?.find((t) => t.number === me().team)?.id ?? null : null) : myId);
+const TEAM_MODES = ['boat', 'tug']; // the racers are teams: boats, or the two ends of the rope
+const teamMode = (mode) => TEAM_MODES.includes(mode);
+const myRacerId = () => (teamMode(state?.race?.mode) ? (me()?.inRace ? state.race.teams?.find((t) => t.number === me().team)?.id ?? null : null) : myId);
 
 /**
  * Character picker: one tab per character group the map allows (tabs only when there are several),
@@ -216,9 +218,13 @@ function renderLobby(player, entering) {
 
 /** Boat races: one button per team (colour, name, how many rowers); mine is checked. */
 function renderTeamPick(player) {
-  const boat = state.mode === 'boat';
-  $('team-card').hidden = !boat;
-  if (!boat) return;
+  const teams = teamMode(state.mode);
+  $('team-card').hidden = !teams;
+  if (!teams) return;
+  $('team-card-title').textContent = state.mode === 'tug' ? '🪢 Đội của bạn' : '🚣 Đội của bạn';
+  $('team-card-note').textContent = state.mode === 'tug'
+    ? 'Bấm để đổi đội. Lực kéo là nhịp bấm trung bình của cả đội: ai cũng phải kéo!'
+    : 'Bấm để đổi đội. Thuyền chạy theo nhịp chèo trung bình của cả đội: ai cũng phải chèo!';
   const rowers = (n) => state.players.filter((p) => p.team === n && !p.spectator && p.connected).length;
   $('team-pick').replaceChildren(...Array.from({ length: state.teamCount }, (_, i) => {
     const n = i + 1;
@@ -236,7 +242,7 @@ function renderTeamPick(player) {
 function queueText(player) {
   if (player.spectator) return 'Bạn đang là khán giả 👀 — xem và chat thoải mái';
   if (player.queuePos === null) return 'Đang kết nối lại…';
-  if (state.mode === 'boat') return `✅ Bạn chèo cho ${teamName(player.team)} ở lượt tới`;
+  if (teamMode(state.mode)) return `✅ Bạn ${state.mode === 'tug' ? 'kéo' : 'chèo'} cho ${teamName(player.team)} ở lượt tới`;
   if (player.queuePos <= state.raceSlots) return `✅ Bạn sẽ đua ở lượt tới (${state.raceSlots} người mỗi lượt)`;
   return `Bạn đang ở vị trí #${player.queuePos} trong hàng chờ — mỗi lượt ${state.raceSlots} người`;
 }
@@ -300,7 +306,7 @@ document.addEventListener('keydown', (event) => {
 
 function renderTapPad(player) {
   const race = state.race;
-  const rowing = race?.mode === 'boat';
+  const rowing = teamMode(race?.mode); // a crew: boats or the rope
   const mine = race?.racers.find((r) => r.id === myRacerId());
   const show = (race?.mode === 'tap' || rowing) && player.inRace && Boolean(mine) && mine.finishedAt === null
     && (state.phase === 'countdown' || state.phase === 'racing');
@@ -309,13 +315,15 @@ function renderTapPad(player) {
   if (!show) return;
   const go = state.phase === 'racing' && !race.paused;
   tapPad.disabled = !go;
-  $('tap-word').textContent = go ? (rowing ? 'CHÈO!' : 'BẤM!') : race.paused ? 'Tạm dừng' : 'Chuẩn bị…';
+  $('tap-word').textContent = go ? ({ boat: 'CHÈO!', tug: 'KÉO!' }[race.mode] ?? 'BẤM!') : race.paused ? 'Tạm dừng' : 'Chuẩn bị…';
   const rate = mine.rate ?? 0;
   if (rowing) { // my strokes and the whole crew's
     const now = performance.now();
     const own = Math.min(RULES.tapMaxRate, myStrokes.filter((t) => now - t <= RULES.tapWindowMs).length);
     tapPad.classList.toggle('flat-out', go && rate >= RULES.tapFullRate);
-    $('tap-rate').textContent = go ? `🚣 Bạn ${own}/giây · cả đội ${rate}/giây` : 'Chèo đều tay khi có hiệu lệnh: cả đội cùng chèo thì thuyền mới nhanh';
+    const icon = race.mode === 'tug' ? '💪' : '🚣';
+    $('tap-rate').textContent = go ? `${icon} Bạn ${own}/giây · cả đội ${rate}/giây`
+      : race.mode === 'tug' ? 'Bấm thật đều khi có hiệu lệnh: cả đội cùng kéo thì mới thắng' : 'Chèo đều tay khi có hiệu lệnh: cả đội cùng chèo thì thuyền mới nhanh';
     return;
   }
   tapPad.classList.toggle('flat-out', go && rate >= RULES.tapFullRate);
@@ -347,14 +355,14 @@ function renderRace(entering) {
   const player = me();
   renderThrowBar(player);
   renderTapPad(player);
-  const note = player.inRace ? '' : player.spectator ? '👀 Bạn đang xem với tư cách khán giả' : state.mode === 'boat' ? '⏳ Lượt này đã xuất phát — bạn chèo từ lượt sau' : '⏳ Lượt này đã đủ người — bạn sẽ đua lượt sau';
+  const note = player.inRace ? '' : player.spectator ? '👀 Bạn đang xem với tư cách khán giả' : teamMode(state.mode) ? '⏳ Lượt này đã bắt đầu — bạn vào đội từ lượt sau' : '⏳ Lượt này đã đủ người — bạn sẽ đua lượt sau';
   $('race-note').hidden = !note;
   $('race-note').textContent = note;
   const mine = state.results?.find((r) => r.id === myRacerId());
   $('result-card').hidden = !mine;
   if (mine) {
     $('result-rank').textContent = `#${mine.rank}`;
-    $('result-time').textContent = mine.members ? `${mine.name} · ${formatTime(mine.timeMs)} · ${state.results.length} đội` : `${formatTime(mine.timeMs)} · ${state.results.length} người đua`;
+    $('result-time').textContent = mine.draw ? `${mine.name} · Hòa!` : mine.animal === 'keoCo' ? `${mine.name} · ${mine.rank === 1 ? 'Thắng' : 'Thua'}` : mine.members ? `${mine.name} · ${formatTime(mine.timeMs)} · ${state.results.length} đội` : `${formatTime(mine.timeMs)} · ${state.results.length} người đua`;
   }
   $('ranking-title').textContent = state.results ? 'Kết quả chung cuộc' : 'Bảng xếp hạng trực tiếp';
   if (!force && now - lastRankingPaint < RANKING_REFRESH_MS) return;
@@ -402,6 +410,7 @@ $('chat-close').addEventListener('click', () => toggleChat(false));
 
 /** Wording that depends on how the room races (tap to run, or random). */
 const MODE_TEXT = {
+  tug: { eyebrow: 'Kéo co', step: 'Kéo cùng đội', stepNote: 'Cả đội bấm đều thì mới kéo được 💪', pick: '· chỉ để trang trí, lúc kéo co cả đội cùng giữ một sợi dây' },
   boat: { eyebrow: 'Đua thuyền', step: 'Chèo cùng đội', stepNote: 'Cả đội chèo đều thì thuyền mới nhanh 🚣', pick: '· chỉ để trang trí, lúc đua cả đội đi chung một thuyền' },
   tap: { eyebrow: 'Đua bấm nút', step: 'Bấm liên tục để chạy', stepNote: 'Ai bấm nhanh về trước 💨', pick: '· chỉ để trang trí, nhân vật nào cũng chạy như nhau' },
   random: { eyebrow: 'Đua ngẫu nhiên', step: 'Xem đua & ném gạch', stepNote: 'Vui thôi, không đổi kết quả 😉', pick: '· tốc độ ngẫu nhiên, như nhau cho mọi nhân vật' },

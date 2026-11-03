@@ -1,4 +1,4 @@
-// The dragon boat of boat races (one per team; also a pick of its own on the river map).
+// Team painters: the dragon boat of boat races (also a pick of its own on the river map) and the tug-of-war crew.
 // Same conventions as painters.js: facing right, origin on the water line under the hull, ~100 units.
 // The team shows on the drummer's badge (face), drawn in the team colour.
 import { INK, circle, drawFace, ellipse, poly, shade, shape, stroke, thinLine } from './paint.js';
@@ -55,7 +55,27 @@ function thuyen(ctx, c, p, m, face) {
   drawFace(ctx, 34, -44, 10, face, shade(c, -0.3));
 }
 
-export const BOAT_PAINTERS = { thuyen };
+/** A tug-of-war crew: three people leaning back on a rope that runs off to the right (the middle of the pull). */
+function keoCo(ctx, c, p, m, face) {
+  const heave = m ? Math.sin(p * 2) * 3 : 0; // they heave together
+  thinLine(ctx, '#c8a46a', 4, () => { ctx.moveTo(-60, -40); ctx.lineTo(70, -38 - heave * 0.3); }); // the rope
+  [-44, -14, 16].forEach((x, i) => {
+    const lean = 14 + heave + i;
+    stroke(ctx, '#2b2d42', 4, () => { // legs braced, feet dug in
+      ctx.moveTo(x - lean * 0.5, -34); ctx.lineTo(x - 2, 0);
+      ctx.moveTo(x - lean * 0.5, -34); ctx.lineTo(x + 12, 0);
+    });
+    shape(ctx, shade(c, i % 2 ? 0.08 : -0.04), () => { ctx.moveTo(x - lean * 0.5 - 7, -34); ctx.lineTo(x - lean - 6, -64); ctx.lineTo(x - lean + 6, -66); ctx.lineTo(x - lean * 0.5 + 7, -34); ctx.closePath(); }, 2);
+    stroke(ctx, '#e9b98f', 3.5, () => { ctx.moveTo(x - lean + 2, -60); ctx.lineTo(x + 6, -41); }); // arms to the rope
+    if (i < 2) {
+      circle(ctx, x - lean - 2, -74, 8, '#e9b98f');
+      ellipse(ctx, x - lean - 3, -80, 8, 4, '#2b2d42');
+    }
+  });
+  drawFace(ctx, -2 - heave, -74, 9, face, shade(c, -0.3)); // the front puller wears the team badge
+}
+
+export const BOAT_PAINTERS = { thuyen, keoCo };
 
 /** Where accessories float above the boat (animal units): over the drummer. */
-export const BOAT_HEAD_TOP = { thuyen: [34, -60] };
+export const BOAT_HEAD_TOP = { thuyen: [34, -60], keoCo: [-2, -92] };

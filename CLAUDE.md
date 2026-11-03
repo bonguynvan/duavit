@@ -17,7 +17,7 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
   per-IP limits count an IPv6 /64 as one client (`clientIp` in `src/sockets.js`). With rooms open to
   everyone, Google sign-in only admits `ADMIN_EMAILS` (for `/admin`); nobody else gets a user row.
   Host screen `/r/CODE/host`, OBS view `/r/CODE/live`, verify page `/kiem-chung`.
-- Rooms race in one of three modes (`room.mode`, host picks in the lobby):
+- Rooms race in one of four modes (`room.mode`, host picks in the lobby):
   - `tap` (default, "Bấm để chạy"): speed follows each phone's tap rate (`shared/tap.js`, counted over 1 s,
     capped at `RULES.tapMaxRate`); bots tap at a random rate; host-typed names (`isManual`) don't race; no seed,
     `race.fairness` is null.
@@ -28,6 +28,10 @@ Contributor guide (adding characters and maps): `CONTRIBUTING.md`.
     rower slows the boat and a big team gains nothing. Everyone who can row races (no slot limit); host-typed names
     don't row. Racers are teams (`race.teams`, ids `team-N`, painter `thuyen`); results list each crew. Starts on the
     river map `song`. No seed, `race.fairness` is null.
+  - `tug` ("Kéo co"): the same teams, always two. One rope (`shared/tug.js`): the mark moves toward the team
+    whose average tap rate is higher; past a team's line it wins, after `TUG.maxMs` the side the mark leans to wins
+    (near the middle: a draw, both rank 1 with `draw: true`). Drawn by `public/js/tugView.js` (RaceView hands over
+    when `race.mode === 'tug'`); crews use the `keoCo` painter. No seed.
   Cosmetic items, throws ("ném gạch"), falls, emoji reactions are **visual only** — never change results.
   Quick race "fun mode" (`public/js/quick/fun.js`) hands out random accessories and auto-throws with
   `Math.random` only — never the seed, never positions.

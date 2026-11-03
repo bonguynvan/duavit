@@ -65,6 +65,7 @@ const durationButtons = [null, ...RULES.durationChoices].map((seconds) => {
 const MODE_NOTES = {
   tap: `Mỗi người bấm liên tục trên điện thoại để chạy, ai bấm nhanh hơn về trước (~${RULES.tapRaceSec} giây/lượt). Tên host tự thêm chỉ đua ở chế độ Ngẫu nhiên.`,
   random: 'Tốc độ ngẫu nhiên, kiểm chứng được (provably fair). Hợp để chọn ngẫu nhiên, chia đội, xếp thứ tự.',
+  tug: 'Hai đội kéo một sợi dây. Lực kéo là nhịp bấm trung bình của cả đội; kéo được nơ đỏ qua vạch phía mình là thắng, hết 45 giây thì đội đang được lợi thắng. Tên host tự thêm không kéo được.',
   boat: 'Mọi người chia đội, mỗi đội một thuyền. Thuyền chạy theo nhịp bấm trung bình của cả đội, ai ngừng chèo là cả thuyền chậm lại. Tên host tự thêm không chèo được.',
 };
 document.querySelectorAll('#race-mode [data-mode]').forEach((button) => {
@@ -75,7 +76,9 @@ function renderMode() {
   document.querySelectorAll('#race-mode [data-mode]').forEach((button) => button.setAttribute('aria-checked', String(button.dataset.mode === mode)));
   $('mode-note').textContent = MODE_NOTES[mode] ?? '';
   $('duration-row').hidden = mode !== 'random'; // tap and boat races have their own length: mashing longer hurts
-  $('team-row').hidden = mode !== 'boat';
+  $('team-row').hidden = mode !== 'boat' && mode !== 'tug';
+  $('team-count').hidden = mode === 'tug'; // a rope has two ends
+  $('team-row-title').textContent = mode === 'tug' ? 'Hai đội' : 'Số đội';
   teamCountButtons.forEach(({ n, button }) => button.setAttribute('aria-checked', String(n === state.teamCount)));
 }
 
@@ -90,7 +93,7 @@ $('shuffle-teams').addEventListener('click', () => act('host:shuffleTeams'));
 
 /** Boat races: a team tag on each racer card; tapping it moves the racer to the next team. */
 function teamTag(p) {
-  if (state.mode !== 'boat') return null;
+  if (state.mode !== 'boat' && state.mode !== 'tug') return null;
   const next = (p.team % state.teamCount) + 1;
   return el('button', { type: 'button', class: 'team-tag', title: `Chuyển sang ${teamName(next)}`, 'aria-label': `${p.name}: ${teamName(p.team)}, chuyển sang ${teamName(next)}`,
     style: { background: BOAT_TEAM_COLORS[(p.team - 1) % BOAT_TEAM_COLORS.length] }, onclick: () => act('host:team', { id: p.id, team: next }) }, teamName(p.team));
@@ -184,14 +187,14 @@ function renderLobby() {
   const racers = state.players.filter((p) => !p.spectator);
   const queued = racers.filter((p) => p.queuePos !== null).length;
   $('player-count').textContent = String(racers.length);
-  $('roster-sub').textContent = state.mode === 'boat'
-    ? `${state.teamCount} đội · ai cũng chèo, không cần chờ lượt`
+  $('roster-sub').textContent = state.mode === 'boat' || state.mode === 'tug'
+    ? `${state.teamCount} đội · ai cũng ${state.mode === 'tug' ? 'kéo' : 'chèo'}, không cần chờ lượt`
     : `Mỗi lượt ${state.raceSlots} người${queued > state.raceSlots ? ` · ${queued - state.raceSlots} người chờ lượt sau` : ''}`;
   $('roster-empty').hidden = state.players.length > 0;
   if (document.activeElement !== $('title-input')) $('title-input').value = state.title ?? '';
   renderRoster();
   if (!$('add-person-form').hidden) renderAddPersonPicker(); // follows map changes (vehicle-only maps)
-  $('start').disabled = state.mode === 'boat' ? rowingTeams() < 2 : queued < 2;
+  $('start').disabled = state.mode === 'boat' || state.mode === 'tug' ? rowingTeams() < 2 : queued < 2;
 }
 
 function podiumEntry(result) {
@@ -200,7 +203,7 @@ function podiumEntry(result) {
   const face = { initials: result.team ? String(result.team) : player?.initials ?? result.name.slice(0, 1), color: result.color };
   requestAnimationFrame(() => paintAnimalCard(canvas, findAnimal(result.animal), face, itemIcons(player?.items)));
   const crew = result.members ? el('small', { class: 'crew' }, result.members.join(', ')) : null; // boat races: who rowed
-  return el('li', {}, canvas, el('strong', {}, result.name), el('small', {}, formatTime(result.timeMs)), crew, el('div', { class: 'step' }, String(result.rank)));
+  return el('li', {}, canvas, el('strong', {}, result.name), el('small', {}, result.draw ? 'Hòa' : result.animal === 'keoCo' && result.timeMs === null ? 'Thua' : formatTime(result.timeMs)), crew, el('div', { class: 'step' }, String(result.rank)));
 }
 
 // ---------- video: every race is filmed from the countdown to the results ----------

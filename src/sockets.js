@@ -256,7 +256,7 @@ export function registerSockets(io, rooms, { buildId, trustProxy, publicUrl, max
     hostAction('host:start', () => {
       const result = room.start(Date.now());
       // daily counter for the dashboard: racers (in a boat race, the rowers)
-      const racers = room.race?.mode === 'boat' ? room.race.racers.reduce((n, b) => n + b.members.length, 0) : room.race?.racers.length ?? 0;
+      const racers = room.race?.teams ? room.race.racers.reduce((n, b) => n + b.members.length, 0) : room.race?.racers.length ?? 0;
       if (!result.error) onRaceStart(racers);
       return result;
     });

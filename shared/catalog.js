@@ -26,6 +26,7 @@ export const ANIMALS = [
   // Everyday people: on every regular map, in their own tab.
   { id: 'nongDan', name: 'Anh Hai Lúa', color: '#6b8f4e', group: 'people' },
   { id: 'xeBo', name: 'Bác Ba xe bò', color: '#4f7a8f', group: 'people' },
+  { id: 'keoCo', name: 'Đội kéo co', color: '#e63946', group: 'people' }, // also the crews of the tug of war
   // Map-exclusive characters (`maps`): only offered on those maps.
   { id: 'giong', name: 'Thánh Gióng', color: '#6b6f78', maps: ['denhung'] },
   { id: 'dragon', name: 'Rồng', color: '#3f9d6a', maps: ['denhung'] },

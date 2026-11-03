@@ -220,3 +220,4 @@ body { overflow-x: hidden; }
 }
 .team-tag:focus-visible { outline: 3px solid var(--tomato); outline-offset: 2px; }
 .podium .crew { display: block; max-width: 220px; margin: 2px auto 0; color: var(--ink-soft); font-weight: 600; font-size: 0.8rem; }
+.duration[hidden], .duration-options[hidden] { display: none; } /* their display rules would otherwise win over [hidden] */
